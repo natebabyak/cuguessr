@@ -1,50 +1,11 @@
 "use client";
 
 import Map, { useMap } from "react-map-gl/maplibre";
-// @ts-expect-error CSS import
-import "maplibre-gl/dist/maplibre-gl.css";
 import { Button } from "@/components/ui/button";
 import { Navigation } from "lucide-react";
 import { useEffect, useState } from "react";
 import { Card, CardContent } from "@/components/ui/card";
-
-const EARTH_RADIUS = 6371000;
-const SIGMA = 100;
-const CARLETON_LATITUDE = 45.3866786;
-const CARLETON_LONGITUDE = -75.697256;
-
-interface Coordinates {
-  latitude: number;
-  longitude: number;
-}
-
-function rad(degrees: number): number {
-  return (degrees * Math.PI) / 180;
-}
-
-function hav(theta: number): number {
-  return Math.pow(Math.sin(theta / 2), 2);
-}
-
-function d(pointA: Coordinates, pointB: Coordinates): number {
-  return (
-    2 *
-    EARTH_RADIUS *
-    Math.asin(
-      Math.sqrt(
-        hav(rad(pointB.latitude - pointA.latitude)) +
-          Math.cos(rad(pointA.latitude)) *
-            Math.cos(rad(pointB.latitude)) *
-            hav(rad(pointB.longitude - pointA.longitude))
-      )
-    )
-  );
-}
-
-function score(answer: Coordinates, guess: Coordinates): number {
-  const distance = d(answer, guess);
-  return 5000 * Math.exp(-0.5 * Math.pow(distance / SIGMA, 2));
-}
+import { DEFAULT_LATITUDE, DEFAULT_LONGITUDE } from "@/lib/constants";
 
 interface GameProps {
   photos: {
@@ -66,8 +27,8 @@ export function Game({ photos }: GameProps) {
       <Scoreboard round={round} score={score} />
       <Map
         initialViewState={{
-          latitude: CARLETON_LATITUDE,
-          longitude: CARLETON_LONGITUDE,
+          latitude: DEFAULT_LATITUDE,
+          longitude: DEFAULT_LONGITUDE,
           zoom: 15,
         }}
         mapStyle={`https://api.maptiler.com/maps/streets/style.json?key=${process.env.NEXT_PUBLIC_MAPTILER_API_KEY}`}
@@ -102,7 +63,7 @@ function NavigationButton() {
   const handleClick = () => {
     if (map) {
       map.flyTo({
-        center: [CARLETON_LONGITUDE, CARLETON_LATITUDE],
+        center: [DEFAULT_LONGITUDE, DEFAULT_LATITUDE],
       });
     }
   };

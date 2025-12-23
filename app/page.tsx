@@ -1,6 +1,6 @@
 import { Button } from "@/components/ui/button";
 import { ButtonGroup } from "@/components/ui/button-group";
-import { MapPin, Play } from "lucide-react";
+import { ImageIcon, Play } from "lucide-react";
 import Link from "next/link";
 
 export default function Home() {
@@ -20,9 +20,9 @@ export default function Home() {
         </ButtonGroup>
         <ButtonGroup>
           <Button asChild variant="outline">
-            <Link href="/submit">
-              <MapPin />
-              Submit a Location
+            <Link href="/upload">
+              <ImageIcon />
+              Upload Photo
             </Link>
           </Button>
         </ButtonGroup>

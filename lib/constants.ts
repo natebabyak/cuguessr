@@ -1,4 +1,3 @@
-export const CARLETON_LATITUDE = 45.3866786;
-export const CARLETON_LONGITUDE = -75.697256;
-export const EARTH_RADIUS_IN_METERS = 6371000;
-export const SIGMA = 100;
+export const DEFAULT_LATITUDE = 45.3866786;
+export const DEFAULT_LONGITUDE = -75.697256;
+export const DEFAULT_ZOOM = 15;
