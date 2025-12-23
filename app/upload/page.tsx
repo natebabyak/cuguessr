@@ -15,7 +15,6 @@ import {
   Maximize,
   Minimize,
   Navigation,
-  Rows2,
   Sparkles,
 } from "lucide-react";
 import { Map, MapLayerMouseEvent, Marker, useMap } from "react-map-gl/maplibre";
@@ -32,7 +31,6 @@ import {
 } from "@/components/ui/empty";
 import { useIsMobile } from "@/hooks/use-mobile";
 import Link from "next/link";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 export default function Page() {
   const [cursor, setCursor] = useState<"crosshair" | "grabbing">("crosshair");
@@ -46,11 +44,6 @@ export default function Page() {
   const isMobile = useIsMobile();
 
   const inputRef = useRef(null);
-
-  const onSubmit = () => {
-    const supabase = createClient();
-    supabase.from("photos").insert([]);
-  };
 
   return (
     <main className="w-screen h-screen">
@@ -100,26 +93,30 @@ export default function Page() {
           )}
         >
           <CardContent>
-            <label className="cursor-pointer border-dashed border">
-              {photoPreview ? (
-                <img
-                  alt="Photo"
-                  src={photoPreview}
-                  className="w-full max-h-96 rounded-md"
-                />
-              ) : (
-                <Empty>
-                  <EmptyHeader>
-                    <EmptyMedia variant="icon">
-                      <ImageIcon />
-                    </EmptyMedia>
-                    <EmptyTitle>Upload Photo</EmptyTitle>
-                    <EmptyDescription>
-                      Click here to browse your files
-                    </EmptyDescription>
-                  </EmptyHeader>
-                </Empty>
-              )}
+            <label>
+              <div className="cursor-pointer border-dashed border rounded-md">
+                {photoPreview ? (
+                  // eslint-disable-next-line @next/next/no-img-element
+                  <img
+                    alt="Photo"
+                    src={photoPreview}
+                    className="w-full max-h-96 rounded-md"
+                  />
+                ) : (
+                  <Empty>
+                    <EmptyHeader>
+                      <EmptyMedia variant="icon">
+                        <ImageIcon />
+                      </EmptyMedia>
+                      <EmptyTitle>Upload Photo</EmptyTitle>
+                      <EmptyDescription>
+                        Click here to browse your files
+                      </EmptyDescription>
+                    </EmptyHeader>
+                  </Empty>
+                )}
+              </div>
+
               <input
                 accept="image/gif,image/jpeg,image/png,image/svg+xml,image/webp"
                 hidden
@@ -134,24 +131,6 @@ export default function Page() {
               />
             </label>
           </CardContent>
-          <CardFooter>
-            <Tabs defaultValue="split">
-              <TabsList>
-                <TabsTrigger value="minimize">
-                  <Minimize />
-                  Hide
-                </TabsTrigger>
-                <TabsTrigger value="split">
-                  <ImageIcon />
-                  Fit
-                </TabsTrigger>
-                <TabsTrigger value="maximize">
-                  <Maximize />
-                  Fill
-                </TabsTrigger>
-              </TabsList>
-            </Tabs>
-          </CardFooter>
         </Card>
         <Button
           asChild
@@ -230,8 +209,18 @@ function MapButtonGroup({
       </ButtonGroup>
       <ButtonGroup>
         <Button
-          className="rounded-full"
           disabled={!(photo && markerLatitude && markerLongitude)}
+          onClick={async () => {
+            const supabase = createClient();
+            const { error } = await supabase.from("photos").insert([
+              {
+                latitude: markerLatitude!,
+                longitude: markerLongitude!,
+                photo,
+              },
+            ]);
+          }}
+          className="rounded-full"
         >
           <Check />
           Done
