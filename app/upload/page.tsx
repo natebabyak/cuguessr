@@ -1,7 +1,7 @@
 "use client";
 
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardFooter } from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 import {
   DEFAULT_LATITUDE,
   DEFAULT_LONGITUDE,
@@ -12,13 +12,11 @@ import {
   Home,
   ImageIcon,
   LocateFixed,
-  Maximize,
-  Minimize,
   Navigation,
   Sparkles,
 } from "lucide-react";
 import { Map, MapLayerMouseEvent, Marker, useMap } from "react-map-gl/maplibre";
-import { ChangeEvent, useRef, useState } from "react";
+import { ChangeEvent, useState } from "react";
 import { ButtonGroup } from "@/components/ui/button-group";
 import { cn } from "@/lib/utils";
 import { createClient } from "@/lib/supabase/client";
@@ -31,19 +29,21 @@ import {
 } from "@/components/ui/empty";
 import { useIsMobile } from "@/hooks/use-mobile";
 import Link from "next/link";
+import { earthDistance } from "@/lib/math";
+import { toast } from "sonner";
+import { PhotoCard } from "./photo-card";
 
 export default function Page() {
   const [cursor, setCursor] = useState<"crosshair" | "grabbing">("crosshair");
   const [cursorLatitude, setCursorLatitude] = useState<number | null>(null);
   const [cursorLongitude, setCursorLongitude] = useState<number | null>(null);
+  const [dragging, setDragging] = useState(false);
   const [markerLatitude, setMarkerLatitude] = useState<number | null>(null);
   const [markerLongitude, setMarkerLongitude] = useState<number | null>(null);
   const [photo, setPhoto] = useState<File | null>(null);
-  const [photoPreview, setPhotoPreview] = useState<string | null>(null);
+  const [preview, setPreview] = useState<string | null>(null);
 
   const isMobile = useIsMobile();
-
-  const inputRef = useRef(null);
 
   return (
     <main className="w-screen h-screen">
@@ -85,53 +85,7 @@ export default function Page() {
             <LocateFixed className="text-[#e91c24]" />
           </Marker>
         )}
-        <Card
-          className={cn(
-            "shadow-md w-full max-h-1/2 absolute z-10 ",
-            isMobile && "left-2 max-w-94 top-2",
-            !isMobile && "left-4 top-4 max-w-sm"
-          )}
-        >
-          <CardContent>
-            <label>
-              <div className="cursor-pointer border-dashed border rounded-md">
-                {photoPreview ? (
-                  // eslint-disable-next-line @next/next/no-img-element
-                  <img
-                    alt="Photo"
-                    src={photoPreview}
-                    className="w-full max-h-96 rounded-md"
-                  />
-                ) : (
-                  <Empty>
-                    <EmptyHeader>
-                      <EmptyMedia variant="icon">
-                        <ImageIcon />
-                      </EmptyMedia>
-                      <EmptyTitle>Upload Photo</EmptyTitle>
-                      <EmptyDescription>
-                        Click here to browse your files
-                      </EmptyDescription>
-                    </EmptyHeader>
-                  </Empty>
-                )}
-              </div>
-
-              <input
-                accept="image/gif,image/jpeg,image/png,image/svg+xml,image/webp"
-                hidden
-                onChange={(event: ChangeEvent<HTMLInputElement>) => {
-                  const file = event.target.files?.[0];
-                  if (file) {
-                    setPhoto(file);
-                    setPhotoPreview(URL.createObjectURL(file));
-                  }
-                }}
-                type="file"
-              />
-            </label>
-          </CardContent>
-        </Card>
+        <PhotoCard setPhoto={setPhoto} />
         <Button
           asChild
           size="icon"
@@ -183,8 +137,14 @@ function MapButtonGroup({
                 center: [longitude, latitude],
                 zoom: DEFAULT_ZOOM,
               });
-              setMarkerLatitude(latitude);
-              setMarkerLongitude(longitude);
+              const distance = earthDistance(
+                { latitude: DEFAULT_LATITUDE, longitude: DEFAULT_LONGITUDE },
+                { latitude, longitude }
+              );
+              if (distance <= 10_000) {
+                setMarkerLatitude(latitude);
+                setMarkerLongitude(longitude);
+              }
             });
           }}
           size="icon"
