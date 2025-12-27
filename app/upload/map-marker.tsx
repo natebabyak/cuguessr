@@ -1,35 +1,30 @@
+import { Coordinates } from "@/lib/math";
 import { LocateFixed } from "lucide-react";
 import { Marker } from "react-map-gl/maplibre";
 
 interface MapMarkerProps {
-  cursorLatitude: number;
-  cursorLongitude: number;
-  markerLatitude: number | null;
-  markerLongitude: number | null;
-  setMarkerLatitude: (value: number) => void;
-  setMarkerLongitude: (value: number) => void;
+  cursorCoordinates: Coordinates | null;
+  markerCoordinates: Coordinates | null;
+  setMarkerCoordinates: (value: Coordinates) => void;
 }
 
 export function MapMarker({
-  cursorLatitude,
-  cursorLongitude,
-  markerLatitude,
-  markerLongitude,
-  setMarkerLatitude,
-  setMarkerLongitude,
+  cursorCoordinates,
+  markerCoordinates,
+  setMarkerCoordinates,
 }: MapMarkerProps) {
   const handleDrag = () => {
-    setMarkerLatitude(cursorLatitude);
-    setMarkerLongitude(cursorLongitude);
+    if (!cursorCoordinates) return;
+    setMarkerCoordinates(cursorCoordinates);
   };
 
-  if (!markerLatitude || !markerLongitude) return;
+  if (!markerCoordinates) return;
 
   return (
     <Marker
       draggable={true}
-      latitude={markerLatitude}
-      longitude={markerLongitude}
+      latitude={markerCoordinates.latitude}
+      longitude={markerCoordinates.longitude}
       onDrag={handleDrag}
     >
       <LocateFixed className="text-primary" />

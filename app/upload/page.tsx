@@ -1,5 +1,6 @@
 "use client";
 
+import { Coordinates, distance } from "@/lib/math";
 import {
   DEFAULT_LATITUDE,
   DEFAULT_LONGITUDE,
@@ -10,20 +11,33 @@ import { Map, MapLayerMouseEvent } from "react-map-gl/maplibre";
 import { MapButtonGroup } from "./map-button-group";
 import { MapMarker } from "./map-marker";
 import { PhotoCard } from "./photo-card";
+import { toast } from "sonner";
 import { useState } from "react";
 
 export default function Page() {
   const [cursor, setCursor] = useState<"crosshair" | "grabbing">("crosshair");
-  const [cursorLatitude, setCursorLatitude] = useState<number>(0);
-  const [cursorLongitude, setCursorLongitude] = useState<number>(0);
-  const [markerLatitude, setMarkerLatitude] = useState<number | null>(null);
-  const [markerLongitude, setMarkerLongitude] = useState<number | null>(null);
+  const [cursorCoordinates, setCursorCoordinates] =
+    useState<Coordinates | null>(null);
+  const [markerCoordinates, setMarkerCoordinates] =
+    useState<Coordinates | null>(null);
   const [photo, setPhoto] = useState<File | null>(null);
+
+  const setMarkerCoordinatesWrapper = (coordinates: Coordinates) => {
+    const MAX_DISTANCE = 2_000;
+
+    const { latitude, longitude } = coordinates;
+
+    if (distance({ latitude, longitude }) > MAX_DISTANCE) {
+      toast.error("Marker Too Far from Campus");
+      return;
+    }
+
+    setMarkerCoordinates(coordinates);
+  };
 
   const handleClick = (event: MapLayerMouseEvent) => {
     const { lat, lng } = event.lngLat;
-    setMarkerLatitude(lat);
-    setMarkerLongitude(lng);
+    setMarkerCoordinatesWrapper({ latitude: lat, longitude: lng });
   };
 
   const handleMouseDown = () => {
@@ -32,8 +46,7 @@ export default function Page() {
 
   const handleMouseMove = (event: MapLayerMouseEvent) => {
     const { lat, lng } = event.lngLat;
-    setCursorLatitude(lat);
-    setCursorLongitude(lng);
+    setCursorCoordinates({ latitude: lat, longitude: lng });
   };
 
   const handleMouseUp = () => {
@@ -56,22 +69,13 @@ export default function Page() {
         onMouseUp={handleMouseUp}
       >
         <MapMarker
-          cursorLatitude={cursorLatitude}
-          cursorLongitude={cursorLongitude}
-          markerLatitude={markerLatitude}
-          markerLongitude={markerLongitude}
-          setMarkerLatitude={setMarkerLatitude}
-          setMarkerLongitude={setMarkerLongitude}
+          cursorCoordinates={cursorCoordinates}
+          markerCoordinates={markerCoordinates}
+          setMarkerCoordinates={setMarkerCoordinatesWrapper}
         />
         <PhotoCard setPhoto={setPhoto} />
         <HomeButton />
-        <MapButtonGroup
-          markerLatitude={markerLatitude}
-          markerLongitude={markerLongitude}
-          photo={photo}
-          setMarkerLatitude={setMarkerLatitude}
-          setMarkerLongitude={setMarkerLongitude}
-        />
+        <MapButtonGroup markerCoordinates={markerCoordinates} photo={photo} />
       </Map>
     </main>
   );

@@ -1,76 +1,52 @@
 import { Button } from "@/components/ui/button";
 import { ButtonGroup } from "@/components/ui/button-group";
+import { Check, Locate, Navigation } from "lucide-react";
+import { cn } from "@/lib/utils";
+import { Coordinates } from "@/lib/math";
+import { createClient } from "@/lib/supabase/client";
 import {
   DEFAULT_LATITUDE,
   DEFAULT_LONGITUDE,
   DEFAULT_ZOOM,
 } from "@/lib/constants";
-import { earthDistance } from "@/lib/math";
-import { createClient } from "@/lib/supabase/client";
-import { cn } from "@/lib/utils";
-import { Check, Locate, Navigation } from "lucide-react";
+import { toast } from "sonner";
 import { useRouter } from "next/navigation";
 import { useMap } from "react-map-gl/maplibre";
-import { toast } from "sonner";
 
 interface MapButtonGroupProps {
-  markerLatitude: number | null;
-  markerLongitude: number | null;
+  markerCoordinates: Coordinates | null;
   photo: File | null;
-  setMarkerLatitude: (value: number) => void;
-  setMarkerLongitude: (value: number) => void;
-}
-
-interface LocateButtonProps {
-  setMarkerLatitude: (value: number) => void;
-  setMarkerLongitude: (value: number) => void;
 }
 
 interface SubmitButtonProps {
-  markerLatitude: number | null;
-  markerLongitude: number | null;
+  markerCoordinates: Coordinates | null;
   photo: File | null;
 }
 
 export function MapButtonGroup({
-  markerLatitude,
-  markerLongitude,
+  markerCoordinates,
   photo,
-  setMarkerLatitude,
-  setMarkerLongitude,
 }: MapButtonGroupProps) {
   return (
     <ButtonGroup
       orientation="vertical"
-      className="absolute z-10 bottom-12 right-4"
+      className="absolute z-10 md:bottom-12 md:right-4 right-2 bottom-10"
     >
       <ButtonGroup orientation="vertical" className="ml-auto">
-        <LocateButton
-          setMarkerLatitude={setMarkerLatitude}
-          setMarkerLongitude={setMarkerLongitude}
-        />
+        <LocateButton />
         <NavigationButton />
       </ButtonGroup>
       <ButtonGroup>
-        <SubmitButton
-          markerLatitude={markerLatitude}
-          markerLongitude={markerLongitude}
-          photo={photo}
-        />
+        <SubmitButton markerCoordinates={markerCoordinates} photo={photo} />
       </ButtonGroup>
     </ButtonGroup>
   );
 }
 
-function LocateButton({
-  setMarkerLatitude,
-  setMarkerLongitude,
-}: LocateButtonProps) {
+function LocateButton() {
   const { current: map } = useMap();
 
   const handleClick = () => {
-    const MAX_DISTANCE = 5_000;
-
     if (!map) return;
 
     navigator.geolocation.getCurrentPosition((position) => {
@@ -78,24 +54,8 @@ function LocateButton({
 
       map.flyTo({
         center: [longitude, latitude],
-        zoom: DEFAULT_ZOOM,
+        zoom: 20,
       });
-
-      const distance = earthDistance(
-        { latitude: DEFAULT_LATITUDE, longitude: DEFAULT_LONGITUDE },
-        { latitude, longitude }
-      );
-
-      if (distance > MAX_DISTANCE) {
-        toast.error("");
-
-        return;
-      }
-
-      if (distance <= 10_000) {
-        setMarkerLatitude(latitude);
-        setMarkerLongitude(longitude);
-      }
     });
   };
 
@@ -109,6 +69,14 @@ function LocateButton({
 function NavigationButton() {
   const { current: map } = useMap();
 
+  const isCentered = () => {
+    if (!map) return false;
+
+    const { lat, lng } = map.getCenter();
+
+    return lat === DEFAULT_LATITUDE && lng === DEFAULT_LONGITUDE;
+  };
+
   const handleClick = () => {
     if (!map) return;
 
@@ -120,56 +88,63 @@ function NavigationButton() {
 
   return (
     <Button onClick={handleClick} size="icon" className="rounded-full">
-      <Navigation className={cn()} />
+      <Navigation className={cn(isCentered() && "fill-primary")} />
     </Button>
   );
 }
 
-function SubmitButton({
-  markerLatitude,
-  markerLongitude,
-  photo,
-}: SubmitButtonProps) {
+function SubmitButton({ markerCoordinates, photo }: SubmitButtonProps) {
   const router = useRouter();
 
   const handleClick = async () => {
-    const supabase = createClient();
-
-    const { error } = await supabase.from("photos").insert([
-      {
-        latitude: markerLatitude,
-        longitude: markerLongitude,
-        photo,
-      },
-    ]);
-
-    if (error) {
-      toast.error("Something Went Wrong", {
-        action: {
-          label: <Check />,
-          onClick: () => toast.dismiss(),
-        },
-      });
-
+    if (!photo) {
+      toast.error("No Photo Uploaded");
       return;
     }
 
-    toast.success("Photo Uploaded Successfully", {
-      action: {
-        label: <Check />,
-        onClick: () => toast.dismiss(),
-      },
-    });
+    if (!markerCoordinates) {
+      toast.error("No Marker Placed");
+      return;
+    }
 
+    const supabase = createClient();
+    const uuid = crypto.randomUUID();
+    const extension = photo.name.split(".").pop()?.toLowerCase();
+
+    const { data: storageData, error: storageError } = await supabase.storage
+      .from("photos")
+      .upload(`${uuid}.${extension}`, photo, {
+        contentType: photo.type,
+      });
+
+    if (storageError) {
+      toast.error("Something Went Wrong", {
+        description: storageError.message,
+      });
+      return;
+    }
+
+    const { latitude, longitude } = markerCoordinates;
+
+    const { error: insertError } = await supabase.from("photos").insert([
+      {
+        image_path: storageData.path,
+        latitude,
+        longitude,
+      },
+    ]);
+
+    if (insertError) {
+      toast.error("Something Went Wrong");
+      return;
+    }
+
+    toast.success("Photo Uploaded Successfully");
     router.push("/");
   };
 
   return (
-    <Button
-      disabled={!photo || !markerLatitude || !markerLongitude}
-      onClick={handleClick}
-      className="rounded-full"
-    >
+    <Button onClick={handleClick} className="rounded-full">
       <Check />
       Submit
     </Button>

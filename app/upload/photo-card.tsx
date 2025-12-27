@@ -8,7 +8,7 @@ import {
 } from "@/components/ui/empty";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { cn } from "@/lib/utils";
-import { Check, ImageIcon } from "lucide-react";
+import { ImageIcon } from "lucide-react";
 import { ChangeEvent, DragEvent, useState } from "react";
 import { toast } from "sonner";
 
@@ -19,7 +19,7 @@ interface PhotoCardProps {
 }
 
 export function PhotoCard({ setPhoto }: PhotoCardProps) {
-  const [isDragging, setIsDragging] = useState(false);
+  const [, setIsDragging] = useState(false);
   const [photoPreview, setPhotoPreview] = useState<string | null>(null);
   const isMobile = useIsMobile();
 
@@ -27,23 +27,15 @@ export function PhotoCard({ setPhoto }: PhotoCardProps) {
     if (!file) return;
 
     if (!file.type.startsWith("image/")) {
-      toast.error("Invalid file type", {
-        description: "Valid file types include GIF, JPEG, PNG, SVG, and WebP",
-        action: {
-          label: <Check />,
-          onClick: () => toast.dismiss(),
-        },
+      toast.error("Invalid File Type", {
+        description: "File must be an image",
       });
       return;
     }
 
     if (file.size > MAX_FILE_SIZE) {
-      toast.error("File too large", {
-        description: "Maximum file size is 10 MB",
-        action: {
-          label: <Check />,
-          onClick: () => toast.dismiss(),
-        },
+      toast.error("File Too Large", {
+        description: "File must be less than 10 MB",
       });
       return;
     }
@@ -76,41 +68,47 @@ export function PhotoCard({ setPhoto }: PhotoCardProps) {
   return (
     <Card
       className={cn(
-        "shadow-md w-full max-h-1/2 absolute z-10",
+        "shadow-md w-full max-h-1/2 h-fit absolute z-10",
         isMobile && "left-2 max-w-94 top-2",
         !isMobile && "left-4 top-4 max-w-sm"
       )}
     >
-      <CardContent>
-        <input
-          accept="image/gif,image/jpeg,image/png,image/svg+xml,image/webp"
-          hidden
-          onChange={handleChange}
-          type="file"
-        />
-        <div
-          className="cursor-pointer border-dashed border rounded-md"
-          onDragLeave={handleDragLeave}
-          onDragOver={handleDragOver}
-          onDrop={handleDrop}
-        >
-          {photoPreview ? (
-            // eslint-disable-next-line @next/next/no-img-element
-            <img alt="Photo" src={photoPreview} className="w-full rounded-md" />
-          ) : (
-            <Empty>
-              <EmptyHeader>
-                <EmptyMedia variant="icon">
-                  <ImageIcon />
-                </EmptyMedia>
-                <EmptyTitle>Upload Photo</EmptyTitle>
-                <EmptyDescription>
-                  Drop a photo here, or click to browse your files
-                </EmptyDescription>
-              </EmptyHeader>
-            </Empty>
-          )}
-        </div>
+      <CardContent className="overflow-hidden">
+        <label>
+          <input accept="image/*" hidden onChange={handleChange} type="file" />
+          <div
+            className={cn(
+              "cursor-pointer border-dashed rounded-md",
+              !photoPreview && "border"
+            )}
+            onDragLeave={handleDragLeave}
+            onDragOver={handleDragOver}
+            onDrop={handleDrop}
+          >
+            {photoPreview ? (
+              <div className="relative overflow-hidden rounded-md h-full">
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img
+                  alt="Photo"
+                  src={photoPreview}
+                  className="w-full h-full object-cover"
+                />
+              </div>
+            ) : (
+              <Empty>
+                <EmptyHeader>
+                  <EmptyMedia variant="icon">
+                    <ImageIcon />
+                  </EmptyMedia>
+                  <EmptyTitle>Drop your photo here</EmptyTitle>
+                  <EmptyDescription>
+                    Or upload it by clicking this area
+                  </EmptyDescription>
+                </EmptyHeader>
+              </Empty>
+            )}
+          </div>
+        </label>
       </CardContent>
     </Card>
   );
