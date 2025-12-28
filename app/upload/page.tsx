@@ -23,7 +23,7 @@ export default function Page() {
   const [photo, setPhoto] = useState<File | null>(null);
 
   const setMarkerCoordinatesWrapper = (coordinates: Coordinates) => {
-    const MAX_DISTANCE = 2_000;
+    const MAX_DISTANCE = 1_500;
 
     const { latitude, longitude } = coordinates;
 
