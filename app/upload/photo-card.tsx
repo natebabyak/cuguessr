@@ -30,6 +30,7 @@ import {
   InputGroupButton,
 } from "@/components/ui/input-group";
 import { useIsMobile } from "@/hooks/use-mobile";
+import { cn } from "@/lib/utils";
 import { DialogClose, DialogTitle } from "@radix-ui/react-dialog";
 import { Eye, ImageIcon } from "lucide-react";
 import { ChangeEvent, DragEvent, useRef, useState } from "react";
@@ -46,27 +47,35 @@ interface PreviewDialogProps {
 }
 
 export function PhotoCard({ setPhoto }: PhotoCardProps) {
-  const [, setIsDragging] = useState(false);
+  const [isDragging, setIsDragging] = useState(false);
   const [photoPreview, setPhotoPreview] = useState<string | null>(null);
 
   const inputRef = useRef<HTMLInputElement | null>(null);
 
-  const handleFile = async (file?: File | null) => {
-    if (!file) return;
-
+  const validateFile = (file: File): boolean => {
     if (!file.type.startsWith("image/")) {
       toast.error("Invalid File Type", {
         description: "File must be an image",
       });
-      return;
+
+      return false;
     }
 
     if (file.size > MAX_FILE_SIZE) {
       toast.error("File Too Large", {
         description: "File must be less than 10 MB",
       });
-      return;
+
+      return false;
     }
+
+    return true;
+  };
+
+  const handleFile = async (file?: File | null) => {
+    if (!file) return;
+
+    if (!validateFile(file)) return;
 
     const url = URL.createObjectURL(file);
     const img = new Image();
@@ -77,9 +86,18 @@ export function PhotoCard({ setPhoto }: PhotoCardProps) {
     setPhotoPreview(url);
   };
 
-  const handleChange = (event: ChangeEvent<HTMLInputElement>) => {
+  const handleChange = async (event: ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
-    handleFile(file);
+
+    if (file && !validateFile(file)) {
+      if (inputRef.current) {
+        inputRef.current.value = "";
+      }
+      setPhotoPreview(null);
+      return;
+    }
+
+    await handleFile(file);
   };
 
   const handleDragLeave = () => {
@@ -97,6 +115,14 @@ export function PhotoCard({ setPhoto }: PhotoCardProps) {
 
     const file = event.dataTransfer.files?.[0];
     if (!file) return;
+
+    if (!validateFile(file)) {
+      if (inputRef.current) {
+        inputRef.current.value = "";
+      }
+      setPhotoPreview(null);
+      return;
+    }
 
     const dataTransfer = new DataTransfer();
     dataTransfer.items.add(file);
@@ -133,7 +159,10 @@ export function PhotoCard({ setPhoto }: PhotoCardProps) {
           </InputGroup>
           <Empty
             hidden={!!photoPreview}
-            className="cursor-pointer border-dashed rounded-md border"
+            className={cn(
+              "border-dashed rounded-md border transition-colors",
+              isDragging && "border-primary"
+            )}
           >
             <EmptyHeader>
               <EmptyMedia variant="icon">
@@ -141,7 +170,7 @@ export function PhotoCard({ setPhoto }: PhotoCardProps) {
               </EmptyMedia>
               <EmptyTitle>Drop your photo here</EmptyTitle>
               <EmptyDescription>
-                Or upload it by clicking this area
+                Or upload it by clicking anywhere in this box
               </EmptyDescription>
             </EmptyHeader>
           </Empty>
