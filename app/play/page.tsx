@@ -9,6 +9,8 @@ export default async function Page() {
     .select()
     .eq("verified", true);
 
+  if (!photos) return;
+
   return (
     <main className="h-screen w-screen">
       {photos ? <Game photos={photos} /> : <Spinner />}

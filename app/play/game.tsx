@@ -1,6 +1,6 @@
 "use client";
 
-import Map from "react-map-gl/maplibre";
+import Map, { MapLayerMouseEvent } from "react-map-gl/maplibre";
 import { useState } from "react";
 import {
   DEFAULT_LATITUDE,
@@ -14,25 +14,49 @@ import { GuessButton } from "./guess-button";
 import { NavigationButton } from "./navigation-button";
 import { LocateButton } from "./locate-button";
 import { LocateFixedButton } from "./locate-fixed-button";
+import { GuessMarker } from "./guess-marker";
+import { AnswerMarker } from "./answer-marker";
+import { PhotoDialog } from "./photo-dialog";
 
 interface GameProps {
   photos: {
-    id: number;
-    imageUrl: string;
+    id: string;
+    image_path: string;
     latitude: number;
     longitude: number;
   }[];
 }
 
 export function Game({ photos }: GameProps) {
+  const [answerCoordinates, setAnswerCoordinates] =
+    useState<Coordinates | null>(null);
   const [cursor, setCursor] = useState<"crosshair" | "grabbing">("crosshair");
   const [cursorCoordinates, setCursorCoordinates] =
     useState<Coordinates | null>(null);
   const [guessCoordinates, setGuessCoordinates] = useState<Coordinates | null>(
     null
   );
-  const [round, setRound] = useState<number>(1);
-  const [score, setScore] = useState<number>(0);
+  const [isRoundOver, setIsRoundOver] = useState(false);
+  const [round, setRound] = useState(1);
+  const [score, setScore] = useState(0);
+
+  const handleClick = (event: MapLayerMouseEvent) => {
+    const { lat, lng } = event.lngLat;
+    setGuessCoordinates({ latitude: lat, longitude: lng });
+  };
+
+  const handleMouseDown = () => {
+    setCursor("grabbing");
+  };
+
+  const handleMouseMove = (event: MapLayerMouseEvent) => {
+    const { lat, lng } = event.lngLat;
+    setCursorCoordinates({ latitude: lat, longitude: lng });
+  };
+
+  const handleMouseUp = () => {
+    setCursor("crosshair");
+  };
 
   return (
     <Map
@@ -49,6 +73,13 @@ export function Game({ photos }: GameProps) {
       onMouseUp={handleMouseUp}
     >
       <ScoreCard round={round} score={score} />
+      <GuessMarker
+        cursorCoordinates={cursorCoordinates}
+        guessCoordinates={guessCoordinates}
+        setGuessCoordinates={setGuessCoordinates}
+      />
+      <AnswerMarker answerCoordinates={answerCoordinates} />
+      <PhotoDialog imagePath={photos[round - 1].image_path} />
       <ButtonGroup
         orientation="vertical"
         className="absolute right-2 bottom-10 md:right-4 md:bottom-12"
@@ -59,7 +90,7 @@ export function Game({ photos }: GameProps) {
           <NavigationButton />
         </ButtonGroup>
         <ButtonGroup>
-          <GuessButton />
+          <GuessButton guessCoordinates={guessCoordinates} />
         </ButtonGroup>
       </ButtonGroup>
     </Map>
