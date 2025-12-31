@@ -33,16 +33,14 @@ export function Game({ photos }: GameProps) {
   const [cursor, setCursor] = useState<"crosshair" | "grabbing">("crosshair");
   const [cursorCoordinates, setCursorCoordinates] =
     useState<Coordinates | null>(null);
-  const [guessCoordinates, setGuessCoordinates] = useState<Coordinates | null>(
-    null
-  );
-  const [isRoundOver, setIsRoundOver] = useState(true);
+  const [guess, setGuess] = useState<Coordinates | null>(null);
+  const [isRoundOver, setIsRoundOver] = useState(false);
   const [round, setRound] = useState(0);
   const [score, setScore] = useState(0);
 
   const handleClick = (event: MapLayerMouseEvent) => {
     const { lat, lng } = event.lngLat;
-    setGuessCoordinates({ latitude: lat, longitude: lng });
+    setGuess({ latitude: lat, longitude: lng });
   };
 
   const handleMouseDown = () => {
@@ -59,15 +57,15 @@ export function Game({ photos }: GameProps) {
   };
 
   const handleGuess = () => {
-    if (!guessCoordinates) return;
+    if (!guess) return;
 
-    const photo = photos[round - 1];
+    const photo = photos[round];
     const answer = {
       latitude: photo.latitude,
       longitude: photo.longitude,
     };
 
-    const distance = distanceInMeters(guessCoordinates, answer);
+    const distance = distanceInMeters(guess, answer);
     const roundScore = scoreFromDistance(distance);
 
     setScore((s) => s + roundScore);
@@ -75,6 +73,12 @@ export function Game({ photos }: GameProps) {
   };
 
   if (isRoundOver) {
+    const photo = photos[round];
+    const answer = {
+      latitude: photo.latitude,
+      longitude: photo.longitude,
+    };
+
     return (
       <Map
         cursor="none"
@@ -85,25 +89,24 @@ export function Game({ photos }: GameProps) {
         }}
         mapStyle={`https://api.maptiler.com/maps/streets/style.json?key=${process.env.NEXT_PUBLIC_MAPTILER_API_KEY}`}
       >
-        <Marker
-          latitude={photos[round].latitude}
-          longitude={photos[round].longitude}
-        >
+        <Marker latitude={photo.latitude} longitude={photo.longitude}>
           <MapPinCheckInside className="text-green-500" />
         </Marker>
-        {guessCoordinates && (
-          <Marker
-            latitude={guessCoordinates.latitude}
-            longitude={guessCoordinates.longitude}
-          >
+        {guess && (
+          <Marker latitude={guess.latitude} longitude={guess.longitude}>
             <MapPinXInside className="text-red-500" />
           </Marker>
         )}
-        <div className="w-full px-2 absolute bottom-2 left-0">
+        <div className="w-full px-2 absolute bottom-10 left-0">
           <Card>
             <CardContent className="flex justify-between">
               <div>
                 <span>Distance</span>
+                <CountUp
+                  start={0}
+                  end={distanceInMeters(answer, guess!)}
+                  suffix="m"
+                />
               </div>
             </CardContent>
           </Card>
@@ -129,8 +132,8 @@ export function Game({ photos }: GameProps) {
       <ScoreCard round={round} score={score} />
       <GuessMarker
         cursorCoordinates={cursorCoordinates}
-        guessCoordinates={guessCoordinates}
-        setGuessCoordinates={setGuessCoordinates}
+        guessCoordinates={guess}
+        setGuessCoordinates={setGuess}
       />
       <PhotoDialog imagePath={photos[round].image_path} />
       <ButtonGroup
@@ -139,14 +142,11 @@ export function Game({ photos }: GameProps) {
       >
         <ButtonGroup orientation="vertical" className="ml-auto">
           <LocateButton />
-          <LocateFixedButton guessCoordinates={guessCoordinates} />
+          <LocateFixedButton guessCoordinates={guess} />
           <NavigationButton />
         </ButtonGroup>
         <ButtonGroup>
-          <GuessButton
-            guessCoordinates={guessCoordinates}
-            handleClick={handleGuess}
-          />
+          <GuessButton guessCoordinates={guess} handleClick={handleGuess} />
         </ButtonGroup>
       </ButtonGroup>
     </Map>
