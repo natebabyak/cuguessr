@@ -1,24 +1,28 @@
 "use client";
 
-import Map, { MapLayerMouseEvent, Marker } from "react-map-gl/maplibre";
-import { useState } from "react";
+import { Button } from "@/components/ui/button";
+import { ButtonGroup } from "@/components/ui/button-group";
+import { Card, CardContent, CardFooter } from "@/components/ui/card";
+import {
+  Check,
+  Locate,
+  LocateFixed,
+  MapPinCheckInside,
+  MapPinXInside,
+  Navigation,
+  SkipForward,
+} from "lucide-react";
+import { Coordinates, distanceInMeters, scoreFromDistance } from "@/lib/math";
+import CountUp from "react-countup";
 import {
   DEFAULT_LATITUDE,
   DEFAULT_LONGITUDE,
   DEFAULT_ZOOM,
 } from "@/lib/constants";
-import { ScoreCard } from "./score-card";
-import { Coordinates, distanceInMeters, scoreFromDistance } from "@/lib/math";
-import { ButtonGroup } from "@/components/ui/button-group";
-import { GuessButton } from "./guess-button";
-import { NavigationButton } from "./navigation-button";
-import { LocateButton } from "./locate-button";
-import { LocateFixedButton } from "./locate-fixed-button";
-import { GuessMarker } from "./guess-marker";
+import Map, { Marker, useMap } from "react-map-gl/maplibre";
 import { PhotoDialog } from "./photo-dialog";
-import { MapPinCheckInside, MapPinXInside } from "lucide-react";
-import { Card, CardContent } from "@/components/ui/card";
-import CountUp from "react-countup";
+import { ScoreCard } from "./score-card";
+import { useState } from "react";
 
 interface GameProps {
   photos: {
@@ -33,44 +37,12 @@ export function Game({ photos }: GameProps) {
   const [cursor, setCursor] = useState<"crosshair" | "grabbing">("crosshair");
   const [cursorCoordinates, setCursorCoordinates] =
     useState<Coordinates | null>(null);
-  const [guess, setGuess] = useState<Coordinates | null>(null);
+  const [guessCoordinates, setGuessCoordinates] = useState<Coordinates | null>(
+    null
+  );
   const [isRoundOver, setIsRoundOver] = useState(false);
   const [round, setRound] = useState(0);
   const [score, setScore] = useState(0);
-
-  const handleClick = (event: MapLayerMouseEvent) => {
-    const { lat, lng } = event.lngLat;
-    setGuess({ latitude: lat, longitude: lng });
-  };
-
-  const handleMouseDown = () => {
-    setCursor("grabbing");
-  };
-
-  const handleMouseMove = (event: MapLayerMouseEvent) => {
-    const { lat, lng } = event.lngLat;
-    setCursorCoordinates({ latitude: lat, longitude: lng });
-  };
-
-  const handleMouseUp = () => {
-    setCursor("crosshair");
-  };
-
-  const handleGuess = () => {
-    if (!guess) return;
-
-    const photo = photos[round];
-    const answer = {
-      latitude: photo.latitude,
-      longitude: photo.longitude,
-    };
-
-    const distance = distanceInMeters(guess, answer);
-    const roundScore = scoreFromDistance(distance);
-
-    setScore((s) => s + roundScore);
-    setIsRoundOver(true);
-  };
 
   if (isRoundOver) {
     const photo = photos[round];
@@ -92,23 +64,44 @@ export function Game({ photos }: GameProps) {
         <Marker latitude={photo.latitude} longitude={photo.longitude}>
           <MapPinCheckInside className="text-green-500" />
         </Marker>
-        {guess && (
-          <Marker latitude={guess.latitude} longitude={guess.longitude}>
+        {guessCoordinates && (
+          <Marker
+            latitude={guessCoordinates.latitude}
+            longitude={guessCoordinates.longitude}
+          >
             <MapPinXInside className="text-red-500" />
           </Marker>
         )}
         <div className="w-full px-2 absolute bottom-10 left-0">
           <Card>
             <CardContent className="flex justify-between">
-              <div>
+              <div className="flex flex-col">
                 <span>Distance</span>
                 <CountUp
                   start={0}
-                  end={distanceInMeters(answer, guess!)}
-                  suffix="m"
+                  end={distanceInMeters(answer, guessCoordinates!)}
+                  suffix=" m"
+                  className="ml-auto"
                 />
               </div>
+              <div className="flex flex-col">
+                <span>Round Score</span>
+                <CountUp start={0} end={100} className="ml-auto" />
+              </div>
+              <div className="flex flex-col">
+                <span>Total Score</span>
+                <CountUp start={0} end={score} className="ml-auto" />
+              </div>
             </CardContent>
+            <CardFooter>
+              <Button
+                onClick={() => setRound((prev) => prev + 1)}
+                className="ml-auto"
+              >
+                <SkipForward />
+                Next Round
+              </Button>
+            </CardFooter>
           </Card>
         </div>
       </Map>
@@ -124,17 +117,36 @@ export function Game({ photos }: GameProps) {
         zoom: DEFAULT_ZOOM,
       }}
       mapStyle={`https://api.maptiler.com/maps/streets/style.json?key=${process.env.NEXT_PUBLIC_MAPTILER_API_KEY}`}
-      onClick={handleClick}
-      onMouseDown={handleMouseDown}
-      onMouseMove={handleMouseMove}
-      onMouseUp={handleMouseUp}
+      onClick={(e) => {
+        const { lat, lng } = e.lngLat;
+        setGuessCoordinates({
+          latitude: lat,
+          longitude: lng,
+        });
+      }}
+      onMouseDown={() => setCursor("grabbing")}
+      onMouseMove={(e) => {
+        const { lat, lng } = e.lngLat;
+        setCursorCoordinates({
+          latitude: lat,
+          longitude: lng,
+        });
+      }}
+      onMouseUp={() => setCursor("crosshair")}
     >
       <ScoreCard round={round} score={score} />
-      <GuessMarker
-        cursorCoordinates={cursorCoordinates}
-        guessCoordinates={guess}
-        setGuessCoordinates={setGuess}
-      />
+      {guessCoordinates && (
+        <Marker
+          draggable={true}
+          latitude={guessCoordinates.latitude}
+          longitude={guessCoordinates.longitude}
+          onDrag={() => {
+            setGuessCoordinates(cursorCoordinates);
+          }}
+        >
+          <LocateFixed className="text-primary" />
+        </Marker>
+      )}
       <PhotoDialog imagePath={photos[round].image_path} />
       <ButtonGroup
         orientation="vertical"
@@ -142,13 +154,97 @@ export function Game({ photos }: GameProps) {
       >
         <ButtonGroup orientation="vertical" className="ml-auto">
           <LocateButton />
-          <LocateFixedButton guessCoordinates={guess} />
+          <LocateFixedButton />
           <NavigationButton />
         </ButtonGroup>
         <ButtonGroup>
-          <GuessButton guessCoordinates={guess} handleClick={handleGuess} />
+          <Button
+            disabled={!guessCoordinates}
+            onClick={() => {
+              if (!guessCoordinates) return;
+
+              const photo = photos[round];
+              const answer = {
+                latitude: photo.latitude,
+                longitude: photo.longitude,
+              };
+
+              const distance = distanceInMeters(guessCoordinates, answer);
+              const roundScore = scoreFromDistance(distance);
+
+              setScore((s) => s + roundScore);
+              setIsRoundOver(true);
+            }}
+            className="rounded-full"
+          >
+            <Check />
+            Make Guess
+          </Button>
         </ButtonGroup>
       </ButtonGroup>
     </Map>
   );
+
+  function LocateButton() {
+    const { current: map } = useMap();
+
+    const handleClick = () => {
+      if (!map) return;
+
+      navigator.geolocation.getCurrentPosition((position) => {
+        const { latitude, longitude } = position.coords;
+
+        map.flyTo({
+          center: [longitude, latitude],
+          zoom: 20,
+        });
+      });
+    };
+
+    return (
+      <Button onClick={handleClick} size="icon" className="rounded-full">
+        <Locate />
+      </Button>
+    );
+  }
+
+  function LocateFixedButton() {
+    const { current: map } = useMap();
+
+    const handleClick = () => {
+      if (!guessCoordinates || !map) return;
+
+      const { latitude, longitude } = guessCoordinates;
+
+      map.flyTo({
+        center: [longitude, latitude],
+        zoom: 20,
+      });
+    };
+
+    return (
+      <Button disabled={!guessCoordinates} onClick={handleClick} size="icon">
+        <LocateFixed />
+      </Button>
+    );
+  }
+
+  function NavigationButton() {
+    const { current: map } = useMap();
+
+    const handleClick = () => {
+      if (!map) return;
+
+      map.flyTo({
+        center: [DEFAULT_LONGITUDE, DEFAULT_LATITUDE],
+        zoom: DEFAULT_ZOOM,
+      });
+    };
+
+    return (
+      <Button onClick={handleClick} size="icon" className="rounded-full">
+        <Navigation />
+      </Button>
+    );
+  }
 }
