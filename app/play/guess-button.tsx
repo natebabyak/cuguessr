@@ -4,13 +4,13 @@ import { Check } from "lucide-react";
 
 interface GuessButtonProps {
   guessCoordinates: Coordinates | null;
+  handleClick: () => void;
 }
 
-export function GuessButton({ guessCoordinates }: GuessButtonProps) {
-  const handleClick = () => {
-    console.log("Guess");
-  };
-
+export function GuessButton({
+  guessCoordinates,
+  handleClick,
+}: GuessButtonProps) {
   return (
     <Button
       disabled={!guessCoordinates}

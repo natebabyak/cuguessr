@@ -22,7 +22,6 @@ export function ScoreCard({ round, score }: ScoreCardProps) {
             <span className="text-xl font-semibold">
               {score.toLocaleString("en-US")}
             </span>
-            <span className="text-muted-foreground text-xs">/25,000</span>
           </div>
         </div>
       </CardContent>

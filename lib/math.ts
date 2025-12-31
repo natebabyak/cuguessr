@@ -32,7 +32,7 @@ function haversine(theta: number): number {
  * @param b The second set of coordinates (optional).
  * @returns The distance between the two coordinates in meters.
  */
-function distance(a: Coordinates, b?: Coordinates): number {
+function distanceInMeters(a: Coordinates, b?: Coordinates): number {
   const R = 6_371_000;
 
   const { latitude: lat1, longitude: lng1 } = a;
@@ -58,7 +58,7 @@ function distance(a: Coordinates, b?: Coordinates): number {
  * @param distance The distance between two coordinates in meters.
  * @returns The calculated score.
  */
-function score(distance: number): number {
+function scoreFromDistance(distance: number): number {
   const MIN = 5;
   const MAX = 500;
   const MAX_SCORE = 5_000;
@@ -70,4 +70,4 @@ function score(distance: number): number {
   return Math.round(value * MAX_SCORE);
 }
 
-export { type Coordinates, distance, score };
+export { type Coordinates, distanceInMeters, scoreFromDistance };

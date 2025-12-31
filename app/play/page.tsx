@@ -1,6 +1,5 @@
 import { createClient } from "@/lib/supabase/server";
 import { Game } from "./game";
-import { Spinner } from "@/components/ui/spinner";
 
 export default async function Page() {
   const supabase = await createClient();
@@ -13,7 +12,7 @@ export default async function Page() {
 
   return (
     <main className="h-screen w-screen">
-      {photos ? <Game photos={photos} /> : <Spinner />}
+      <Game photos={photos} />
     </main>
   );
 }
