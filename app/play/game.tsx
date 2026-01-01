@@ -19,9 +19,8 @@ import {
   DEFAULT_LONGITUDE,
   DEFAULT_ZOOM,
 } from "@/lib/constants";
-import Map, { Marker, useMap } from "react-map-gl/maplibre";
+import Map, { Layer, Marker, Source, useMap } from "react-map-gl/maplibre";
 import { PhotoDialog } from "./photo-dialog";
-import { ScoreCard } from "./score-card";
 import { useState } from "react";
 
 interface GameProps {
@@ -52,6 +51,17 @@ export function Game({ photos }: GameProps) {
       longitude: photo.longitude,
     };
 
+    const lineGeoJson = {
+      type: "Feature",
+      geometry: {
+        type: "LineString",
+        coordinates: [
+          [guessCoordinates!.longitude, guessCoordinates!.latitude],
+          [answerCoordinates.longitude, answerCoordinates.latitude],
+        ],
+      },
+    };
+
     return (
       <Map
         initialViewState={{
@@ -61,16 +71,34 @@ export function Game({ photos }: GameProps) {
         }}
         mapStyle={`https://api.maptiler.com/maps/streets/style.json?key=${process.env.NEXT_PUBLIC_MAPTILER_API_KEY}`}
       >
-        <Marker latitude={photo.latitude} longitude={photo.longitude}>
+        <Marker
+          anchor="bottom"
+          latitude={photo.latitude}
+          longitude={photo.longitude}
+        >
           <MapPinCheckInside className="text-green-500" />
         </Marker>
         {guessCoordinates && (
           <Marker
+            anchor="bottom"
             latitude={guessCoordinates.latitude}
             longitude={guessCoordinates.longitude}
           >
             <MapPinXInside className="text-red-500" />
           </Marker>
+        )}
+        {lineGeoJson && (
+          <Source id="guess-line" type="geojson" data={lineGeoJson}>
+            <Layer
+              id="guess-line-layer"
+              type="line"
+              paint={{
+                "line-color": "#000",
+                "line-width": 2,
+                "line-dasharray": [2, 2], // 🔥 dotted line
+              }}
+            />
+          </Source>
         )}
         <div className="w-full px-2 absolute bottom-10 left-0">
           <Card>
@@ -150,7 +178,28 @@ export function Game({ photos }: GameProps) {
       }}
       onMouseUp={() => setCursor("crosshair")}
     >
-      <ScoreCard round={round} score={score} />
+      <Card className="absolute top-2 right-2 md:right-4 md:top-4 z-10">
+        <CardContent className="flex gap-8">
+          <div className="flex flex-col gap-2">
+            <span className="text-lg font-medium">Round</span>
+            <div className="flex ml-auto items-end">
+              <span className="text-2xl font-bold">{round + 1}</span>
+              <span className="text-muted-foreground text-sm">/5</span>
+            </div>
+          </div>
+          <div className="flex flex-col gap-2">
+            <span className="text-lg font-medium">Score</span>
+            <div className="flex items-end ml-auto">
+              <span className="text-2xl font-bold">
+                {score.toLocaleString("en-us")}
+              </span>
+              <span className="text-sm text-muted-foreground">
+                /{5_000 * round}
+              </span>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
       {guessCoordinates && (
         <Marker
           draggable={true}
