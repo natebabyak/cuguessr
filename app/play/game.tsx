@@ -2,7 +2,7 @@
 
 import { Button } from "@/components/ui/button";
 import { ButtonGroup } from "@/components/ui/button-group";
-import { Card, CardContent, CardFooter } from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 import {
   Check,
   Locate,
@@ -42,21 +42,21 @@ export function Game({ photos }: GameProps) {
   );
   const [isRoundOver, setIsRoundOver] = useState(false);
   const [round, setRound] = useState(0);
+  const [roundScore, setRoundScore] = useState(0);
   const [score, setScore] = useState(0);
 
   if (isRoundOver) {
     const photo = photos[round];
-    const answer = {
+    const answerCoordinates = {
       latitude: photo.latitude,
       longitude: photo.longitude,
     };
 
     return (
       <Map
-        cursor="none"
         initialViewState={{
-          latitude: DEFAULT_LATITUDE,
-          longitude: DEFAULT_LONGITUDE,
+          latitude: answerCoordinates.latitude,
+          longitude: answerCoordinates.longitude,
           zoom: 0,
         }}
         mapStyle={`https://api.maptiler.com/maps/streets/style.json?key=${process.env.NEXT_PUBLIC_MAPTILER_API_KEY}`}
@@ -74,34 +74,50 @@ export function Game({ photos }: GameProps) {
         )}
         <div className="w-full px-2 absolute bottom-10 left-0">
           <Card>
-            <CardContent className="flex justify-between">
+            <CardContent className="flex justify-between items-center flex-wrap">
               <div className="flex flex-col">
-                <span>Distance</span>
+                <span className="text-sm font-medium text-muted-foreground">
+                  Distance
+                </span>
                 <CountUp
                   start={0}
-                  end={distanceInMeters(answer, guessCoordinates!)}
+                  end={distanceInMeters(answerCoordinates, guessCoordinates!)}
                   suffix=" m"
-                  className="ml-auto"
+                  className="ml-auto text-2xl font-semibold"
                 />
               </div>
               <div className="flex flex-col">
-                <span>Round Score</span>
-                <CountUp start={0} end={100} className="ml-auto" />
+                <span className="text-sm font-medium text-muted-foreground">
+                  Round Score
+                </span>
+                <CountUp
+                  start={0}
+                  end={roundScore}
+                  className="ml-auto text-2xl font-semibold"
+                />
               </div>
               <div className="flex flex-col">
-                <span>Total Score</span>
-                <CountUp start={0} end={score} className="ml-auto" />
+                <span className="text-sm font-medium text-muted-foreground">
+                  Total Score
+                </span>
+                <CountUp
+                  start={score}
+                  end={score + roundScore}
+                  className="ml-auto text-2xl font-semibold"
+                />
               </div>
-            </CardContent>
-            <CardFooter>
               <Button
-                onClick={() => setRound((prev) => prev + 1)}
-                className="ml-auto"
+                onClick={() => {
+                  setGuessCoordinates(null);
+                  setIsRoundOver(false);
+                  setRound((prev) => prev + 1);
+                  setScore((prev) => prev + roundScore);
+                }}
               >
                 <SkipForward />
                 Next Round
               </Button>
-            </CardFooter>
+            </CardContent>
           </Card>
         </div>
       </Map>
@@ -170,9 +186,7 @@ export function Game({ photos }: GameProps) {
               };
 
               const distance = distanceInMeters(guessCoordinates, answer);
-              const roundScore = scoreFromDistance(distance);
-
-              setScore((s) => s + roundScore);
+              setRoundScore(scoreFromDistance(distance));
               setIsRoundOver(true);
             }}
             className="rounded-full"
