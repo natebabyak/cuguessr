@@ -12,7 +12,7 @@ import {
   Navigation,
   SkipForward,
 } from "lucide-react";
-import { Coordinates, distanceInMeters, scoreFromDistance } from "@/lib/math";
+import { calculateDistance, calculateScore, Coordinates } from "@/lib/math";
 import CountUp from "react-countup";
 import {
   DEFAULT_LATITUDE,
@@ -60,7 +60,7 @@ export function Game({ photos }: GameProps) {
           [answerCoordinates.longitude, answerCoordinates.latitude],
         ],
       },
-    };
+    } as unknown as string;
 
     return (
       <Map
@@ -95,7 +95,7 @@ export function Game({ photos }: GameProps) {
               paint={{
                 "line-color": "#000",
                 "line-width": 2,
-                "line-dasharray": [2, 2], // 🔥 dotted line
+                "line-dasharray": [2, 2],
               }}
             />
           </Source>
@@ -109,7 +109,7 @@ export function Game({ photos }: GameProps) {
                 </span>
                 <CountUp
                   start={0}
-                  end={distanceInMeters(answerCoordinates, guessCoordinates!)}
+                  end={calculateDistance(answerCoordinates, guessCoordinates!)}
                   suffix=" m"
                   className="ml-auto text-2xl font-semibold"
                 />
@@ -189,14 +189,9 @@ export function Game({ photos }: GameProps) {
           </div>
           <div className="flex flex-col gap-2">
             <span className="text-lg font-medium">Score</span>
-            <div className="flex items-end ml-auto">
-              <span className="text-2xl font-bold">
-                {score.toLocaleString("en-us")}
-              </span>
-              <span className="text-sm text-muted-foreground">
-                /{5_000 * round}
-              </span>
-            </div>
+            <span className="text-2xl font-bold ml-auto">
+              {score.toLocaleString("en-us")}
+            </span>
           </div>
         </CardContent>
       </Card>
@@ -234,8 +229,8 @@ export function Game({ photos }: GameProps) {
                 longitude: photo.longitude,
               };
 
-              const distance = distanceInMeters(guessCoordinates, answer);
-              setRoundScore(scoreFromDistance(distance));
+              const distance = calculateDistance(guessCoordinates, answer);
+              setRoundScore(calculateScore(distance));
               setIsRoundOver(true);
             }}
             className="rounded-full"

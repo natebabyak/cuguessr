@@ -1,5 +1,3 @@
-import { DEFAULT_LATITUDE, DEFAULT_LONGITUDE } from "./constants";
-
 /**
  * Represents geographical coordinates.
  */
@@ -27,47 +25,47 @@ function haversine(theta: number): number {
 }
 
 /**
- * Calculates the distance between two geographical coordinates.
+ * Calculates the distance between two sets of coordinates.
  * @param a The first set of coordinates.
- * @param b The second set of coordinates (optional).
- * @returns The distance between the two coordinates in meters.
+ * @param b The second set of coordinates.
+ * @returns The distance between the two sets of coordinates in meters.
  */
-function distanceInMeters(a: Coordinates, b?: Coordinates): number {
+function calculateDistance(a: Coordinates, b: Coordinates): number {
   const R = 6_371_000;
 
-  const { latitude: lat1, longitude: lng1 } = a;
-  const {
-    latitude: lat2 = DEFAULT_LATITUDE,
-    longitude: lng2 = DEFAULT_LONGITUDE,
-  } = b || {};
-
-  const dLat = toRadians(lat2 - lat1);
-  const dLng = toRadians(lng2 - lng1);
-
-  const lat1Rad = toRadians(lat1);
-  const lat2Rad = toRadians(lat2);
-
-  const h =
-    haversine(dLat) + Math.cos(lat1Rad) * Math.cos(lat2Rad) * haversine(dLng);
-
-  return 2 * R * Math.asin(Math.sqrt(h));
+  return (
+    2 *
+    R *
+    Math.asin(
+      Math.sqrt(
+        haversine(toRadians(b.latitude - a.latitude)) +
+          Math.cos(toRadians(a.latitude)) *
+            Math.cos(toRadians(b.latitude)) *
+            haversine(toRadians(b.longitude - a.longitude))
+      )
+    )
+  );
 }
 
 /**
- * Calculates a score based on the distance.
- * @param distance The distance between two coordinates in meters.
- * @returns The calculated score.
+ * Calculates a score from a distance.
+ * @param distance The distance in meters.
+ * @returns The score.
  */
-function scoreFromDistance(distance: number): number {
-  const MIN = 5;
-  const MAX = 500;
+function calculateScore(distance: number): number {
   const MAX_SCORE = 5_000;
+  const MIN = 5;
+  const MAX = 250;
   const EXPONENT = 2.5;
 
-  const clamped = Math.min(Math.max(distance, MIN), MAX);
-  const t = (clamped - MIN) / (MAX - MIN);
-  const value = Math.pow(1 - t, EXPONENT);
-  return Math.round(value * MAX_SCORE);
+  if (distance <= MIN) return MAX_SCORE;
+  if (distance >= MAX) return 0;
+
+  const normalizedError = (distance - MIN) / (MAX - MIN);
+  const invertedScore = 1 - normalizedError;
+  const curvedScore = Math.pow(invertedScore, EXPONENT);
+  const finalScore = Math.round(curvedScore * MAX_SCORE);
+  return finalScore;
 }
 
-export { type Coordinates, distanceInMeters, scoreFromDistance };
+export { type Coordinates, calculateDistance, calculateScore };
