@@ -100,9 +100,9 @@ export function Game({ photos }: GameProps) {
             />
           </Source>
         )}
-        <div className="w-full px-2 absolute bottom-10 left-0">
+        <div className="w-full px-2 absolute bottom-10 left-0 md:max-w-94">
           <Card>
-            <CardContent className="flex justify-between items-center flex-wrap">
+            <CardContent className="flex justify-between items-center flex-wrap gap-4">
               <div className="flex flex-col">
                 <span className="text-sm font-medium text-muted-foreground">
                   Distance
@@ -141,9 +141,10 @@ export function Game({ photos }: GameProps) {
                   setRound((prev) => prev + 1);
                   setScore((prev) => prev + roundScore);
                 }}
+                className="ml-auto"
               >
-                <SkipForward />
                 Next Round
+                <SkipForward />
               </Button>
             </CardContent>
           </Card>

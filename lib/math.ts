@@ -55,7 +55,7 @@ function calculateDistance(a: Coordinates, b: Coordinates): number {
 function calculateScore(distance: number): number {
   const MAX_SCORE = 5_000;
   const MIN = 5;
-  const MAX = 250;
+  const MAX = 500;
   const EXPONENT = 2.5;
 
   if (distance <= MIN) return MAX_SCORE;
