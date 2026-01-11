@@ -1,6 +1,6 @@
 "use client";
 
-import { Coordinates, distance } from "@/lib/math";
+import { Coordinates, calculateDistance } from "@/lib/math";
 import {
   DEFAULT_LATITUDE,
   DEFAULT_LONGITUDE,
@@ -23,11 +23,16 @@ export default function Page() {
   const [photo, setPhoto] = useState<File | null>(null);
 
   const setMarkerCoordinatesWrapper = (coordinates: Coordinates) => {
-    const MAX_DISTANCE = 2_000; // 2 km
+    const MAX_DISTANCE = 2_000;
 
     const { latitude, longitude } = coordinates;
 
-    if (distance({ latitude, longitude }) > MAX_DISTANCE) {
+    if (
+      calculateDistance(
+        { latitude: DEFAULT_LATITUDE, longitude: DEFAULT_LONGITUDE },
+        { latitude, longitude }
+      ) > MAX_DISTANCE
+    ) {
       toast.error("Marker Too Far from Campus");
       return;
     }
