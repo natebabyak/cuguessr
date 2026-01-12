@@ -5,11 +5,9 @@ import { ButtonGroup } from "@/components/ui/button-group";
 import { Card, CardContent } from "@/components/ui/card";
 import {
   Check,
-  Locate,
   LocateFixed,
   MapPinCheckInside,
   MapPinXInside,
-  Navigation,
   SkipForward,
 } from "lucide-react";
 import { calculateDistance, calculateScore, Coordinates } from "@/lib/math";
@@ -19,9 +17,12 @@ import {
   DEFAULT_LONGITUDE,
   DEFAULT_ZOOM,
 } from "@/lib/constants";
-import Map, { Layer, Marker, Source, useMap } from "react-map-gl/maplibre";
+import Map, { Layer, Marker, Source } from "react-map-gl/maplibre";
 import { PhotoDialog } from "./photo-dialog";
 import { useState } from "react";
+import { NavigationButton } from "./navigation-button";
+import { LocateButton } from "./locate-button";
+import { LocateFixedButton } from "./locate-fixed-button";
 
 interface GameProps {
   photos: {
@@ -215,7 +216,7 @@ export function Game({ photos }: GameProps) {
       >
         <ButtonGroup orientation="vertical" className="ml-auto">
           <LocateButton />
-          <LocateFixedButton />
+          <LocateFixedButton guessCoordinates={guessCoordinates} />
           <NavigationButton />
         </ButtonGroup>
         <ButtonGroup>
@@ -243,67 +244,4 @@ export function Game({ photos }: GameProps) {
       </ButtonGroup>
     </Map>
   );
-
-  function LocateButton() {
-    const { current: map } = useMap();
-
-    const handleClick = () => {
-      if (!map) return;
-
-      navigator.geolocation.getCurrentPosition((position) => {
-        const { latitude, longitude } = position.coords;
-
-        map.flyTo({
-          center: [longitude, latitude],
-          zoom: 20,
-        });
-      });
-    };
-
-    return (
-      <Button onClick={handleClick} size="icon" className="rounded-full">
-        <Locate />
-      </Button>
-    );
-  }
-
-  function LocateFixedButton() {
-    const { current: map } = useMap();
-
-    const handleClick = () => {
-      if (!guessCoordinates || !map) return;
-
-      const { latitude, longitude } = guessCoordinates;
-
-      map.flyTo({
-        center: [longitude, latitude],
-        zoom: 20,
-      });
-    };
-
-    return (
-      <Button disabled={!guessCoordinates} onClick={handleClick} size="icon">
-        <LocateFixed />
-      </Button>
-    );
-  }
-
-  function NavigationButton() {
-    const { current: map } = useMap();
-
-    const handleClick = () => {
-      if (!map) return;
-
-      map.flyTo({
-        center: [DEFAULT_LONGITUDE, DEFAULT_LATITUDE],
-        zoom: DEFAULT_ZOOM,
-      });
-    };
-
-    return (
-      <Button onClick={handleClick} size="icon" className="rounded-full">
-        <Navigation />
-      </Button>
-    );
-  }
 }
