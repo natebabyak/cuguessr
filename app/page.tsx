@@ -8,11 +8,11 @@ export default function Home() {
     <div className="bg-[url(/cu.jpg)] w-screen h-screen bg-cover bg-center">
       <div className="size-full backdrop-blur-sm bg-black/10">
         <div className="absolute w-full left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 flex flex-col gap-4">
-          <h1 className="text-6xl font-black text-shadow-lg text-shadow-black/30 text-center">
+          <h1 className="text-6xl md:text-8xl font-black text-shadow-lg text-shadow-black/30 text-center">
             <span className="text-primary">cu</span>
             <span className="text-white">Guessr</span>
           </h1>
-          <p className="text-xl text-center text-white text-shadow-lg font-medium text-balance leading-tight text-shadow-black/30">
+          <p className="text-xl md:text-2xl text-center text-white text-shadow-lg font-medium text-balance leading-tight text-shadow-black/30">
             How well do <span className="italic">you</span> know the Carleton
             campus?
           </p>

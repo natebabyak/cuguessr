@@ -101,54 +101,52 @@ export function Game({ photos }: GameProps) {
             />
           </Source>
         )}
-        <div className="w-full px-2 absolute bottom-10 left-0 md:max-w-94">
-          <Card>
-            <CardContent className="flex justify-between items-center flex-wrap gap-4">
-              <div className="flex flex-col">
-                <span className="text-sm font-medium text-muted-foreground">
-                  Distance
-                </span>
-                <CountUp
-                  start={0}
-                  end={calculateDistance(answerCoordinates, guessCoordinates!)}
-                  suffix=" m"
-                  className="ml-auto text-2xl font-semibold"
-                />
-              </div>
-              <div className="flex flex-col">
-                <span className="text-sm font-medium text-muted-foreground">
-                  Round Score
-                </span>
-                <CountUp
-                  start={0}
-                  end={roundScore}
-                  className="ml-auto text-2xl font-semibold"
-                />
-              </div>
-              <div className="flex flex-col">
-                <span className="text-sm font-medium text-muted-foreground">
-                  Total Score
-                </span>
-                <CountUp
-                  start={score}
-                  end={score + roundScore}
-                  className="ml-auto text-2xl font-semibold"
-                />
-              </div>
-              <Button
-                onClick={() => {
-                  setGuessCoordinates(null);
-                  setIsRoundOver(false);
-                  setRound((prev) => prev + 1);
-                  setScore((prev) => prev + roundScore);
-                }}
-                className="ml-auto"
-              >
-                Next Round
-                <SkipForward />
-              </Button>
-            </CardContent>
-          </Card>
+        <div className="w-full absolute bottom-0 left-0">
+          <div className="flex justify-between items-center flex-wrap gap-4">
+            <div className="flex flex-col">
+              <span className="text-sm font-medium text-muted-foreground">
+                Distance
+              </span>
+              <CountUp
+                start={0}
+                end={calculateDistance(answerCoordinates, guessCoordinates!)}
+                suffix=" m"
+                className="ml-auto text-2xl font-semibold"
+              />
+            </div>
+            <div className="flex flex-col">
+              <span className="text-sm font-medium text-muted-foreground">
+                Round Score
+              </span>
+              <CountUp
+                start={0}
+                end={roundScore}
+                className="ml-auto text-2xl font-semibold"
+              />
+            </div>
+            <div className="flex flex-col">
+              <span className="text-sm font-medium text-muted-foreground">
+                Total Score
+              </span>
+              <CountUp
+                start={score}
+                end={score + roundScore}
+                className="ml-auto text-2xl font-semibold"
+              />
+            </div>
+            <Button
+              onClick={() => {
+                setGuessCoordinates(null);
+                setIsRoundOver(false);
+                setRound((prev) => prev + 1);
+                setScore((prev) => prev + roundScore);
+              }}
+              className="ml-auto"
+            >
+              Next Round
+              <SkipForward />
+            </Button>
+          </div>
         </div>
       </Map>
     );
