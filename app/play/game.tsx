@@ -101,7 +101,7 @@ export function Game({ photos }: GameProps) {
             />
           </Source>
         )}
-        <div className="w-full absolute bottom-0 left-0">
+        <div className="w-full px-4 pb-10 pt-4 bg-background absolute bottom-0 left-0">
           <div className="flex justify-between items-center flex-wrap gap-4">
             <div className="flex flex-col">
               <span className="text-sm font-medium text-muted-foreground">
