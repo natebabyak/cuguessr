@@ -10,7 +10,11 @@ import {
   MapPinXInside,
   SkipForward,
 } from "lucide-react";
-import { calculateDistance, calculateScore, Coordinates } from "@/lib/math";
+import {
+  calculateDistance,
+  calculateScore,
+  Coordinates,
+} from "@/lib/math";
 import CountUp from "react-countup";
 import {
   DEFAULT_LATITUDE,
@@ -18,11 +22,13 @@ import {
   DEFAULT_ZOOM,
 } from "@/lib/constants";
 import Map, { Layer, Marker, Source } from "react-map-gl/maplibre";
+import type { MapRef } from "react-map-gl/maplibre";
 import { PhotoDialog } from "./photo-dialog";
-import { useState } from "react";
+import { useState, useEffect, useRef } from "react";
 import { NavigationButton } from "./navigation-button";
 import { LocateButton } from "./locate-button";
 import { LocateFixedButton } from "./locate-fixed-button";
+import { ResultsScreen } from "./results-screen";
 
 interface GameProps {
   photos: {
@@ -31,6 +37,14 @@ interface GameProps {
     latitude: number;
     longitude: number;
   }[];
+}
+
+interface RoundResult {
+  round: number;
+  distance: number;
+  score: number;
+  guessCoordinates: Coordinates;
+  answerCoordinates: Coordinates;
 }
 
 export function Game({ photos }: GameProps) {
@@ -44,6 +58,101 @@ export function Game({ photos }: GameProps) {
   const [round, setRound] = useState(0);
   const [roundScore, setRoundScore] = useState(0);
   const [score, setScore] = useState(0);
+  const [roundResults, setRoundResults] = useState<RoundResult[]>([]);
+  const [isGameComplete, setIsGameComplete] = useState(false);
+  const mapRef = useRef<MapRef>(null);
+  const gameMapRef = useRef<MapRef>(null);
+
+  // Reset map to default position when starting a new round
+  useEffect(() => {
+    if (!isRoundOver && gameMapRef.current) {
+      gameMapRef.current.flyTo({
+        center: [DEFAULT_LONGITUDE, DEFAULT_LATITUDE],
+        zoom: DEFAULT_ZOOM,
+        duration: 500,
+      });
+    }
+  }, [round, isRoundOver]);
+
+  // Animate from zoomed out to zoomed in when round ends
+  useEffect(() => {
+    if (isRoundOver && mapRef.current && guessCoordinates) {
+      const photo = photos[round];
+      const answerCoordinates = {
+        latitude: photo.latitude,
+        longitude: photo.longitude,
+      };
+
+      // Calculate bounding box for both points with padding
+      const minLng = Math.min(
+        guessCoordinates.longitude,
+        answerCoordinates.longitude
+      );
+      const maxLng = Math.max(
+        guessCoordinates.longitude,
+        answerCoordinates.longitude
+      );
+      const minLat = Math.min(
+        guessCoordinates.latitude,
+        answerCoordinates.latitude
+      );
+      const maxLat = Math.max(
+        guessCoordinates.latitude,
+        answerCoordinates.latitude
+      );
+
+      // Start fully zoomed out
+      mapRef.current.flyTo({
+        center: [
+          (minLng + maxLng) / 2,
+          (minLat + maxLat) / 2,
+        ],
+        zoom: 0,
+        duration: 0, // Instant initial position
+      });
+
+      // Then animate to fit bounds with padding
+      const timeoutId = setTimeout(() => {
+        mapRef.current?.fitBounds(
+          [
+            [minLng, minLat],
+            [maxLng, maxLat],
+          ],
+          {
+            padding: {
+              top: 100,
+              bottom: 200, // Extra padding for bottom UI
+              left: 50,
+              right: 50,
+            },
+            duration: 2000, // 2 second animation
+          }
+        );
+      }, 100);
+
+      return () => clearTimeout(timeoutId);
+    }
+  }, [isRoundOver, guessCoordinates, round, photos]);
+
+  const handlePlayAgain = () => {
+    setRound(0);
+    setScore(0);
+    setRoundResults([]);
+    setIsGameComplete(false);
+    setIsRoundOver(false);
+    setGuessCoordinates(null);
+    setRoundScore(0);
+  };
+
+  if (isGameComplete) {
+    return (
+      <ResultsScreen
+        totalScore={score}
+        roundResults={roundResults}
+        onPlayAgain={handlePlayAgain}
+      />
+    );
+  }
 
   if (isRoundOver) {
     const photo = photos[round];
@@ -51,6 +160,12 @@ export function Game({ photos }: GameProps) {
       latitude: photo.latitude,
       longitude: photo.longitude,
     };
+
+    // Calculate center point between guess and answer
+    const centerLatitude =
+      (guessCoordinates!.latitude + answerCoordinates.latitude) / 2;
+    const centerLongitude =
+      (guessCoordinates!.longitude + answerCoordinates.longitude) / 2;
 
     const lineGeoJson = {
       type: "Feature",
@@ -65,9 +180,10 @@ export function Game({ photos }: GameProps) {
 
     return (
       <Map
+        ref={mapRef}
         initialViewState={{
-          latitude: answerCoordinates.latitude,
-          longitude: answerCoordinates.longitude,
+          latitude: centerLatitude,
+          longitude: centerLongitude,
           zoom: 0,
         }}
         mapStyle={`https://api.maptiler.com/maps/streets/style.json?key=${process.env.NEXT_PUBLIC_MAPTILER_API_KEY}`}
@@ -136,14 +252,46 @@ export function Game({ photos }: GameProps) {
             </div>
             <Button
               onClick={() => {
-                setGuessCoordinates(null);
-                setIsRoundOver(false);
-                setRound((prev) => prev + 1);
-                setScore((prev) => prev + roundScore);
+                const photo = photos[round];
+                const answerCoordinates = {
+                  latitude: photo.latitude,
+                  longitude: photo.longitude,
+                };
+                const distance = calculateDistance(
+                  answerCoordinates,
+                  guessCoordinates!
+                );
+
+                // Save round result
+                const newRoundResult: RoundResult = {
+                  round,
+                  distance,
+                  score: roundScore,
+                  guessCoordinates: guessCoordinates!,
+                  answerCoordinates,
+                };
+
+                const updatedResults = [...roundResults, newRoundResult];
+                const newScore = score + roundScore;
+                const isLastRound = round === 4; // 0-indexed, so round 4 is the 5th round
+
+                if (isLastRound) {
+                  // Game is complete
+                  setRoundResults(updatedResults);
+                  setScore(newScore);
+                  setIsGameComplete(true);
+                } else {
+                  // Continue to next round
+                  setGuessCoordinates(null);
+                  setIsRoundOver(false);
+                  setRound((prev) => prev + 1);
+                  setScore(newScore);
+                  setRoundResults(updatedResults);
+                }
               }}
               className="ml-auto"
             >
-              Next Round
+              {round === 4 ? "View Results" : "Next Round"}
               <SkipForward />
             </Button>
           </div>
@@ -154,6 +302,7 @@ export function Game({ photos }: GameProps) {
 
   return (
     <Map
+      ref={gameMapRef}
       cursor={cursor}
       initialViewState={{
         latitude: DEFAULT_LATITUDE,

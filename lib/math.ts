@@ -68,4 +68,47 @@ function calculateScore(distance: number): number {
   return finalScore;
 }
 
-export { type Coordinates, calculateDistance, calculateScore };
+/**
+ * Calculates the appropriate zoom level to make a line between two points
+ * take up the majority of the screen.
+ * @param distance The distance between the two points in meters.
+ * @param centerLatitude The latitude at the center point (for accurate calculations).
+ * @param screenCoverage The desired percentage of screen the line should span (0-1). Default 0.7 (70%).
+ * @param viewportWidth The viewport width in pixels. Default 1200.
+ * @returns The calculated zoom level.
+ */
+function calculateZoomForDistance(
+  distance: number,
+  centerLatitude: number,
+  screenCoverage: number = 0.7,
+  viewportWidth: number = 1200
+): number {
+  // Constants for Web Mercator projection
+  const EARTH_CIRCUMFERENCE = 40075017; // meters at equator
+  const TILE_SIZE = 256; // pixels per tile
+  
+  // Calculate meters per pixel at the given latitude
+  // At zoom level z: metersPerPixel = (EARTH_CIRCUMFERENCE * cos(latitude)) / (TILE_SIZE * 2^z)
+  // We want: distanceInMeters = screenCoverage * viewportWidth * metersPerPixel
+  // Solving for z: 2^z = (EARTH_CIRCUMFERENCE * cos(latitude) * screenCoverage * viewportWidth) / (distanceInMeters * TILE_SIZE)
+  // z = log2((EARTH_CIRCUMFERENCE * cos(latitude) * screenCoverage * viewportWidth) / (distanceInMeters * TILE_SIZE))
+  
+  const latRad = toRadians(centerLatitude);
+  const cosLat = Math.cos(latRad);
+  
+  // Calculate the zoom level
+  const numerator = EARTH_CIRCUMFERENCE * cosLat * screenCoverage * viewportWidth;
+  const denominator = distance * TILE_SIZE;
+  
+  // Avoid division by zero and ensure minimum zoom
+  if (denominator === 0 || numerator === 0) {
+    return 15; // Default zoom level
+  }
+  
+  const zoom = Math.log2(numerator / denominator);
+  
+  // Clamp zoom to reasonable bounds (typically 0-20 for web maps)
+  return Math.max(0, Math.min(20, zoom));
+}
+
+export { type Coordinates, calculateDistance, calculateScore, calculateZoomForDistance };
