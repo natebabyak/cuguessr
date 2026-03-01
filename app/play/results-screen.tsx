@@ -1,10 +1,26 @@
 "use client";
 
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Share2, Trophy, RotateCcw } from "lucide-react";
-import { calculateDistance } from "@/lib/math";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardFooter,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import { Share2, House } from "lucide-react";
 import type { Coordinates } from "@/lib/math";
+import { ButtonGroup } from "@/components/ui/button-group";
+import {
+  Item,
+  ItemContent,
+  ItemDescription,
+  ItemMedia,
+  ItemTitle,
+} from "@/components/ui/item";
+import Link from "next/link";
+import { toast } from "sonner";
 
 interface RoundResult {
   round: number;
@@ -17,20 +33,19 @@ interface RoundResult {
 interface ResultsScreenProps {
   totalScore: number;
   roundResults: RoundResult[];
-  onPlayAgain: () => void;
+  // onPlayAgain: () => void;
 }
 
 function getScoreEmoji(score: number): string {
-  if (score >= 4000) return "🟩"; // Excellent (green)
-  if (score >= 3000) return "🟨"; // Good (yellow)
-  if (score >= 2000) return "🟧"; // Okay (orange)
-  if (score >= 1000) return "🟥"; // Poor (red)
-  return "⬛"; // Very poor (black)
+  if (score >= 3750) return "🟩";
+  if (score >= 2500) return "🟨";
+  if (score >= 1250) return "🟧";
+  return "🟥";
 }
 
 function formatDistance(distance: number): string {
   if (distance < 1000) {
-    return `${Math.round(distance)}m`;
+    return `${Math.round(distance)} m`;
   }
   return `${(distance / 1000).toFixed(1)}km`;
 }
@@ -38,121 +53,85 @@ function formatDistance(distance: number): string {
 export function ResultsScreen({
   totalScore,
   roundResults,
-  onPlayAgain,
+  // onPlayAgain,
 }: ResultsScreenProps) {
   const handleShare = async () => {
     const emojiGrid = roundResults
       .map((result) => getScoreEmoji(result.score))
       .join("");
 
-    const shareText = `CUGUESSR\n\nScore: ${totalScore.toLocaleString()}\n\n${emojiGrid}\n\nPlay at ${window.location.origin}`;
+    const shareText = `cuGuessr (Beta)\n\nScore: ${totalScore.toLocaleString()}\n\n${emojiGrid}\n\nPlay at ${window.location.origin}`;
 
     if (navigator.share) {
-      try {
-        await navigator.share({
-          title: "CUGUESSR Results",
-          text: shareText,
-          url: window.location.origin,
-        });
-      } catch (error) {
-        // User cancelled or error occurred
-        if (error instanceof Error && error.name !== "AbortError") {
-          console.error("Error sharing:", error);
-        }
-      }
+      await navigator.share({
+        title: "cuGuessr Results",
+        text: shareText,
+        url: window.location.origin,
+      });
     } else {
-      // Fallback: copy to clipboard
-      try {
-        await navigator.clipboard.writeText(shareText);
-        // You could show a toast notification here
-        alert("Results copied to clipboard!");
-      } catch (error) {
-        console.error("Error copying to clipboard:", error);
-      }
+      navigator.clipboard.writeText(shareText);
+      toast.success("Results copied to clipboard!");
     }
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-background/95 backdrop-blur-sm">
-      <Card className="w-full max-w-2xl mx-4 max-h-[90vh] overflow-y-auto">
-        <CardHeader className="text-center">
-          <div className="flex items-center justify-center gap-2 mb-2">
-            <Trophy className="h-8 w-8 text-yellow-500" />
-            <CardTitle className="text-3xl">Game Complete!</CardTitle>
-          </div>
-          <p className="text-2xl font-bold text-primary">
-            Final Score: {totalScore.toLocaleString()}
-          </p>
-        </CardHeader>
-        <CardContent className="space-y-6">
-          {/* Emoji Grid */}
-          <div className="flex flex-col items-center gap-2">
-            <p className="text-sm font-medium text-muted-foreground">
-              Round Results
-            </p>
-            <div className="flex gap-2 text-4xl">
+    <div className="bg-[url(/cu.jpg)] w-screen h-screen bg-cover bg-center">
+      <div className="size-full backdrop-blur-sm bg-black/10 flex flex-row items-center">
+        <Card className="mx-auto w-full max-w-sm">
+          <CardHeader className="text-center">
+            <CardTitle className="text-4xl">Game Results</CardTitle>
+            <CardDescription className="text-2xl font-medium">
+              Final Score: {totalScore.toLocaleString()}
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <div className="flex gap-2 flex-col">
               {roundResults.map((result, index) => (
-                <span key={index} title={`Round ${result.round + 1}`}>
-                  {getScoreEmoji(result.score)}
-                </span>
-              ))}
-            </div>
-          </div>
-
-          {/* Round Details */}
-          <div className="space-y-3">
-            <p className="text-sm font-medium text-muted-foreground">
-              Round Details
-            </p>
-            <div className="space-y-2">
-              {roundResults.map((result, index) => (
-                <div
-                  key={index}
-                  className="flex items-center justify-between p-3 rounded-lg border bg-muted/50"
-                >
-                  <div className="flex items-center gap-3">
-                    <span className="text-2xl">
-                      {getScoreEmoji(result.score)}
-                    </span>
-                    <div>
-                      <p className="font-medium">Round {result.round + 1}</p>
-                      <p className="text-sm text-muted-foreground">
+                <Item key={index} variant="outline">
+                  <ItemMedia variant="icon">
+                    {getScoreEmoji(result.score)}
+                  </ItemMedia>
+                  <ItemContent className="flex flex-row justify-between">
+                    <div className="flex flex-col">
+                      <ItemTitle>Round {result.round + 1}</ItemTitle>
+                      <ItemDescription>
                         {formatDistance(result.distance)} away
-                      </p>
+                      </ItemDescription>
                     </div>
-                  </div>
-                  <div className="text-right">
-                    <p className="font-bold">{result.score.toLocaleString()}</p>
-                    <p className="text-xs text-muted-foreground">points</p>
-                  </div>
-                </div>
+                    <div className="flex flex-col items-end font-medium">
+                      <span>{result.score.toLocaleString()}</span>
+                      <span>points</span>
+                    </div>
+                  </ItemContent>
+                </Item>
               ))}
             </div>
-          </div>
-
-          {/* Action Buttons */}
-          <div className="flex flex-col sm:flex-row gap-3 pt-4">
-            <Button
-              onClick={handleShare}
-              className="flex-1"
-              size="lg"
-              variant="default"
-            >
-              <Share2 className="mr-2 h-4 w-4" />
-              Share Results
-            </Button>
-            <Button
-              onClick={onPlayAgain}
-              className="flex-1"
-              size="lg"
-              variant="outline"
-            >
-              <RotateCcw className="mr-2 h-4 w-4" />
-              Play Again
-            </Button>
-          </div>
-        </CardContent>
-      </Card>
+          </CardContent>
+          <CardFooter>
+            <ButtonGroup orientation="vertical" className="w-full">
+              <ButtonGroup className="w-full">
+                <Button
+                  onClick={handleShare}
+                  size="lg"
+                  variant="default"
+                  className="w-full"
+                >
+                  <Share2 />
+                  Share Results
+                </Button>
+              </ButtonGroup>
+              <ButtonGroup className="w-full">
+                <Button asChild size="lg" variant="outline" className="w-full">
+                  <Link href="/">
+                    <House />
+                    Return Home
+                  </Link>
+                </Button>
+              </ButtonGroup>
+            </ButtonGroup>
+          </CardFooter>
+        </Card>
+      </div>
     </div>
   );
 }

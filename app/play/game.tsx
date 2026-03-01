@@ -5,16 +5,12 @@ import { ButtonGroup } from "@/components/ui/button-group";
 import { Card, CardContent } from "@/components/ui/card";
 import {
   Check,
-  LocateFixed,
+  MapPin,
   MapPinCheckInside,
   MapPinXInside,
   SkipForward,
 } from "lucide-react";
-import {
-  calculateDistance,
-  calculateScore,
-  Coordinates,
-} from "@/lib/math";
+import { calculateDistance, calculateScore, Coordinates } from "@/lib/math";
 import CountUp from "react-countup";
 import {
   DEFAULT_LATITUDE,
@@ -52,7 +48,7 @@ export function Game({ photos }: GameProps) {
   const [cursorCoordinates, setCursorCoordinates] =
     useState<Coordinates | null>(null);
   const [guessCoordinates, setGuessCoordinates] = useState<Coordinates | null>(
-    null
+    null,
   );
   const [isRoundOver, setIsRoundOver] = useState(false);
   const [round, setRound] = useState(0);
@@ -86,27 +82,24 @@ export function Game({ photos }: GameProps) {
       // Calculate bounding box for both points with padding
       const minLng = Math.min(
         guessCoordinates.longitude,
-        answerCoordinates.longitude
+        answerCoordinates.longitude,
       );
       const maxLng = Math.max(
         guessCoordinates.longitude,
-        answerCoordinates.longitude
+        answerCoordinates.longitude,
       );
       const minLat = Math.min(
         guessCoordinates.latitude,
-        answerCoordinates.latitude
+        answerCoordinates.latitude,
       );
       const maxLat = Math.max(
         guessCoordinates.latitude,
-        answerCoordinates.latitude
+        answerCoordinates.latitude,
       );
 
       // Start fully zoomed out
       mapRef.current.flyTo({
-        center: [
-          (minLng + maxLng) / 2,
-          (minLat + maxLat) / 2,
-        ],
+        center: [(minLng + maxLng) / 2, (minLat + maxLat) / 2],
         zoom: 0,
         duration: 0, // Instant initial position
       });
@@ -126,7 +119,7 @@ export function Game({ photos }: GameProps) {
               right: 50,
             },
             duration: 2000, // 2 second animation
-          }
+          },
         );
       }, 100);
 
@@ -134,6 +127,7 @@ export function Game({ photos }: GameProps) {
     }
   }, [isRoundOver, guessCoordinates, round, photos]);
 
+  /*
   const handlePlayAgain = () => {
     setRound(0);
     setScore(0);
@@ -143,15 +137,10 @@ export function Game({ photos }: GameProps) {
     setGuessCoordinates(null);
     setRoundScore(0);
   };
+  */
 
   if (isGameComplete) {
-    return (
-      <ResultsScreen
-        totalScore={score}
-        roundResults={roundResults}
-        onPlayAgain={handlePlayAgain}
-      />
-    );
+    return <ResultsScreen totalScore={score} roundResults={roundResults} />;
   }
 
   if (isRoundOver) {
@@ -193,7 +182,7 @@ export function Game({ photos }: GameProps) {
           latitude={photo.latitude}
           longitude={photo.longitude}
         >
-          <MapPinCheckInside className="text-green-500" />
+          <MapPinCheckInside fill="white" className="text-green-500" />
         </Marker>
         {guessCoordinates && (
           <Marker
@@ -201,7 +190,7 @@ export function Game({ photos }: GameProps) {
             latitude={guessCoordinates.latitude}
             longitude={guessCoordinates.longitude}
           >
-            <MapPinXInside className="text-red-500" />
+            <MapPinXInside fill="white" className="text-red-500" />
           </Marker>
         )}
         {lineGeoJson && (
@@ -259,7 +248,7 @@ export function Game({ photos }: GameProps) {
                 };
                 const distance = calculateDistance(
                   answerCoordinates,
-                  guessCoordinates!
+                  guessCoordinates!,
                 );
 
                 // Save round result
@@ -346,6 +335,7 @@ export function Game({ photos }: GameProps) {
       </Card>
       {guessCoordinates && (
         <Marker
+          anchor="bottom"
           draggable={true}
           latitude={guessCoordinates.latitude}
           longitude={guessCoordinates.longitude}
@@ -353,7 +343,7 @@ export function Game({ photos }: GameProps) {
             setGuessCoordinates(cursorCoordinates);
           }}
         >
-          <LocateFixed className="text-primary" />
+          <MapPin fill="white" className="text-primary" />
         </Marker>
       )}
       <PhotoDialog imagePath={photos[round].image_path} />
