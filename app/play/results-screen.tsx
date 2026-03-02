@@ -76,7 +76,7 @@ export function ResultsScreen({
 
   return (
     <div className="bg-[url(/cu.jpg)] w-screen h-screen bg-cover bg-center">
-      <div className="size-full backdrop-blur-sm bg-black/10 flex flex-row items-center">
+      <div className="size-full backdrop-blur-sm bg-black/10 dark:bg-black/30 flex flex-row items-center">
         <Card className="mx-auto w-full max-w-sm">
           <CardHeader className="text-center">
             <CardTitle className="text-4xl">Game Results</CardTitle>

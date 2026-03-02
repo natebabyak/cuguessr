@@ -12,7 +12,7 @@ export default function Home() {
 
   return (
     <div className="bg-[url(/cu.jpg)] w-screen h-screen bg-cover bg-center">
-      <div className="size-full backdrop-blur-sm bg-black/10">
+      <div className="size-full backdrop-blur-sm bg-black/10 dark:bg-black/30">
         <div className="absolute w-full left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 flex flex-col gap-4">
           <h1 className="text-6xl md:text-8xl font-black text-shadow-lg text-shadow-black/30 text-center">
             <span className="text-primary">cu</span>
@@ -53,19 +53,19 @@ export default function Home() {
             <div className="size-4 relative">
               <Sun
                 className={cn(
-                  "absolute dark:scale-100 dark:rotate-0 scale-0 rotate-90 transition-transform!",
+                  "absolute scale-100 rotate-0 dark:scale-0 dark:rotate-90 transition-transform!",
                 )}
               />
               <Moon
                 className={cn(
-                  "absolute dark:scale-0 scale-100 rotate-0 dark:rotate-90 transition-transform!",
+                  "absolute scale-0 dark:scale-100 dark:rotate-0 rotate-90 transition-transform!",
                 )}
               />
             </div>
-            Switch to {theme === "light" ? "dark" : "light"} theme
+            Toggle theme
           </Button>
           <p className="text-white text-shadow-lg text-shadow-black/30">
-            &copy; 2025-{new Date().getFullYear()} Nate Babyak. All rights
+            &copy; 2025-{new Date().getFullYear()} cuGuessr. All rights
             reserved.
           </p>
         </footer>
