@@ -113,7 +113,7 @@ Not interested in contributing code? You can also help by submitting new images 
 
 ## License
 
-[MIT](/license)
+[GNU General Public License v3.0](/LICENSE)
 
 <div align="end">
   <a href="#top">Back to Top</a>
