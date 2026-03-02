@@ -1,6 +1,6 @@
 <a id="top"></a>
 
-# cuGuessr
+# [cuGuessr](https://cuguessr.com)
 
 How well do you know the Carleton campus?
 
@@ -20,6 +20,8 @@ How well do you know the Carleton campus?
 ## About
 
 **This app is not affiliated with Carleton University in any way.**
+
+You can play cuGuessr [here](https://cuguessr.com).
 
 > cuGuessr is a web application inspired by GeoGuessr that challenges users to identify locations on the Carleton University campus based on images. Users can explore the campus virtually and test their knowledge of its landmarks and hidden gems.
 
