@@ -1,7 +1,5 @@
-// @ts-expect-error CSS import
 import "./globals.css";
 import { Geist, Geist_Mono } from "next/font/google";
-// @ts-expect-error CSS import
 import "maplibre-gl/dist/maplibre-gl.css";
 import type { Metadata } from "next";
 import { ThemeProvider } from "@/components/theme-provider";
