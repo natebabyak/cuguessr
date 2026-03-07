@@ -10,7 +10,6 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { Share2, House } from "lucide-react";
-import type { Coordinates } from "@/lib/math";
 import { ButtonGroup } from "@/components/ui/button-group";
 import {
   Item,
@@ -21,19 +20,10 @@ import {
 } from "@/components/ui/item";
 import Link from "next/link";
 import { toast } from "sonner";
-
-interface RoundResult {
-  round: number;
-  distance: number;
-  score: number;
-  guessCoordinates: Coordinates;
-  answerCoordinates: Coordinates;
-}
+import type { Round } from "@/lib/types";
 
 interface ResultsScreenProps {
-  totalScore: number;
-  roundResults: RoundResult[];
-  // onPlayAgain: () => void;
+  rounds: Round[];
 }
 
 function getScoreEmoji(score: number): string {
@@ -50,14 +40,12 @@ function formatDistance(distance: number): string {
   return `${(distance / 1000).toFixed(1)}km`;
 }
 
-export function ResultsScreen({
-  totalScore,
-  roundResults,
-  // onPlayAgain,
-}: ResultsScreenProps) {
+export function ResultsScreen({ rounds }: ResultsScreenProps) {
+  const totalScore = rounds.reduce((sum, round) => sum + (round.score ?? 0), 0);
+
   const handleShare = async () => {
-    const emojiGrid = roundResults
-      .map((result) => getScoreEmoji(result.score))
+    const emojiGrid = rounds
+      .map((round) => getScoreEmoji(round.score ?? 0))
       .join("");
 
     const shareText = `cuGuessr (Beta)\n\nScore: ${totalScore.toLocaleString()}\n\n${emojiGrid}\n\nPlay at ${window.location.origin}`;
@@ -75,8 +63,8 @@ export function ResultsScreen({
   };
 
   return (
-    <div className="bg-[url(/cu.jpg)] w-screen h-screen bg-cover bg-center">
-      <div className="size-full backdrop-blur-sm bg-black/10 dark:bg-black/30 flex flex-row items-center">
+    <div className="h-screen w-screen bg-[url(/cu.jpg)] bg-cover bg-center">
+      <div className="flex size-full flex-row items-center bg-black/10 backdrop-blur-sm dark:bg-black/30">
         <Card className="mx-auto w-full max-w-sm">
           <CardHeader className="text-center">
             <CardTitle className="text-4xl">Game Results</CardTitle>
@@ -85,21 +73,21 @@ export function ResultsScreen({
             </CardDescription>
           </CardHeader>
           <CardContent>
-            <div className="flex gap-2 flex-col">
-              {roundResults.map((result, index) => (
+            <div className="flex flex-col gap-2">
+              {rounds.map((round, index) => (
                 <Item key={index} variant="outline">
                   <ItemMedia variant="icon">
-                    {getScoreEmoji(result.score)}
+                    {getScoreEmoji(round.score ?? 0)}
                   </ItemMedia>
                   <ItemContent className="flex flex-row justify-between">
                     <div className="flex flex-col">
-                      <ItemTitle>Round {result.round + 1}</ItemTitle>
+                      <ItemTitle>Round {index + 1}</ItemTitle>
                       <ItemDescription>
-                        {formatDistance(result.distance)} away
+                        {formatDistance(round.distance ?? 0)} away
                       </ItemDescription>
                     </div>
                     <div className="flex flex-col items-end font-medium">
-                      <span>{result.score.toLocaleString()}</span>
+                      <span>{round.score?.toLocaleString()}</span>
                       <span>points</span>
                     </div>
                   </ItemContent>

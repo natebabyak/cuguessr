@@ -1,10 +1,4 @@
-/**
- * Represents geographical coordinates.
- */
-interface Coordinates {
-  latitude: number;
-  longitude: number;
-}
+import type { Coordinates } from "@/lib/types";
 
 /**
  * Converts degrees to radians.
@@ -41,8 +35,8 @@ function calculateDistance(a: Coordinates, b: Coordinates): number {
         haversine(toRadians(b.latitude - a.latitude)) +
           Math.cos(toRadians(a.latitude)) *
             Math.cos(toRadians(b.latitude)) *
-            haversine(toRadians(b.longitude - a.longitude))
-      )
+            haversine(toRadians(b.longitude - a.longitude)),
+      ),
     )
   );
 }
@@ -81,34 +75,40 @@ function calculateZoomForDistance(
   distance: number,
   centerLatitude: number,
   screenCoverage: number = 0.7,
-  viewportWidth: number = 1200
+  viewportWidth: number = 1200,
 ): number {
   // Constants for Web Mercator projection
   const EARTH_CIRCUMFERENCE = 40075017; // meters at equator
   const TILE_SIZE = 256; // pixels per tile
-  
+
   // Calculate meters per pixel at the given latitude
   // At zoom level z: metersPerPixel = (EARTH_CIRCUMFERENCE * cos(latitude)) / (TILE_SIZE * 2^z)
   // We want: distanceInMeters = screenCoverage * viewportWidth * metersPerPixel
   // Solving for z: 2^z = (EARTH_CIRCUMFERENCE * cos(latitude) * screenCoverage * viewportWidth) / (distanceInMeters * TILE_SIZE)
   // z = log2((EARTH_CIRCUMFERENCE * cos(latitude) * screenCoverage * viewportWidth) / (distanceInMeters * TILE_SIZE))
-  
+
   const latRad = toRadians(centerLatitude);
   const cosLat = Math.cos(latRad);
-  
+
   // Calculate the zoom level
-  const numerator = EARTH_CIRCUMFERENCE * cosLat * screenCoverage * viewportWidth;
+  const numerator =
+    EARTH_CIRCUMFERENCE * cosLat * screenCoverage * viewportWidth;
   const denominator = distance * TILE_SIZE;
-  
+
   // Avoid division by zero and ensure minimum zoom
   if (denominator === 0 || numerator === 0) {
     return 15; // Default zoom level
   }
-  
+
   const zoom = Math.log2(numerator / denominator);
-  
+
   // Clamp zoom to reasonable bounds (typically 0-20 for web maps)
   return Math.max(0, Math.min(20, zoom));
 }
 
-export { type Coordinates, calculateDistance, calculateScore, calculateZoomForDistance };
+export {
+  type Coordinates,
+  calculateDistance,
+  calculateScore,
+  calculateZoomForDistance,
+};
