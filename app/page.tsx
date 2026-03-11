@@ -1,25 +1,19 @@
 "use client";
 import { Button } from "@/components/ui/button";
 import { Calendar, Clock, ImageIcon, Moon, Play, Sun } from "lucide-react";
+import { getDailyNumber } from "@/lib/utils";
 import Image from "next/image";
 import Link from "next/link";
 import { useTheme } from "next-themes";
-import { getDailyNumber } from "@/lib/utils";
 
 export default function Page() {
   const dailyNumber = getDailyNumber();
   const { theme, setTheme } = useTheme();
+
   return (
     <>
       <div className="fixed top-0 left-0 h-lvh w-screen">
-        <Image
-          src="/cu.jpg"
-          alt="bg"
-          fill
-          preload
-          loading="eager"
-          className="object-cover"
-        />
+        <Image src="/cu.jpg" alt="bg" fill preload className="object-cover" />
         <div className="absolute inset-0 bg-black/10 backdrop-blur-sm dark:bg-black/50" />
       </div>
       <div className="relative z-10 flex h-svh w-screen flex-col overflow-hidden">
@@ -83,7 +77,7 @@ export default function Page() {
             <Moon className="absolute scale-0 -rotate-45 transition-transform! dark:scale-100 dark:rotate-0" />
           </Button>
           <p className="text-primary-foreground text-shadow-black/25 text-shadow-lg">
-            &copy; {new Date().getFullYear()} Nate Babyak. All rights reserved.
+            &copy; {new Date().getFullYear()} cuGuessr. All rights reserved.
           </p>
         </footer>
       </div>

@@ -104,7 +104,6 @@ export function PhotoDialog({ imagePath }: PhotoDialogProps) {
         width={768}
         height={768}
         preload
-        loading="eager"
         className="rounded-md object-cover"
       />
     );
