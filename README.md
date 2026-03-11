@@ -95,9 +95,11 @@ bun dev
 
 ## Roadmap
 
-- [ ] Implement daily challenges
-- [ ] Implement daily leaderboard
-- [ ] Implement image approval solution
+- [x] Daily challenges
+- [ ] Save daily challenge progress
+- [ ] Save daily challenges history
+- [ ] Add daily leaderboard
+- [ ] Add image approval solution (i.e., admin dashboard)
 
 <div align="end">
   <a href="#top">Back to Top</a>
@@ -123,8 +125,9 @@ Not interested in contributing code? You can also help by submitting new images 
 
 ## Acknowledgements
 
-- [GeoGuessr](https://www.geoguessr.com)
-- [uwGuessr](https://uwguessr.com)
+- GeoGuessr
+- uwGuessr
+- Wordle
 
 <div align="end">
   <a href="#top">Back to Top</a>
