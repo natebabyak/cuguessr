@@ -6,8 +6,8 @@ export function HomeButton() {
   return (
     <Button
       asChild
-      size="icon"
-      className="absolute z-10 rounded-full md:left-4 left-2 bottom-10 md:bottom-12"
+      size="icon-lg"
+      className="pointer-events-auto self-end justify-self-start rounded-full"
     >
       <Link href="/">
         <Home />

@@ -1,6 +1,6 @@
 import { Button } from "@/components/ui/button";
 import { ButtonGroup } from "@/components/ui/button-group";
-import { Check, Locate, Navigation, X } from "lucide-react";
+import { Check, Locate, Navigation, Send, X } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { createClient } from "@/lib/supabase/client";
 import {
@@ -49,10 +49,10 @@ export function MapButtonGroup({
   return (
     <ButtonGroup
       orientation="vertical"
-      className="absolute right-2 bottom-10 z-10 md:right-4 md:bottom-12"
+      className="pointer-events-auto self-end justify-self-end"
     >
       <ButtonGroup orientation="vertical" className="ml-auto">
-        <LocateButton />
+        <LocateButton markerCoordinates={markerCoordinates} />
         <NavigationButton />
       </ButtonGroup>
       <ButtonGroup>
@@ -62,24 +62,31 @@ export function MapButtonGroup({
   );
 }
 
-function LocateButton() {
+function LocateButton({
+  markerCoordinates,
+}: {
+  markerCoordinates: Coordinates | null;
+}) {
   const { current: map } = useMap();
 
   const handleClick = () => {
-    if (!map) return;
+    if (!map || !markerCoordinates) return;
 
-    navigator.geolocation.getCurrentPosition((position) => {
-      const { latitude, longitude } = position.coords;
+    const { latitude, longitude } = markerCoordinates;
 
-      map.flyTo({
-        center: [longitude, latitude],
-        zoom: 20,
-      });
+    map.flyTo({
+      center: [longitude, latitude],
+      zoom: 20,
     });
   };
 
   return (
-    <Button onClick={handleClick} size="icon" className="rounded-full">
+    <Button
+      disabled={!markerCoordinates}
+      onClick={handleClick}
+      size="icon-lg"
+      className="rounded-full"
+    >
       <Locate />
     </Button>
   );
@@ -102,11 +109,12 @@ function NavigationButton() {
     map.flyTo({
       center: [DEFAULT_LONGITUDE, DEFAULT_LATITUDE],
       zoom: DEFAULT_ZOOM,
+      bearing: 0,
     });
   };
 
   return (
-    <Button onClick={handleClick} size="icon" className="rounded-full">
+    <Button onClick={handleClick} size="icon-lg" className="rounded-full">
       <Navigation className={cn(isCentered() && "fill-primary")} />
     </Button>
   );
@@ -166,8 +174,8 @@ function SubmitDialog({ markerCoordinates, photo }: SubmitDialogProps) {
     return (
       <Drawer onOpenChange={setOpen} open={open}>
         <DrawerTrigger asChild>
-          <Button className="rounded-full">
-            <Check />
+          <Button size="lg" className="rounded-full">
+            <Send />
             Submit
           </Button>
         </DrawerTrigger>

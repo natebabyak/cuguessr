@@ -60,7 +60,7 @@ export default function Page() {
   };
 
   return (
-    <main className="h-screen w-screen">
+    <div className="relative h-dvh w-dvw">
       <Map
         cursor={cursor}
         initialViewState={{
@@ -79,10 +79,12 @@ export default function Page() {
           markerCoordinates={markerCoordinates}
           setMarkerCoordinates={setMarkerCoordinatesWrapper}
         />
-        <PhotoCard setPhoto={setPhoto} />
-        <HomeButton />
-        <MapButtonGroup markerCoordinates={markerCoordinates} photo={photo} />
+        <div className="pointer-events-none absolute grid h-dvh w-dvw grid-cols-2 grid-rows-2 px-2 pt-2 pb-10 md:px-4 md:pt-4 md:pb-12">
+          <PhotoCard setPhoto={setPhoto} />
+          <HomeButton />
+          <MapButtonGroup markerCoordinates={markerCoordinates} photo={photo} />
+        </div>
       </Map>
-    </main>
+    </div>
   );
 }

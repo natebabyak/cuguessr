@@ -135,7 +135,7 @@ export function PhotoCard({ setPhoto }: PhotoCardProps) {
   };
 
   return (
-    <Card className="shadow-md w-full max-h-1/2 h-fit absolute z-10 md:left-4 md:top-4 md:max-w-sm left-2 max-w-94 top-2">
+    <Card className="pointer-events-auto col-span-2 h-fit justify-start justify-self-start">
       <CardContent className="overflow-hidden">
         <label
           onDragLeave={handleDragLeave}
@@ -144,7 +144,7 @@ export function PhotoCard({ setPhoto }: PhotoCardProps) {
         >
           <InputGroup
             hidden={!photoPreview}
-            className="flex justify-between items-center"
+            className="flex items-center justify-between"
           >
             <Input
               accept="image/*"
@@ -160,8 +160,8 @@ export function PhotoCard({ setPhoto }: PhotoCardProps) {
           <Empty
             hidden={!!photoPreview}
             className={cn(
-              "border-dashed rounded-md border transition-colors",
-              isDragging && "border-primary"
+              "rounded-md border border-dashed transition-colors",
+              isDragging && "border-primary",
             )}
           >
             <EmptyHeader>
@@ -194,7 +194,7 @@ function PreviewDialog({ photoPreview }: PreviewDialogProps) {
         </DrawerTrigger>
         <DrawerContent>
           <DrawerHeader>
-            <DrawerTitle className="leading-none text-lg font-semibold">
+            <DrawerTitle className="text-lg leading-none font-semibold">
               Preview
             </DrawerTitle>
           </DrawerHeader>
@@ -223,7 +223,7 @@ function PreviewDialog({ photoPreview }: PreviewDialogProps) {
       </DialogTrigger>
       <DialogContent>
         <DialogHeader>
-          <DialogTitle className="leading-none text-lg font-semibold">
+          <DialogTitle className="text-lg leading-none font-semibold">
             Preview
           </DialogTitle>
         </DialogHeader>
