@@ -2,7 +2,6 @@ import { Button } from "@/components/ui/button";
 import { ButtonGroup } from "@/components/ui/button-group";
 import { Check, Locate, Navigation, X } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { Coordinates } from "@/lib/math";
 import { createClient } from "@/lib/supabase/client";
 import {
   DEFAULT_LATITUDE,
@@ -31,6 +30,7 @@ import {
 import { Spinner } from "@/components/ui/spinner";
 import { DialogTitle, DialogTrigger } from "@radix-ui/react-dialog";
 import { useRouter } from "next/navigation";
+import { Coordinates } from "@/lib/types";
 
 interface MapButtonGroupProps {
   markerCoordinates: Coordinates | null;
@@ -49,7 +49,7 @@ export function MapButtonGroup({
   return (
     <ButtonGroup
       orientation="vertical"
-      className="absolute z-10 md:bottom-12 md:right-4 right-2 bottom-10"
+      className="absolute right-2 bottom-10 z-10 md:right-4 md:bottom-12"
     >
       <ButtonGroup orientation="vertical" className="ml-auto">
         <LocateButton />
@@ -228,7 +228,7 @@ function SubmitDialog({ markerCoordinates, photo }: SubmitDialogProps) {
         <div
           className={cn(
             "flex items-center gap-2",
-            photo && "text-muted-foreground"
+            photo && "text-muted-foreground",
           )}
         >
           {photo ? <Check /> : <X />}
@@ -237,7 +237,7 @@ function SubmitDialog({ markerCoordinates, photo }: SubmitDialogProps) {
         <div
           className={cn(
             "flex items-center gap-2",
-            markerCoordinates && "text-muted-foreground"
+            markerCoordinates && "text-muted-foreground",
           )}
         >
           {markerCoordinates ? <Check /> : <X />}
