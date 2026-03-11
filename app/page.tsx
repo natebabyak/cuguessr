@@ -12,7 +12,14 @@ export default function Page() {
   return (
     <>
       <div className="fixed top-0 left-0 h-lvh w-screen">
-        <Image alt="" priority fill src="/cu.jpg" className="object-cover" />
+        <Image
+          src="/cu.jpg"
+          alt="bg"
+          fill
+          preload
+          loading="eager"
+          className="object-cover"
+        />
         <div className="absolute inset-0 bg-black/10 backdrop-blur-sm dark:bg-black/50" />
       </div>
       <div className="relative z-10 flex h-svh w-screen flex-col overflow-hidden">
@@ -37,7 +44,7 @@ export default function Page() {
             </Button>
             <Button
               asChild
-              variant="outline"
+              variant="secondary"
               className="shadow-lg shadow-black/25 dark:shadow-white/25"
             >
               <Link href="/classic">
@@ -47,7 +54,7 @@ export default function Page() {
             </Button>
             <Button
               disabled
-              variant="outline"
+              variant="secondary"
               className="shadow-lg shadow-black/25 dark:shadow-white/25"
             >
               <Clock />
@@ -55,7 +62,7 @@ export default function Page() {
             </Button>
             <Button
               asChild
-              variant="outline"
+              variant="secondary"
               className="col-span-2 shadow-lg shadow-black/25 dark:shadow-white/25"
             >
               <Link href="/submit">

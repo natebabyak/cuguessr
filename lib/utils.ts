@@ -94,6 +94,6 @@ export function easeInOut(t: number): number {
 
 export function getDailyNumber() {
   return Math.floor(
-    (new Date().getTime() - new Date("2026-03-11").getTime()) / 86400000,
+    (new Date().getTime() - new Date("2026-03-11").getTime()) / 86400000 + 1,
   ).toLocaleString();
 }

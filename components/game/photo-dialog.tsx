@@ -22,7 +22,7 @@ import {
 import { ImageIcon, X } from "lucide-react";
 import Image from "next/image";
 import { useIsMobile } from "@/hooks/use-mobile";
-import { useEffect, useState } from "react";
+import { useState } from "react";
 
 const TITLE_CONTENT = "Where is this?";
 const DESCRIPTION_CONTENT = "Guess where this photo was taken from";
@@ -34,17 +34,7 @@ interface PhotoDialogProps {
 
 export function PhotoDialog({ imagePath }: PhotoDialogProps) {
   const isMobile = useIsMobile();
-  const [open, setOpen] = useState(false);
-  const [imageLoaded, setImageLoaded] = useState(false);
-
-  useEffect(() => {
-    const img = new window.Image();
-    img.src = `${SUPABASE_URL}${imagePath}`;
-    img.onload = () => {
-      setImageLoaded(true);
-      setOpen(true);
-    };
-  }, [imagePath]);
+  const [open, setOpen] = useState(true);
 
   return (
     <div className="pointer-events-auto self-end justify-self-start">
@@ -99,12 +89,7 @@ export function PhotoDialog({ imagePath }: PhotoDialogProps) {
 
   function TriggerButton() {
     return (
-      <Button
-        disabled={!imageLoaded}
-        onClick={() => setOpen(true)}
-        size="lg"
-        className="rounded-full"
-      >
+      <Button onClick={() => setOpen(true)} size="lg" className="rounded-full">
         <ImageIcon />
         View Photo
       </Button>
@@ -114,11 +99,12 @@ export function PhotoDialog({ imagePath }: PhotoDialogProps) {
   function Photo() {
     return (
       <Image
-        alt="Photo"
-        height={768}
-        priority
         src={`${SUPABASE_URL}${imagePath}`}
+        alt="Photo"
         width={768}
+        height={768}
+        preload
+        loading="eager"
         className="rounded-md object-cover"
       />
     );
