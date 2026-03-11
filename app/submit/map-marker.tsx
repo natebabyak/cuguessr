@@ -1,4 +1,4 @@
-import { Coordinates } from "@/lib/math";
+import { Coordinates } from "@/lib/types";
 import { LocateFixed } from "lucide-react";
 import { Marker } from "react-map-gl/maplibre";
 
