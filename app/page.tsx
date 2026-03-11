@@ -2,18 +2,20 @@
 
 import { Button } from "@/components/ui/button";
 import { Calendar, Clock, ImageIcon, Moon, Play, Sun } from "lucide-react";
-import { useTheme } from "next-themes";
 import Image from "next/image";
 import Link from "next/link";
+import { useTheme } from "next-themes";
+import { getDailyNumber } from "@/lib/utils";
 
 export default function Page() {
+  const dailyNumber = getDailyNumber();
   const { theme, setTheme } = useTheme();
 
   return (
-    <div className="flex h-dvh w-dvw flex-col">
+    <div className="flex h-lvh w-lvw flex-col">
       <Image alt="" fill src="/cu.jpg" className="object-cover" />
-      <div className="absolute inset-0 bg-black/10 backdrop-blur-sm dark:bg-black/30"></div>
-      <div className="z-10 flex flex-1 flex-col items-center justify-center gap-4">
+      <div className="absolute inset-0 bg-black/10 backdrop-blur-sm dark:bg-black/50"></div>
+      <div className="animate-in slide-in-from-bottom-5 fade-in-0 z-10 flex flex-1 flex-col items-center justify-center gap-4 duration-700">
         <h1 className="text-center text-6xl font-black text-shadow-black/30 text-shadow-lg md:text-8xl">
           <span className="text-primary">cu</span>
           <span className="text-white">Guessr</span>
@@ -24,16 +26,17 @@ export default function Page() {
         <div className="grid w-full max-w-sm grid-cols-2 gap-2">
           <Button
             asChild
+            disabled
             className="col-span-2 shadow-lg shadow-black/25 dark:shadow-white/25"
           >
             <Link href="/daily">
               <Calendar />
-              Daily Challenge
+              Daily Challenge #{dailyNumber}
             </Link>
           </Button>
           <Button
             asChild
-            variant="secondary"
+            variant="outline"
             className="shadow-lg shadow-black/25 dark:shadow-white/25"
           >
             <Link href="/classic">
@@ -43,7 +46,7 @@ export default function Page() {
           </Button>
           <Button
             disabled
-            variant="secondary"
+            variant="outline"
             className="shadow-lg shadow-black/25 dark:shadow-white/25"
           >
             <Clock />
@@ -51,7 +54,7 @@ export default function Page() {
           </Button>
           <Button
             asChild
-            variant="secondary"
+            variant="outline"
             className="col-span-2 shadow-lg shadow-black/25 dark:shadow-white/25"
           >
             <Link href="/submit">
@@ -72,7 +75,7 @@ export default function Page() {
           <Moon className="absolute scale-0 -rotate-45 transition-transform! dark:scale-100 dark:rotate-0" />
         </Button>
         <p className="text-primary-foreground text-shadow-black/25 text-shadow-lg">
-          &copy; {new Date().getFullYear()} cuGuessr. All rights reserved.
+          &copy; {new Date().getFullYear()} Nate Babyak. All rights reserved.
         </p>
       </footer>
     </div>

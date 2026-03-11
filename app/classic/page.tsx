@@ -14,7 +14,7 @@ export default async function Page() {
 
   return (
     <div className="h-dvh w-dvw">
-      <Game photos={pickRandom(photos, 5)} />
+      <Game type="classic" photos={pickRandom(photos, 5)} />
     </div>
   );
 }
