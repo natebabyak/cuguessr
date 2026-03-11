@@ -1,6 +1,5 @@
 "use client";
 
-import { Coordinates, calculateDistance } from "@/lib/math";
 import {
   DEFAULT_LATITUDE,
   DEFAULT_LONGITUDE,
@@ -13,6 +12,8 @@ import { MapMarker } from "./map-marker";
 import { PhotoCard } from "./photo-card";
 import { toast } from "sonner";
 import { useState } from "react";
+import { Coordinates } from "@/lib/types";
+import { calculateDistance } from "@/lib/utils";
 
 export default function Page() {
   const [cursor, setCursor] = useState<"crosshair" | "grabbing">("crosshair");
@@ -30,7 +31,7 @@ export default function Page() {
     if (
       calculateDistance(
         { latitude: DEFAULT_LATITUDE, longitude: DEFAULT_LONGITUDE },
-        { latitude, longitude }
+        { latitude, longitude },
       ) > MAX_DISTANCE
     ) {
       toast.error("Marker Too Far from Campus");
@@ -59,7 +60,7 @@ export default function Page() {
   };
 
   return (
-    <main className="w-screen h-screen">
+    <main className="h-screen w-screen">
       <Map
         cursor={cursor}
         initialViewState={{

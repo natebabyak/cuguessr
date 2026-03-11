@@ -1,75 +1,83 @@
 "use client";
 
 import { Button } from "@/components/ui/button";
-import { ButtonGroup } from "@/components/ui/button-group";
-import { cn } from "@/lib/utils";
-import { ImageIcon, Moon, Play, Sun } from "lucide-react";
-import { useTheme } from "next-themes";
+import { Calendar, Clock, ImageIcon, Moon, Play, Sun } from "lucide-react";
+import Image from "next/image";
 import Link from "next/link";
+import { useTheme } from "next-themes";
+import { getDailyNumber } from "@/lib/utils";
 
-export default function Home() {
+export default function Page() {
+  const dailyNumber = getDailyNumber();
   const { theme, setTheme } = useTheme();
 
   return (
-    <div className="bg-[url(/cu.jpg)] w-screen h-screen bg-cover bg-center">
-      <div className="size-full backdrop-blur-sm bg-black/10 dark:bg-black/30">
-        <div className="absolute w-full left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 flex flex-col gap-4">
-          <h1 className="text-6xl md:text-8xl font-black text-shadow-lg text-shadow-black/30 text-center">
-            <span className="text-primary">cu</span>
-            <span className="text-white">Guessr</span>
-          </h1>
-          <p className="text-xl md:text-2xl text-center text-white text-shadow-lg font-medium text-balance leading-tight text-shadow-black/30">
-            How well do you know the Carleton campus?
-          </p>
-          <ButtonGroup
-            orientation="vertical"
-            className="max-w-sm w-full mx-auto px-4"
-          >
-            <ButtonGroup className="w-full">
-              <Button asChild className="w-full">
-                <Link href="/play">
-                  <Play />
-                  Play
-                </Link>
-              </Button>
-            </ButtonGroup>
-            <ButtonGroup className="w-full">
-              <Button asChild variant="outline" className="w-full">
-                <Link href="/upload">
-                  <ImageIcon />
-                  Upload Photo
-                </Link>
-              </Button>
-            </ButtonGroup>
-          </ButtonGroup>
-        </div>
-        <footer className="p-4 absolute left-0 bottom-0 w-full flex flex-col items-center gap-2">
+    <div className="flex h-lvh w-lvw flex-col">
+      <Image alt="" fill src="/cu.jpg" className="object-cover" />
+      <div className="absolute inset-0 bg-black/10 backdrop-blur-sm dark:bg-black/50"></div>
+      <div className="animate-in slide-in-from-bottom-5 fade-in-0 z-10 flex flex-1 flex-col items-center justify-center gap-4 duration-700">
+        <h1 className="text-center text-6xl font-black text-shadow-black/30 text-shadow-lg md:text-8xl">
+          <span className="text-primary">cu</span>
+          <span className="text-white">Guessr</span>
+        </h1>
+        <p className="text-center text-xl leading-tight font-medium text-balance text-white text-shadow-black/30 text-shadow-lg md:text-2xl">
+          How well do you know the Carleton campus?
+        </p>
+        <div className="grid w-full max-w-sm grid-cols-2 gap-2">
           <Button
-            onClick={() => setTheme(theme === "light" ? "dark" : "light")}
-            size="lg"
-            variant="ghost"
-            className="text-white"
+            asChild
+            disabled
+            className="col-span-2 shadow-lg shadow-black/25 dark:shadow-white/25"
           >
-            <div className="size-4 relative">
-              <Sun
-                className={cn(
-                  "absolute scale-100 rotate-0 dark:scale-0 dark:rotate-90 transition-transform!",
-                )}
-              />
-              <Moon
-                className={cn(
-                  "absolute scale-0 dark:scale-100 dark:rotate-0 rotate-90 transition-transform!",
-                )}
-              />
-            </div>
-            Toggle theme
+            <Link href="/daily">
+              <Calendar />
+              Daily Challenge #{dailyNumber}
+            </Link>
           </Button>
-          <p className="text-white text-shadow-lg text-shadow-black/30">
-            &copy; 2025-{new Date().getFullYear()} cuGuessr. All rights
-            reserved.
-          </p>
-        </footer>
+          <Button
+            asChild
+            variant="outline"
+            className="shadow-lg shadow-black/25 dark:shadow-white/25"
+          >
+            <Link href="/classic">
+              <Play />
+              Classic
+            </Link>
+          </Button>
+          <Button
+            disabled
+            variant="outline"
+            className="shadow-lg shadow-black/25 dark:shadow-white/25"
+          >
+            <Clock />
+            Coming soon...
+          </Button>
+          <Button
+            asChild
+            variant="outline"
+            className="col-span-2 shadow-lg shadow-black/25 dark:shadow-white/25"
+          >
+            <Link href="/submit">
+              <ImageIcon />
+              Submit Photo
+            </Link>
+          </Button>
+        </div>
       </div>
+      <footer className="z-10 mt-auto flex flex-col items-center justify-center gap-2 p-4">
+        <Button
+          onClick={() => setTheme(theme === "light" ? "dark" : "light")}
+          size="icon-sm"
+          variant="secondary"
+          className="shadow-lg shadow-black/25 dark:shadow-white/25"
+        >
+          <Sun className="scale-100 rotate-0 transition-transform! dark:scale-0 dark:rotate-45" />
+          <Moon className="absolute scale-0 -rotate-45 transition-transform! dark:scale-100 dark:rotate-0" />
+        </Button>
+        <p className="text-primary-foreground text-shadow-black/25 text-shadow-lg">
+          &copy; {new Date().getFullYear()} Nate Babyak. All rights reserved.
+        </p>
+      </footer>
     </div>
   );
 }
