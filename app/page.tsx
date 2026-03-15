@@ -5,19 +5,27 @@ import { getDailyNumber } from "@/lib/utils";
 import Image from "next/image";
 import Link from "next/link";
 import { useTheme } from "next-themes";
+import { useEffect } from "react";
 
 export default function Page() {
   const dailyNumber = getDailyNumber();
   const { theme, setTheme } = useTheme();
 
+  useEffect(() => {
+    const originalOverflow = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+
+    return () => {
+      document.body.style.overflow = originalOverflow;
+    };
+  }, []);
+
   return (
-    <>
-      <div className="fixed top-0 left-0 h-lvh w-screen">
-        <Image src="/cu.jpg" alt="bg" fill preload className="object-cover" />
-        <div className="absolute inset-0 bg-black/10 backdrop-blur-sm dark:bg-black/50" />
-      </div>
-      <div className="relative z-10 flex h-svh w-screen flex-col overflow-hidden">
-        <div className="animate-in slide-in-from-bottom-5 fade-in-0 flex flex-1 flex-col items-center justify-center gap-4 duration-700">
+    <div className="relative h-screen w-screen overflow-hidden">
+      <Image src="/cu.jpg" alt="bg" fill preload className="object-cover" />
+      <div className="absolute inset-0 overflow-hidden bg-black/25 backdrop-blur-sm dark:bg-black/50"></div>
+      <div className="relative z-10 flex h-svh w-screen flex-col overflow-hidden overscroll-none">
+        <main className="animate-in slide-in-from-bottom-5 fade-in-0 flex flex-1 flex-col items-center justify-center gap-4 duration-700">
           <h1 className="text-center text-6xl font-black text-shadow-black/30 text-shadow-lg md:text-8xl">
             <span className="text-primary">cu</span>
             <span className="text-white">Guessr</span>
@@ -65,7 +73,7 @@ export default function Page() {
               </Link>
             </Button>
           </div>
-        </div>
+        </main>
         <footer className="mt-auto flex flex-col items-center justify-center gap-2 p-4">
           <Button
             onClick={() => setTheme(theme === "light" ? "dark" : "light")}
@@ -81,6 +89,6 @@ export default function Page() {
           </p>
         </footer>
       </div>
-    </>
+    </div>
   );
 }

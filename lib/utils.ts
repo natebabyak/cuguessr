@@ -93,7 +93,11 @@ export function easeInOut(t: number): number {
 }
 
 export function getDailyNumber() {
-  return Math.floor(
-    (new Date().getTime() - new Date("2026-03-11").getTime()) / 86400000 + 1,
-  ).toLocaleString();
+  const estDateStr = new Date().toLocaleDateString("en-CA", {
+    timeZone: "America/New_York",
+  });
+  const diff =
+    (new Date(estDateStr).getTime() - new Date("2026-03-15").getTime()) /
+    86400000;
+  return Math.floor(diff) + 1;
 }

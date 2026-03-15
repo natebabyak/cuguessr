@@ -19,12 +19,17 @@ import {
 } from "@/lib/constants";
 import { Layer, Map, Marker, Source } from "react-map-gl/maplibre";
 import type { MapLayerMouseEvent, MapRef } from "react-map-gl/maplibre";
-import { useEffect, useState, useRef } from "react";
+import { useEffect, useState, useRef, startTransition } from "react";
 import { Coordinates, GameType, Round } from "@/lib/types";
 import CountUp from "react-countup";
 import Link from "next/link";
-import { Card, CardContent } from "../ui/card";
-import { calculateDistance, calculateScore, easeInOut } from "@/lib/utils";
+import { Card, CardContent } from "@/components/ui/card";
+import {
+  calculateDistance,
+  calculateScore,
+  easeInOut,
+  getDailyNumber,
+} from "@/lib/utils";
 import { ResultsScreen } from "./results-screen";
 import { PhotoDialog } from "./photo-dialog";
 
@@ -40,28 +45,65 @@ interface GameProps {
   }[];
 }
 
+type GameState = {
+  rounds: Round[];
+  roundIndex: number;
+  isRoundOver: boolean;
+  isGameOver: boolean;
+  guessCoordinates: Coordinates | null;
+};
+
 export function Game({ type, photos }: GameProps) {
+  const STORAGE_KEY = `cuguessr-daily-${getDailyNumber()}`;
+
   const [cursor, setCursor] = useState<"default" | "crosshair" | "grabbing">(
     "crosshair",
   );
   const [cursorCoordinates, setCursorCoordinates] =
     useState<Coordinates | null>(null);
-  const [guessCoordinates, setGuessCoordinates] = useState<Coordinates | null>(
-    null,
-  );
-  const [rounds, setRounds] = useState<Round[]>([
-    ...photos.map((photo) => ({
-      photo: photo,
+  const map = useRef<MapRef>(null);
+  const animationRef = useRef<number | null>(null);
+
+  const defaultState: GameState = {
+    rounds: photos.map((photo) => ({
+      photo,
       guess: null,
       distance: null,
       score: null,
     })),
-  ]);
-  const [roundIndex, setRoundIndex] = useState(0);
-  const [isRoundOver, setIsRoundOver] = useState(false);
-  const map = useRef<MapRef>(null);
-  const animationRef = useRef<number | null>(null);
-  const [isGameOver, setIsGameOver] = useState(false);
+    roundIndex: 0,
+    isRoundOver: false,
+    isGameOver: false,
+    guessCoordinates: null,
+  };
+
+  const [gameState, setGameState] = useState<GameState>(defaultState);
+
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    if (type !== "daily") {
+      startTransition(() => setMounted(true));
+      return;
+    }
+    const saved = JSON.parse(localStorage.getItem(STORAGE_KEY) ?? "null");
+    startTransition(() => {
+      if (saved) setGameState(saved);
+      setMounted(true);
+    });
+  }, [type, STORAGE_KEY]);
+
+  useEffect(() => {
+    if (!mounted || type !== "daily") return;
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(gameState));
+  }, [gameState, mounted, type, STORAGE_KEY]);
+
+  const { rounds, roundIndex, isRoundOver, isGameOver, guessCoordinates } =
+    gameState;
+
+  function updateState(patch: Partial<GameState>) {
+    setGameState((prev) => ({ ...prev, ...patch }));
+  }
 
   useEffect(() => {
     if (!isRoundOver || !map.current) return;
@@ -76,9 +118,8 @@ export function Game({ type, photos }: GameProps) {
     const minLng = Math.min(guessLng, answerLng);
     const maxLng = Math.max(guessLng, answerLng);
 
-    if (animationRef.current !== null) {
+    if (animationRef.current !== null)
       cancelAnimationFrame(animationRef.current);
-    }
 
     map.current.flyTo({
       center: [guessLng, guessLat],
@@ -89,10 +130,8 @@ export function Game({ type, photos }: GameProps) {
 
     const traceTimeout = setTimeout(() => {
       const startTime = performance.now();
-
       const frame = (now: number) => {
         const t = Math.min((now - startTime) / 2000, 1);
-
         map.current
           ?.getMap()
           .setPaintProperty("line-layer", "line-gradient", [
@@ -102,12 +141,8 @@ export function Game({ type, photos }: GameProps) {
             t,
             "rgba(0,0,0,0)",
           ]);
-
-        if (t < 1) {
-          animationRef.current = requestAnimationFrame(frame);
-        }
+        if (t < 1) animationRef.current = requestAnimationFrame(frame);
       };
-
       animationRef.current = requestAnimationFrame(frame);
     }, 1000);
 
@@ -121,12 +156,7 @@ export function Game({ type, photos }: GameProps) {
           bearing: 0,
           duration: 2000,
           easing: easeInOut,
-          padding: {
-            top: 100,
-            bottom: 200,
-            left: 50,
-            right: 50,
-          },
+          padding: { top: 100, bottom: 200, left: 50, right: 50 },
         },
       );
     }, 1000);
@@ -134,23 +164,33 @@ export function Game({ type, photos }: GameProps) {
     return () => {
       clearTimeout(traceTimeout);
       clearTimeout(boundsTimeout);
-      if (animationRef.current !== null) {
+      if (animationRef.current !== null)
         cancelAnimationFrame(animationRef.current);
-      }
     };
   }, [isRoundOver, rounds, roundIndex]);
 
   function nextRound() {
-    setIsRoundOver(false);
-    setGuessCoordinates(null);
-
     if (roundIndex === rounds.length - 1) {
-      setIsGameOver(true);
+      setGameState((prev) => {
+        const finalState = {
+          ...prev,
+          isRoundOver: false,
+          guessCoordinates: null,
+          isGameOver: true,
+        };
+        if (type === "daily")
+          localStorage.setItem(STORAGE_KEY, JSON.stringify(finalState));
+        return finalState;
+      });
       return;
-    } else {
-      setRoundIndex((prev) => prev + 1);
     }
 
+    setGameState((prev) => ({
+      ...prev,
+      isRoundOver: false,
+      guessCoordinates: null,
+      roundIndex: prev.roundIndex + 1,
+    }));
     map.current?.flyTo({
       center: [DEFAULT_LONGITUDE, DEFAULT_LATITUDE],
       zoom: DEFAULT_ZOOM,
@@ -161,39 +201,25 @@ export function Game({ type, photos }: GameProps) {
 
   function placeGuessMarker(e: MapLayerMouseEvent) {
     if (isRoundOver) return;
-
     const { lat, lng } = e.lngLat;
-
-    setGuessCoordinates({
-      latitude: lat,
-      longitude: lng,
-    });
+    updateState({ guessCoordinates: { latitude: lat, longitude: lng } });
   }
 
   function updateCursorCoordinates(e: MapLayerMouseEvent) {
     const { lat, lng } = e.lngLat;
-
-    setCursorCoordinates({
-      latitude: lat,
-      longitude: lng,
-    });
+    setCursorCoordinates({ latitude: lat, longitude: lng });
   }
 
   function goToGuessMarker() {
     if (!guessCoordinates || !map.current) return;
-
-    const { latitude, longitude } = guessCoordinates;
-
     map.current.flyTo({
-      center: [longitude, latitude],
+      center: [guessCoordinates.longitude, guessCoordinates.latitude],
       zoom: 20,
     });
   }
 
   function goToCenter() {
-    if (!map.current) return;
-
-    map.current.flyTo({
+    map.current?.flyTo({
       center: [DEFAULT_LONGITUDE, DEFAULT_LATITUDE],
       zoom: DEFAULT_ZOOM,
     });
@@ -201,28 +227,19 @@ export function Game({ type, photos }: GameProps) {
 
   function makeGuess() {
     if (!guessCoordinates) return;
-
     const { latitude, longitude } = rounds[roundIndex].photo;
-
-    const answerCoordinates = {
-      latitude: latitude,
-      longitude: longitude,
-    };
-
-    const distance = calculateDistance(guessCoordinates, answerCoordinates);
-
-    setRounds((prev) => {
-      const newRounds = [...prev];
-      newRounds[roundIndex] = {
-        ...newRounds[roundIndex],
-        guess: guessCoordinates,
-        distance,
-        score: calculateScore(distance),
-      };
-      return newRounds;
+    const distance = calculateDistance(guessCoordinates, {
+      latitude,
+      longitude,
     });
-
-    setIsRoundOver(true);
+    const newRounds = [...rounds];
+    newRounds[roundIndex] = {
+      ...newRounds[roundIndex],
+      guess: guessCoordinates,
+      distance,
+      score: calculateScore(distance),
+    };
+    updateState({ rounds: newRounds, isRoundOver: true });
   }
 
   const fullLineGeoJson = {
@@ -236,9 +253,7 @@ export function Game({ type, photos }: GameProps) {
     },
   };
 
-  if (isGameOver) {
-    return <ResultsScreen gameType={type} rounds={rounds} />;
-  }
+  if (isGameOver) return <ResultsScreen gameType={type} rounds={rounds} />;
 
   return (
     <>
@@ -275,29 +290,27 @@ export function Game({ type, photos }: GameProps) {
               <MapPinCheckInside fill="white" className="text-green-500" />
             </Marker>
             {guessCoordinates && (
-              <>
-                <Source
-                  id="line"
-                  type="geojson"
-                  lineMetrics={true}
-                  data={fullLineGeoJson as unknown as string}
-                >
-                  <Layer
-                    id="line-layer"
-                    type="line"
-                    paint={{
-                      "line-width": 2,
-                      "line-gradient": [
-                        "step",
-                        ["line-progress"],
-                        "#000000",
-                        0,
-                        "rgba(0,0,0,0)",
-                      ],
-                    }}
-                  />
-                </Source>
-              </>
+              <Source
+                id="line"
+                type="geojson"
+                lineMetrics={true}
+                data={fullLineGeoJson as unknown as string}
+              >
+                <Layer
+                  id="line-layer"
+                  type="line"
+                  paint={{
+                    "line-width": 2,
+                    "line-gradient": [
+                      "step",
+                      ["line-progress"],
+                      "#000000",
+                      0,
+                      "rgba(0,0,0,0)",
+                    ],
+                  }}
+                />
+              </Source>
             )}
             <div className="bg-background pointer-events-auto flex items-center justify-between px-2 pt-2 pb-10 md:px-4 md:pt-4 md:pb-12">
               <div className="flex flex-col items-end">
@@ -351,9 +364,9 @@ export function Game({ type, photos }: GameProps) {
                 draggable={true}
                 latitude={guessCoordinates.latitude}
                 longitude={guessCoordinates.longitude}
-                onDrag={() => {
-                  setGuessCoordinates(cursorCoordinates);
-                }}
+                onDrag={() =>
+                  updateState({ guessCoordinates: cursorCoordinates })
+                }
               >
                 <MapPin className="text-primary fill-white" />
               </Marker>
