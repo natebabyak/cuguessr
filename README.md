@@ -1,8 +1,6 @@
 <a id="top"></a>
 
-# [cuGuessr](https://cuguessr.com)
-
-How well do you know the Carleton campus?
+# cuGuessr
 
 ## Table of Contents
 
@@ -21,9 +19,9 @@ How well do you know the Carleton campus?
 
 **This app is not affiliated with Carleton University in any way.**
 
-You can play cuGuessr [here](https://cuguessr.com).
+cuGuessr is a GeoGuessr-style game set entirely on Carleton's campus. Play the [daily challenge](https://cuguessr.com) and share your score with friends, or just see how well you actually know your school.
 
-> cuGuessr is a web application inspired by GeoGuessr that challenges users to identify locations on the Carleton University campus based on images. Users can explore the campus virtually and test their knowledge of its landmarks and hidden gems.
+All photos are submitted by the community. Think you've got a good spot? [Submit it here](https://cuguessr.com/submit).
 
 ### Screenshots
 
@@ -35,9 +33,9 @@ You can play cuGuessr [here](https://cuguessr.com).
 
 ### Technologies Used
 
+- bun
 - MapTiler
 - Next.js
-- bun
 - Supabase
 
 <div align="end">
@@ -48,7 +46,7 @@ You can play cuGuessr [here](https://cuguessr.com).
 
 ### Prerequisites
 
-- bun (recommended) or npm
+- bun
 
 ### Installation
 
@@ -95,11 +93,7 @@ bun dev
 
 ## Roadmap
 
-- [x] Daily challenges
-- [ ] Save daily challenge progress
-- [ ] Save daily challenges history
-- [ ] Add daily leaderboard
-- [ ] Add image approval solution (i.e., admin dashboard)
+See [issues](https://github.com/natebabyak/cuguessr/issues).
 
 <div align="end">
   <a href="#top">Back to Top</a>
@@ -107,9 +101,9 @@ bun dev
 
 ## Contributing
 
-This project is open source and contributions are welcome! If you have any ideas for new features or improvements, please feel free to submit a pull request.
+This project isn't open source yet, but I'd love to hear from you. Whether it's a bug, a feature idea, or just a suggestion, feel free to open an issue or drop me an email at [nate.babyak@outlook.com](mailto:nate.babyak@outlook.com).
 
-Not interested in contributing code? You can also help by submitting new images of the Carleton campus or by reporting any bugs you encounter.
+Another great way to help is by submitting photos of the Carleton campus [here](https://cuguessr.com/submit). More images means a better experience for everyone!
 
 <div align="end">
   <a href="#top">Back to Top</a>

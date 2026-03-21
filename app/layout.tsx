@@ -19,7 +19,7 @@ const geistMono = Geist_Mono({
 export const metadata: Metadata = {
   title: "cuGuessr",
   description:
-    "A geography guessing game set on the Carleton University campus.",
+    "Guess the location of 130+ user-submitted photos taken around Carleton University's campus. Play the daily challenge and share your score with friends!",
 };
 
 export default function RootLayout({

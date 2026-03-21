@@ -1,94 +1,140 @@
 "use client";
+
 import { Button } from "@/components/ui/button";
-import { Calendar, Clock, ImageIcon, Moon, Play, Sun } from "lucide-react";
-import { getDailyNumber } from "@/lib/utils";
+import { Calendar, ImageIcon, Play } from "lucide-react";
+import { cn, getDailyNumber } from "@/lib/utils";
 import Image from "next/image";
 import Link from "next/link";
-import { useTheme } from "next-themes";
-import { useEffect } from "react";
+import { useRef } from "react";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import { motion, useInView, useScroll, useTransform } from "motion/react";
+import { FaqSection } from "../components/home/faq-section";
+import { Footer } from "../components/home/footer";
 
 export default function Page() {
   const dailyNumber = getDailyNumber();
-  const { theme, setTheme } = useTheme();
+  const { scrollY } = useScroll();
 
-  useEffect(() => {
-    const originalOverflow = document.body.style.overflow;
-    document.body.style.overflow = "hidden";
+  const scale = useTransform(scrollY, [0, 1000], [1, 1.2]);
 
-    return () => {
-      document.body.style.overflow = originalOverflow;
-    };
-  }, []);
+  const titleRef = useRef(null);
+
+  const isTitleInView = useInView(titleRef, {
+    margin: "-65px 0px 0px 0px",
+    amount: 0.5,
+  });
 
   return (
-    <div className="relative h-screen w-screen overflow-hidden">
-      <Image src="/cu.jpg" alt="bg" fill preload className="object-cover" />
-      <div className="absolute inset-0 overflow-hidden bg-black/25 backdrop-blur-sm dark:bg-black/50"></div>
-      <div className="relative z-10 flex h-svh w-screen flex-col overflow-hidden overscroll-none">
-        <main className="animate-in slide-in-from-bottom-5 fade-in-0 flex flex-1 flex-col items-center justify-center gap-4 duration-700">
-          <h1 className="text-center text-6xl font-black text-shadow-black/30 text-shadow-lg md:text-8xl">
-            <span className="text-primary">cu</span>
-            <span className="text-white">Guessr</span>
-          </h1>
-          <p className="text-center text-xl leading-tight font-medium text-balance text-white text-shadow-black/30 text-shadow-lg md:text-2xl">
-            How well do you know the Carleton campus?
-          </p>
-          <div className="grid w-full max-w-sm grid-cols-2 gap-2 px-4">
-            <Button
-              asChild
-              disabled
-              className="col-span-2 shadow-lg shadow-black/25 dark:shadow-white/25"
+    <>
+      <header
+        className={cn(
+          "bg-background/80 fixed top-0 left-0 z-50 w-full border-b border-transparent px-4 py-4 backdrop-blur-md transition-colors md:px-8",
+          scrollY.get() > 0 && "border-border",
+        )}
+      >
+        <div className="mx-auto flex max-w-5xl items-center justify-between">
+          <Link href="/" className="flex items-center gap-2">
+            <Image src="/logo.svg" alt="Logo" width={24} height={24} />
+            <h1
+              className={cn(
+                "text-2xl font-bold opacity-0 transition-opacity duration-500",
+                !isTitleInView
+                  ? "animate-in fade-in-0 opacity-100"
+                  : "animate-out fade-out-0",
+              )}
             >
-              <Link href="/daily">
-                <Calendar />
-                Daily Challenge #{dailyNumber}
-              </Link>
-            </Button>
-            <Button
-              asChild
-              variant="secondary"
-              className="shadow-lg shadow-black/25 dark:shadow-white/25"
-            >
-              <Link href="/classic">
-                <Play />
-                Classic
-              </Link>
-            </Button>
-            <Button
-              disabled
-              variant="secondary"
-              className="shadow-lg shadow-black/25 dark:shadow-white/25"
-            >
-              <Clock />
-              Coming soon...
-            </Button>
-            <Button
-              asChild
-              variant="secondary"
-              className="col-span-2 shadow-lg shadow-black/25 dark:shadow-white/25"
-            >
-              <Link href="/submit">
-                <ImageIcon />
-                Submit Photo
-              </Link>
-            </Button>
-          </div>
-        </main>
-        <footer className="mt-auto flex flex-col items-center justify-center gap-2 p-4">
-          <Button
-            onClick={() => setTheme(theme === "light" ? "dark" : "light")}
-            size="icon-sm"
-            variant="secondary"
-            className="shadow-lg shadow-black/25 dark:shadow-white/25"
-          >
-            <Sun className="scale-100 rotate-0 transition-transform! dark:scale-0 dark:rotate-45" />
-            <Moon className="absolute scale-0 -rotate-45 transition-transform! dark:scale-100 dark:rotate-0" />
+              <span className="text-primary">cu</span>
+              Guessr
+            </h1>
+          </Link>
+          <Button asChild size="sm">
+            <Link href="/classic">
+              <Play />
+              Play Now
+            </Link>
           </Button>
-          <p className="text-primary-foreground text-shadow-black/25 text-shadow-lg">
-            &copy; {new Date().getFullYear()} cuGuessr. All rights reserved.
-          </p>
-        </footer>
-      </div>
-    </div>
+        </div>
+      </header>
+      <main>
+        <article>
+          <section className="relative h-svh w-screen overflow-hidden">
+            <motion.div style={{ scale }} className="absolute inset-0 -z-50">
+              <Image
+                alt="Background"
+                fill
+                src="/bg.webp"
+                className="object-cover object-center"
+              />
+            </motion.div>
+            <div className="from-background absolute -top-px -right-px -left-px -z-40 h-16.25 bg-linear-to-b to-transparent" />
+            <div className="from-background absolute -right-px -bottom-px -left-px -z-40 h-1/2 bg-linear-to-t to-transparent" />
+            <Card className="bg-background/90 animate-in fade-in-0 slide-in-from-bottom-10 absolute top-1/2 left-1/2 z-0 w-full max-w-xs -translate-x-1/2 -translate-y-1/2 backdrop-blur-sm duration-1000 ease-in-out sm:max-w-sm md:max-w-lg">
+              <CardHeader>
+                <CardTitle>
+                  <h1
+                    ref={titleRef}
+                    className="text-center text-6xl font-bold sm:text-7xl md:text-8xl"
+                  >
+                    <span className="text-primary">cu</span>
+                    Guessr
+                  </h1>
+                </CardTitle>
+                <CardDescription>
+                  <p className="text-center text-lg leading-tight font-medium text-balance sm:text-xl md:text-2xl">
+                    How well do you know the Carleton campus?
+                  </p>
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                <div className="mx-auto grid w-full max-w-xs gap-2">
+                  <Button
+                    asChild
+                    size="lg"
+                    className="duration-500 hover:scale-105 hover:rotate-1"
+                  >
+                    <Link href="/daily">
+                      <Calendar />
+                      Daily Challenge #{dailyNumber}
+                    </Link>
+                  </Button>
+                  <Button
+                    asChild
+                    size="lg"
+                    variant="outline"
+                    className="duration-500 hover:scale-105 hover:rotate-1"
+                  >
+                    <Link href="/classic">
+                      <Play />
+                      Play Classic
+                    </Link>
+                  </Button>
+                  <Button
+                    asChild
+                    size="lg"
+                    variant="outline"
+                    className="duration-500 hover:scale-105 hover:rotate-1"
+                  >
+                    <Link href="/submit">
+                      <ImageIcon />
+                      Submit a Photo
+                    </Link>
+                  </Button>
+                </div>
+              </CardContent>
+            </Card>
+          </section>
+          <div className="bg-background p-4">
+            <FaqSection />
+          </div>
+        </article>
+      </main>
+      <Footer />
+    </>
   );
 }

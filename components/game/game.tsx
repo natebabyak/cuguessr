@@ -32,13 +32,15 @@ import {
 } from "@/lib/utils";
 import { ResultsScreen } from "./results-screen";
 import { PhotoDialog } from "./photo-dialog";
+import { PhotoDialog2 } from "./photo-dialog-2";
+import { ReportDialog } from "./report-dialog";
 
 const mapStyle = `https://api.maptiler.com/maps/streets-v4/style.json?key=${process.env.NEXT_PUBLIC_MAPTILER_API_KEY}`;
 
 interface GameProps {
   type: GameType;
   photos: {
-    id: string;
+    id: number;
     image_path: string;
     latitude: number;
     longitude: number;
@@ -272,7 +274,7 @@ export function Game({ type, photos }: GameProps) {
         onMouseUp={() => setCursor("crosshair")}
       >
         {isRoundOver ? (
-          <div className="pointer-events-none absolute flex size-full flex-col justify-end">
+          <div className="pointer-events-none absolute flex size-full flex-col justify-end gap-2 md:gap-4">
             {guessCoordinates && (
               <Marker
                 anchor="bottom"
@@ -312,6 +314,10 @@ export function Game({ type, photos }: GameProps) {
                 />
               </Source>
             )}
+            <div className="flex items-center justify-between px-2 md:px-4">
+              <PhotoDialog2 imagePath={rounds[roundIndex].photo.image_path} />
+              <ReportDialog photoId={rounds[roundIndex].photo.id} />
+            </div>
             <div className="bg-background pointer-events-auto flex items-center justify-between px-2 pt-2 pb-10 md:px-4 md:pt-4 md:pb-12">
               <div className="flex flex-col items-end">
                 <span className="text-muted-foreground text-sm font-medium">

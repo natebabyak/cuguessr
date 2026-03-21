@@ -6,7 +6,7 @@ export interface Coordinates {
 export type GameType = "classic" | "daily";
 
 export interface Photo {
-  id: string;
+  id: number;
   image_path: string;
   latitude: number;
   longitude: number;
