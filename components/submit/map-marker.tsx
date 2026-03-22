@@ -1,5 +1,5 @@
 import { Coordinates } from "@/lib/types";
-import { LocateFixed } from "lucide-react";
+import { MapPin } from "lucide-react";
 import { Marker } from "react-map-gl/maplibre";
 
 interface MapMarkerProps {
@@ -22,12 +22,13 @@ export function MapMarker({
 
   return (
     <Marker
+      anchor="bottom"
       draggable={true}
       latitude={markerCoordinates.latitude}
       longitude={markerCoordinates.longitude}
       onDrag={handleDrag}
     >
-      <LocateFixed className="text-primary" />
+      <MapPin fill="#fff" className="text-primary size-8" />
     </Marker>
   );
 }

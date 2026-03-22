@@ -1,5 +1,5 @@
 import { Button } from "@/components/ui/button";
-import { Home } from "lucide-react";
+import { LogOut } from "lucide-react";
 import Link from "next/link";
 
 export function HomeButton() {
@@ -7,10 +7,10 @@ export function HomeButton() {
     <Button
       asChild
       size="icon-lg"
-      className="pointer-events-auto self-end justify-self-start rounded-full"
+      className="pointer-events-auto self-end justify-self-start rounded-full hover:scale-105"
     >
       <Link href="/">
-        <Home />
+        <LogOut className="rotate-180" />
       </Link>
     </Button>
   );
