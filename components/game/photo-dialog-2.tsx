@@ -18,12 +18,13 @@ import {
   DrawerTrigger,
 } from "@/components/ui/drawer";
 import { ImageIcon, X } from "lucide-react";
-import Image from "next/image";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { useState } from "react";
 import Lightbox from "yet-another-react-lightbox";
 import Zoom from "yet-another-react-lightbox/plugins/zoom";
 import "yet-another-react-lightbox/styles.css";
+import { Spinner } from "../ui/spinner";
+import { cn } from "@/lib/utils";
 
 const SUPABASE_URL = `${process.env.NEXT_PUBLIC_SUPABASE_URL}/storage/v1/object/public/photos/`;
 
@@ -33,6 +34,7 @@ interface PhotoDialogProps {
 
 export function PhotoDialog2({ imagePath }: PhotoDialogProps) {
   const isMobile = useIsMobile();
+  const [imageLoaded, setImageLoaded] = useState(false);
   const [open, setOpen] = useState(false);
   const [lightboxOpen, setLightboxOpen] = useState(false);
   const isShortScreen =
@@ -116,22 +118,23 @@ export function PhotoDialog2({ imagePath }: PhotoDialogProps) {
   }
 
   function Photo() {
-    const isShortScreen =
-      typeof window !== "undefined" && window.innerHeight < 500;
-
     return (
-      <>
-        <Image
+      <div className="flex size-full items-center justify-center">
+        <Spinner className={cn("block", imageLoaded && "hidden")} />
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img
           src={`${SUPABASE_URL}${imagePath}`}
           alt="Photo"
           width={768}
           height={768}
           onClick={() => setLightboxOpen(true)}
-          preload
-          className="cursor-zoom-in rounded-md object-cover"
-          style={{ maxHeight: isShortScreen ? "50vh" : "60vh", height: "auto" }}
+          onLoad={() => setImageLoaded(true)}
+          className={cn(
+            "hidden max-h-[60vh] cursor-zoom-in rounded-md object-cover",
+            imageLoaded && "block",
+          )}
         />
-      </>
+      </div>
     );
   }
 
