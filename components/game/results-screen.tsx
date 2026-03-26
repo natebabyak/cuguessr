@@ -1,12 +1,13 @@
 "use client";
 
 import { Button } from "@/components/ui/button";
-import { Share2, House } from "lucide-react";
+import { Share2, House, RotateCcw } from "lucide-react";
 import type { GameType, Round } from "@/lib/types";
 import { Item, ItemContent, ItemMedia, ItemTitle } from "@/components/ui/item";
 import Link from "next/link";
 import { toast } from "sonner";
 import { getDailyNumber } from "@/lib/utils";
+import { useRouter } from "next/navigation";
 
 interface ResultsScreenProps {
   gameType: GameType;
@@ -39,6 +40,8 @@ export function ResultsScreen({ gameType, rounds }: ResultsScreenProps) {
     gameType === "classic" ? "Classic" : `Daily #${getDailyNumber()}`;
   const totalScore = rounds.reduce((sum, round) => sum + (round.score ?? 0), 0);
   const scoreString = totalScore.toLocaleString();
+
+  const router = useRouter();
 
   async function shareResults() {
     const emojis = rounds
@@ -105,6 +108,17 @@ export function ResultsScreen({ gameType, rounds }: ResultsScreenProps) {
             <Share2 />
             Share Results
           </Button>
+          {gameType === "classic" && (
+            <Button
+              onClick={() => (window.location.href = "/classic")}
+              size="lg"
+              variant="outline"
+              className="rounded-full"
+            >
+              <RotateCcw />
+              Play Again
+            </Button>
+          )}
           <Button asChild size="lg" variant="outline" className="rounded-full">
             <Link href="/">
               <House />
