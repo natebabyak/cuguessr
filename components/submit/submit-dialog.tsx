@@ -132,7 +132,7 @@ function Content({
   markerCoordinates: Coordinates | null;
 }) {
   return (
-    <div className="flex flex-col gap-4">
+    <div className="flex flex-col gap-4 px-4">
       <Item
         variant="outline"
         className={cn(

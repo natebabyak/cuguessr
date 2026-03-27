@@ -1,4 +1,8 @@
+"use client";
+
+import "yet-another-react-lightbox/styles.css";
 import { Button } from "@/components/ui/button";
+import { cn } from "@/lib/utils";
 import {
   Dialog,
   DialogClose,
@@ -20,38 +24,35 @@ import {
   DrawerTrigger,
 } from "@/components/ui/drawer";
 import { ImageIcon, X } from "lucide-react";
+import Lightbox from "yet-another-react-lightbox";
+import { Spinner } from "@/components/ui/spinner";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { useState } from "react";
-import Lightbox from "yet-another-react-lightbox";
 import Zoom from "yet-another-react-lightbox/plugins/zoom";
-import "yet-another-react-lightbox/styles.css";
-import { cn } from "@/lib/utils";
-import { Spinner } from "@/components/ui/spinner";
 
-const TITLE_CONTENT = "Where is this?";
-const DESCRIPTION_CONTENT = "Guess where this photo was taken from";
-const SUPABASE_URL = `${process.env.NEXT_PUBLIC_SUPABASE_URL}/storage/v1/object/public/photos/`;
+const DESCRIPTION = "Guess where this photo was taken from";
+const R2_URL = "https://pub-27971f31521f454098a11afbc3ec23b6.r2.dev";
 
 interface PhotoDialogProps {
   imagePath: string;
+  isRoundOver: boolean;
 }
 
-export function PhotoDialog({ imagePath }: PhotoDialogProps) {
+export function PhotoDialog({ imagePath, isRoundOver }: PhotoDialogProps) {
+  const TITLE = isRoundOver ? "So that's where it was..." : "Where is this?";
+
   const isMobile = useIsMobile();
-  const [open, setOpen] = useState(true);
-  const [imageLoaded, setImageLoaded] = useState(false);
   const [lightboxOpen, setLightboxOpen] = useState(false);
-  const isShortScreen =
-    typeof window !== "undefined" && window.innerHeight < 500;
+  const [open, setOpen] = useState(!isRoundOver);
+
+  const imageSrc = `${R2_URL}/${imagePath.replace(/\.[^/.]+$/, "")}.webp`;
 
   return (
     <>
       <Lightbox
         open={lightboxOpen}
         close={() => setLightboxOpen(false)}
-        slides={[
-          { src: `${SUPABASE_URL}${imagePath}`, width: 768, height: 768 },
-        ]}
+        slides={[{ src: imageSrc }]}
         render={{
           buttonPrev: () => null,
           buttonNext: () => null,
@@ -59,32 +60,24 @@ export function PhotoDialog({ imagePath }: PhotoDialogProps) {
         plugins={[Zoom]}
       />
       <div className="pointer-events-auto self-end justify-self-start">
-        <div className="hidden">
-          <Photo />
-        </div>
         {isMobile ? (
           <Drawer onOpenChange={setOpen} open={open}>
             <DrawerTrigger asChild>
-              <TriggerButton />
+              <TriggerButton setOpen={setOpen} />
             </DrawerTrigger>
-            <DrawerContent>
-              <DrawerHeader>
-                <DrawerTitle>{TITLE_CONTENT}</DrawerTitle>
-                <DrawerDescription>{DESCRIPTION_CONTENT}</DrawerDescription>
+            <DrawerContent className="flex max-h-[90dvh] flex-col">
+              <DrawerHeader className="shrink-0">
+                <DrawerTitle>{TITLE}</DrawerTitle>
+                {!isRoundOver && (
+                  <DrawerDescription>{DESCRIPTION}</DrawerDescription>
+                )}
               </DrawerHeader>
-              <div className="px-2">
-                <Photo />
+              <div className="relative flex min-h-0 flex-1 flex-col overflow-hidden px-4">
+                <Photo imageSrc={imageSrc} setLightboxOpen={setLightboxOpen} />
               </div>
-              <DrawerFooter>
+              <DrawerFooter className="shrink-0">
                 <DrawerClose asChild>
-                  <Button
-                    onClick={() => setOpen(false)}
-                    size="sm"
-                    variant="outline"
-                  >
-                    <X />
-                    Close
-                  </Button>
+                  <CloseButton setOpen={setOpen} />
                 </DrawerClose>
               </DrawerFooter>
             </DrawerContent>
@@ -92,67 +85,80 @@ export function PhotoDialog({ imagePath }: PhotoDialogProps) {
         ) : (
           <Dialog onOpenChange={setOpen} open={open}>
             <DialogTrigger asChild>
-              <TriggerButton />
+              <TriggerButton setOpen={setOpen} />
             </DialogTrigger>
-            <DialogContent>
-              <DialogHeader>
-                <DialogTitle>{TITLE_CONTENT}</DialogTitle>
-                {!isShortScreen && (
-                  <DialogDescription>{DESCRIPTION_CONTENT}</DialogDescription>
+            <DialogContent className="flex max-h-[80vh] max-w-[80vw] flex-col">
+              <DialogHeader className="shrink-0">
+                <DialogTitle>{TITLE}</DialogTitle>
+                {!isRoundOver && (
+                  <DialogDescription>{DESCRIPTION}</DialogDescription>
                 )}
               </DialogHeader>
-              <Photo />
-              {!isShortScreen && (
-                <DialogFooter>
-                  <DialogClose asChild>
-                    <CloseButton />
-                  </DialogClose>
-                </DialogFooter>
-              )}
+              <div className="relative flex min-h-0 flex-1 flex-col overflow-hidden">
+                <Photo imageSrc={imageSrc} setLightboxOpen={setLightboxOpen} />
+              </div>
+              <DialogFooter className="shrink-0">
+                <DialogClose asChild>
+                  <CloseButton setOpen={setOpen} />
+                </DialogClose>
+              </DialogFooter>
             </DialogContent>
           </Dialog>
         )}
       </div>
     </>
   );
+}
 
-  function TriggerButton() {
-    return (
-      <Button onClick={() => setOpen(true)} size="lg" className="rounded-full">
-        <ImageIcon />
-        View Photo
-      </Button>
-    );
-  }
+function TriggerButton({ setOpen }: { setOpen: (open: boolean) => void }) {
+  return (
+    <Button
+      onClick={() => setOpen(true)}
+      size="lg"
+      className="rounded-full transition-transform hover:scale-105"
+    >
+      <ImageIcon />
+      View Photo
+    </Button>
+  );
+}
 
-  function Photo() {
-    return (
-      <div className="flex size-full items-center justify-center">
-        <Spinner className={cn("block", imageLoaded && "hidden")} />
-        {/* eslint-disable-next-line @next/next/no-img-element */}
-        <img
-          src={`${SUPABASE_URL}${imagePath}`}
-          alt="Photo"
-          width={768}
-          height={768}
-          onClick={() => setLightboxOpen(true)}
-          onLoad={() => setImageLoaded(true)}
-          className={cn(
-            "hidden max-h-[60vh] cursor-zoom-in rounded-md object-cover",
-            imageLoaded && "block",
-            isShortScreen && "max-h-[50vh]",
-          )}
-        />
-      </div>
-    );
-  }
+function Photo({
+  imageSrc,
+  setLightboxOpen,
+}: {
+  imageSrc: string;
+  setLightboxOpen: (open: boolean) => void;
+}) {
+  const [loaded, setLoaded] = useState(false);
 
-  function CloseButton() {
-    return (
-      <Button onClick={() => setOpen(false)} size="sm" variant="outline">
-        <X />
-        Close
-      </Button>
-    );
-  }
+  return (
+    <div className="grid h-full w-full overflow-hidden rounded-md">
+      {!loaded && (
+        <div className="col-start-1 row-start-1 flex items-center justify-center p-10">
+          <Spinner />
+        </div>
+      )}
+      {/* eslint-disable-next-line @next/next/no-img-element */}
+      <img
+        src={imageSrc}
+        alt="Photo"
+        onClick={() => setLightboxOpen(true)}
+        onLoad={() => setLoaded(true)}
+        className={cn(
+          "col-start-1 row-start-1 mx-auto my-auto cursor-zoom-in object-cover object-center",
+          loaded ? "opacity-100" : "opacity-0",
+        )}
+      />
+    </div>
+  );
+}
+
+function CloseButton({ setOpen }: { setOpen: (open: boolean) => void }) {
+  return (
+    <Button onClick={() => setOpen(false)} size="sm" variant="outline">
+      <X />
+      Close
+    </Button>
+  );
 }

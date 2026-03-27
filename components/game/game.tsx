@@ -32,7 +32,6 @@ import {
 } from "@/lib/utils";
 import { ResultsScreen } from "./results-screen";
 import { PhotoDialog } from "./photo-dialog";
-import { PhotoDialog2 } from "./photo-dialog-2";
 import { ReportDialog } from "./report-dialog";
 
 const mapStyle = `https://api.maptiler.com/maps/streets-v4/style.json?key=${process.env.NEXT_PUBLIC_MAPTILER_API_KEY}`;
@@ -315,12 +314,15 @@ export function Game({ type, photos }: GameProps) {
               </Source>
             )}
             <div className="flex items-center justify-between px-2 md:px-4">
-              <PhotoDialog2 imagePath={rounds[roundIndex].photo.image_path} />
+              <PhotoDialog
+                imagePath={rounds[roundIndex].photo.image_path}
+                isRoundOver={isRoundOver}
+              />
               <ReportDialog photoId={rounds[roundIndex].photo.id} />
             </div>
-            <div className="bg-background pointer-events-auto flex items-center justify-between px-2 pt-2 pb-10 md:px-4 md:pt-4 md:pb-12">
+            <div className="bg-background pointer-events-auto grid grid-cols-3 gap-4 px-2 pt-2 pb-10 md:grid-cols-4 md:px-4 md:pt-4 md:pb-12">
               <div className="flex flex-col items-end">
-                <span className="text-muted-foreground text-sm font-medium">
+                <span className="text-muted-foreground text-xs font-medium uppercase">
                   Distance
                 </span>
                 <CountUp
@@ -331,7 +333,7 @@ export function Game({ type, photos }: GameProps) {
                 />
               </div>
               <div className="flex flex-col items-end">
-                <span className="text-muted-foreground text-sm font-medium">
+                <span className="text-muted-foreground text-xs font-medium uppercase">
                   Round Score
                 </span>
                 <CountUp
@@ -341,7 +343,7 @@ export function Game({ type, photos }: GameProps) {
                 />
               </div>
               <div className="flex flex-col items-end">
-                <span className="text-muted-foreground text-sm font-medium">
+                <span className="text-muted-foreground text-xs font-medium uppercase">
                   Total Score
                 </span>
                 <CountUp
@@ -356,7 +358,11 @@ export function Game({ type, photos }: GameProps) {
                   className="ml-auto text-2xl font-semibold"
                 />
               </div>
-              <Button onClick={nextRound} size="sm">
+              <Button
+                onClick={nextRound}
+                size="lg"
+                className="col-span-3 ml-auto w-fit hover:scale-105 md:col-span-1"
+              >
                 {roundIndex === rounds.length - 1 ? "Results" : "Next Round"}
                 <SkipForward />
               </Button>
@@ -407,7 +413,10 @@ export function Game({ type, photos }: GameProps) {
                 </span>
               </CardContent>
             </Card>
-            <PhotoDialog imagePath={rounds[roundIndex].photo.image_path} />
+            <PhotoDialog
+              imagePath={rounds[roundIndex].photo.image_path}
+              isRoundOver={isRoundOver}
+            />
             <ButtonGroup
               orientation="vertical"
               className="self-end justify-self-end"

@@ -1,8 +1,10 @@
 import { NextRequest, NextResponse } from "next/server";
 import sharp from "sharp";
+import { S3Client, PutObjectCommand } from "@aws-sdk/client-s3";
 import { createClient } from "@/lib/supabase/server";
 
 const MAX_SIZE_MB = 10;
+const MAX_WIDTH = 1920;
 const ALLOWED_TYPES = [
   "image/jpeg",
   "image/png",
@@ -10,6 +12,15 @@ const ALLOWED_TYPES = [
   "image/heic",
   "image/heif",
 ];
+
+const r2 = new S3Client({
+  region: "auto",
+  endpoint: `https://${process.env.NEXT_PUBLIC_R2_ACCOUNT_ID}.r2.cloudflarestorage.com`,
+  credentials: {
+    accessKeyId: process.env.R2_ACCESS_KEY_ID!,
+    secretAccessKey: process.env.R2_SECRET_ACCESS_KEY!,
+  },
+});
 
 export async function POST(req: NextRequest) {
   const formData = await req.formData();
@@ -34,30 +45,42 @@ export async function POST(req: NextRequest) {
 
   const buffer = Buffer.from(await file.arrayBuffer());
 
-  // Verify it's actually a valid image
-  const metadata = await sharp(buffer)
+  const metadata = await sharp(buffer, { failOn: "error" })
     .metadata()
     .catch(() => null);
+
   if (!metadata?.width || !metadata?.height)
     return NextResponse.json({ error: "Invalid image file." }, { status: 400 });
 
-  const webpBuffer = await sharp(buffer).webp({ quality: 80 }).toBuffer();
+  const pipeline = sharp(buffer).rotate();
 
-  const supabase = createClient();
+  if (metadata.width > MAX_WIDTH) {
+    pipeline.resize(MAX_WIDTH, null, { withoutEnlargement: true });
+  }
+
+  const webpBuffer = await pipeline.webp({ quality: 82 }).toBuffer();
+
   const uuid = crypto.randomUUID();
+  const key = `${uuid}.webp`;
 
-  const { data: storageData, error: storageError } = await (
-    await supabase
-  ).storage
-    .from("photos")
-    .upload(`${uuid}.webp`, webpBuffer, { contentType: "image/webp" });
+  const putCommand = new PutObjectCommand({
+    Bucket: "cuguessr-images",
+    Key: key,
+    Body: webpBuffer,
+    ContentType: "image/webp",
+  });
 
-  if (storageError)
-    return NextResponse.json({ error: storageError.message }, { status: 500 });
+  try {
+    await r2.send(putCommand);
+  } catch (err) {
+    const message = err instanceof Error ? err.message : "R2 upload failed";
+    return NextResponse.json({ error: message }, { status: 500 });
+  }
 
-  const { error: insertError } = await (await supabase).from("photos").insert([
+  const supabase = await createClient();
+  const { error: insertError } = await supabase.from("photos").insert([
     {
-      image_path: storageData.path,
+      image_path: key,
       latitude: parseFloat(latitude),
       longitude: parseFloat(longitude),
     },
@@ -66,5 +89,5 @@ export async function POST(req: NextRequest) {
   if (insertError)
     return NextResponse.json({ error: insertError.message }, { status: 500 });
 
-  return NextResponse.json({ success: true });
+  return NextResponse.json({ success: true, key });
 }
