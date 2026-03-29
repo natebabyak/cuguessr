@@ -55,7 +55,7 @@ type GameState = {
 };
 
 export function Game({ type, photos }: GameProps) {
-  const STORAGE_KEY = `cuguessr-daily-${getDailyNumber()}`;
+  const STORAGE_KEY = `daily-${getDailyNumber()}`;
 
   const [cursor, setCursor] = useState<"default" | "crosshair" | "grabbing">(
     "crosshair",
