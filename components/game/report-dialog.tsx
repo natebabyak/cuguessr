@@ -1,7 +1,6 @@
 "use client";
 
 import { Button } from "@/components/ui/button";
-import { createClient } from "@/lib/supabase/client";
 import {
   Dialog,
   DialogClose,
@@ -47,14 +46,14 @@ export function ReportDialog({ photoId }: ReportDialogProps) {
 
     setLoading(true);
 
-    const supabase = createClient();
-    const { error: insertError } = await supabase.from("reports").insert({
-      photo_id: photoId,
-      reason: reason,
+    const res = await fetch("/api/reports", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ photoId, reason }),
     });
 
-    if (insertError) {
-      toast.error("Something Went Wrong");
+    if (!res.ok) {
+      toast.error("Something Went Wrong. Please Try Again.");
       setLoading(false);
       setOpen(false);
       return;
