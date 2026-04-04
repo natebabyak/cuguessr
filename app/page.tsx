@@ -14,21 +14,18 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { motion, useInView, useScroll, useTransform } from "motion/react";
-import { FaqSection } from "../components/home/faq-section";
-import { Footer } from "../components/home/footer";
+import { FaqSection } from "@/components/home/faq-section";
+import { Footer } from "@/components/home/footer";
 
 export default function Page() {
   const dailyNumber = getDailyNumber();
   const { scrollY } = useScroll();
 
-  const scale = useTransform(scrollY, [0, 1000], [1, 1.2]);
+  const scale = useTransform(scrollY, [0, 800], [1, 1.2]);
 
   const titleRef = useRef(null);
 
-  const isTitleInView = useInView(titleRef, {
-    margin: "-65px 0px 0px 0px",
-    amount: 0.5,
-  });
+  const isTitleInView = useInView(titleRef, { margin: "-65px 0px 0px 0px" });
 
   return (
     <>
@@ -41,17 +38,15 @@ export default function Page() {
         <div className="mx-auto flex max-w-5xl items-center justify-between">
           <Link href="/" className="flex items-center gap-2">
             <Image src="/logo.svg" alt="Logo" width={24} height={24} />
-            <h1
-              className={cn(
-                "text-2xl font-bold opacity-0 transition-opacity duration-500",
-                !isTitleInView
-                  ? "animate-in fade-in-0 opacity-100"
-                  : "animate-out fade-out-0",
-              )}
+            <motion.h1
+              initial={false}
+              animate={{ opacity: !isTitleInView ? 1 : 0 }}
+              transition={{ duration: 0.5, ease: "easeInOut" }}
+              className="text-2xl font-bold"
             >
               <span className="text-primary">cu</span>
               Guessr
-            </h1>
+            </motion.h1>
           </Link>
           <Button asChild size="sm">
             <Link href="/classic">
@@ -63,7 +58,7 @@ export default function Page() {
       </header>
       <main>
         <article>
-          <section className="relative h-svh w-screen overflow-hidden">
+          <section className="relative h-svh overflow-hidden">
             <motion.div style={{ scale }} className="absolute inset-0 -z-50">
               <Image
                 alt="Background"
