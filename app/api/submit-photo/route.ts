@@ -52,7 +52,7 @@ export async function POST(req: NextRequest) {
   if (!metadata?.width || !metadata?.height)
     return NextResponse.json({ error: "Invalid image file." }, { status: 400 });
 
-  const pipeline = sharp(buffer);
+  const pipeline = sharp(buffer).rotate();
 
   if (metadata.width > MAX_WIDTH) {
     pipeline.resize(MAX_WIDTH, null, { withoutEnlargement: true });
