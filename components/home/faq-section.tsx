@@ -53,15 +53,6 @@ const faqItems = [
           className="underline underline-offset-4"
         >
           email
-        </Link>{" "}
-        or on Instagram at{" "}
-        <Link
-          href="https://www.instagram.com/nate.babyak/"
-          target="_blank"
-          rel="noopener noreferrer"
-          className="underline underline-offset-4"
-        >
-          @nate.babyak
         </Link>
         . Bug reports, suggestions, and feedback are always welcome.
       </>
