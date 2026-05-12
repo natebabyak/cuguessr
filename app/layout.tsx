@@ -19,7 +19,7 @@ const geistMono = Geist_Mono({
 export const metadata: Metadata = {
   title: "cuGuessr",
   description:
-    "Guess the location of 130+ user-submitted photos taken around Carleton University's campus. Play the daily challenge and share your score with friends!",
+    "Guess the location of 250+ user-submitted photos taken around Carleton University's campus. Play the daily challenge and share your score with friends!",
 };
 
 export default function RootLayout({
