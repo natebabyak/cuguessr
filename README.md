@@ -126,3 +126,7 @@ Another great way to help is by submitting photos of the Carleton campus [here](
 <div align="end">
   <a href="#top">Back to Top</a>
 </div>
+
+```bash
+pnpm dlx auth@latest generate --output src/lib/auth/schema.ts --yes
+```
