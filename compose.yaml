@@ -4,3 +4,12 @@ services:
     restart: always
     ports:
       - "5432:5432"
+    environment:
+      POSTGRES_USER: user
+      POSTGRES_PASSWORD: password
+      POSTGRES_DB: db
+    volumes:
+      - pgdata:/var/lib/postgresql
+
+volumes:
+  pgdata:

@@ -10,10 +10,8 @@
 2. [Getting Started](#getting-started)
    1. [Prerequisites](#prerequisites)
    2. [Installation](#installation)
-3. [Roadmap](#roadmap)
-4. [Contributing](#contributing)
-5. [License](#license)
-6. [Acknowledgements](#acknowledgements)
+3. [License](#license)
+4. [Acknowledgements](#acknowledgements)
 
 ## About
 
@@ -46,7 +44,7 @@ All photos are submitted by the community. Think you've got a good spot? [Submit
 
 ### Prerequisites
 
-- bun
+- pnpm
 
 ### Installation
 
@@ -63,7 +61,7 @@ cd cuguessr
 #### 2. Install the dependencies
 
 ```bash
-bun install
+pnpm install
 ```
 
 #### 3. Configure the environment variables
@@ -73,37 +71,38 @@ touch .env.local
 ```
 
 ```bash
-# MapTiler
-NEXT_PUBLIC_MAPTILER_API_KEY=your_maptiler_api_key
+# Better Auth
+BETTER_AUTH_SECRET=
+BETTER_AUTH_URL=http://localhost:3000
 
-# Supabase
-NEXT_PUBLIC_SUPABASE_URL=your_supabase_url
-NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY=your_supabase_publishable_key
+# Database
+DATABASE_URL=postgres://user:password@localhost:5432/db
+
+# R2
+NEXT_PUBLIC_R2_ACCOUNT_ID=
+R2_TOKEN_VALUE=
+R2_ACCESS_KEY_ID=
+R2_SECRET_ACCESS_KEY=
+R2_BUCKET_NAME=
+```
+
+#### 5. Generate the auth schema
+
+```bash
+pnpm dlx auth@latest generate --output src/lib/auth/schema.ts --yes
+```
+
+#### 6. Start the local database
+
+```bash
+docker compose up -d
 ```
 
 #### 4. Run the development server
 
 ```bash
-bun dev
+pnpm dev
 ```
-
-<div align="end">
-  <a href="#top">Back to Top</a>
-</div>
-
-## Roadmap
-
-See [issues](https://github.com/natebabyak/cuguessr/issues).
-
-<div align="end">
-  <a href="#top">Back to Top</a>
-</div>
-
-## Contributing
-
-This project isn't open source yet, but I'd love to hear from you. Whether it's a bug, a feature idea, or just a suggestion, feel free to open an issue or drop me an email at [nate.babyak@outlook.com](mailto:nate.babyak@outlook.com).
-
-Another great way to help is by submitting photos of the Carleton campus [here](https://cuguessr.com/submit). More images means a better experience for everyone!
 
 <div align="end">
   <a href="#top">Back to Top</a>
@@ -126,7 +125,3 @@ Another great way to help is by submitting photos of the Carleton campus [here](
 <div align="end">
   <a href="#top">Back to Top</a>
 </div>
-
-```bash
-pnpm dlx auth@latest generate --output src/lib/auth/schema.ts --yes
-```

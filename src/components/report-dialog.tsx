@@ -35,15 +35,15 @@ import {
   FieldGroup,
   FieldLabel,
 } from "@/components/ui/field";
-import { Spinner } from "@/components/ui/spinner";
-import { toast } from "@/components/ui/toast";
-import { useIsMobile } from "@/hooks/use-mobile";
 import {
   InputGroup,
   InputGroupAddon,
   InputGroupText,
   InputGroupTextarea,
-} from "./ui/input-group";
+} from "@/components/ui/input-group";
+import { Spinner } from "@/components/ui/spinner";
+import { toast } from "@/components/ui/toast";
+import { useIsMobile } from "@/hooks/use-mobile";
 
 const TITLE = "Submit Report";
 const DESCRIPTION = "Enter a description to submit a report.";
