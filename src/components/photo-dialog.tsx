@@ -2,7 +2,7 @@
 
 import { ImageIcon } from "lucide-react";
 import Image from "next/image";
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { Gallery, Item } from "react-photoswipe-gallery";
 import { Button } from "@/components/ui/button";
 import {
@@ -21,7 +21,7 @@ import {
 } from "@/components/ui/drawer";
 import { useIsMobile } from "@/hooks/use-mobile";
 
-export function PhotoDialog({ imageSrc }: { imageSrc: string }) {
+export function PhotoDialog({ objectKey }: { objectKey: string }) {
   const isMobile = useIsMobile();
 
   const [open, setOpen] = useState(false);
@@ -68,7 +68,12 @@ export function PhotoDialog({ imageSrc }: { imageSrc: string }) {
   function PhotoDialogLightbox() {
     return (
       <Gallery>
-        <Item original={imageSrc} thumbnail={imageSrc} width="100" height="100">
+        <Item
+          original={`${process.env.NEXT_PUBLIC_IMAGE_URL}width=/${objectKey}`}
+          thumbnail={`${process.env.NEXT_PUBLIC_IMAGE_URL}${objectKey}`}
+          width="100"
+          height="100"
+        >
           {({ ref, open }) => (
             <Image alt="cuGuessr" onClick={open} ref={ref} src={imageSrc} />
           )}

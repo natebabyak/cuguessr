@@ -44,6 +44,8 @@ export const photo = pgTable("photo", {
   id: uuid("id").primaryKey(),
   userId: text("user_id").references(() => user.id, { onDelete: "set null" }),
   objectKey: text("object_key").notNull().unique(),
+  height: integer("height").notNull(),
+  width: integer("width").notNull(),
   latitude: doublePrecision("latitude").notNull(),
   longitude: doublePrecision("longitude").notNull(),
   status: submissionStatus("status").notNull().default("pending"),

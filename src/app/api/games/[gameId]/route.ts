@@ -4,10 +4,10 @@ import { NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
 import { db } from "@/lib/db";
 
-async function getGame(id: number) {
+async function getGame(gameId: number) {
   return await db.query.game.findFirst({
     where: {
-      id,
+      id: gameId,
     },
     with: {
       rounds: {
@@ -28,7 +28,7 @@ export async function GET({
   params,
 }: {
   params: Promise<{
-    id: number;
+    gameId: number;
   }>;
 }) {
   const session = await auth.api.getSession({
@@ -37,9 +37,9 @@ export async function GET({
 
   if (!session) unauthorized();
 
-  const { id } = await params;
+  const { gameId } = await params;
 
-  const game = await getGame(id);
+  const game = await getGame(gameId);
 
   if (!game) notFound();
 

@@ -1,4 +1,4 @@
-import { CalendarIcon, ImageIcon, PlayIcon } from "lucide-react";
+import { CalendarIcon, ImageIcon, PlusIcon } from "lucide-react";
 import Link from "next/link";
 import {
   Accordion,
@@ -6,7 +6,14 @@ import {
   AccordionItem,
   AccordionTrigger,
 } from "@/components/ui/accordion";
-import { buttonVariants } from "@/components/ui/button";
+import { Button, buttonVariants } from "@/components/ui/button";
+import { ButtonGroup } from "@/components/ui/button-group";
+import { Calendar } from "@/components/ui/calendar";
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover";
 
 const FAQ_ITEMS = [
   {
@@ -82,14 +89,24 @@ export default function Page() {
           <h1 className="text-balance font-medium text-5xl">
             Test your knowledge of the CU campus
           </h1>
-          <Link href="/daily" className={buttonVariants()}>
-            <CalendarIcon />
-            Play Today's Game
-          </Link>
-          <Link href="/play" className={buttonVariants()}>
-            <PlayIcon />
-            Play
-          </Link>
+          <ButtonGroup>
+            <Link href="/daily" className={buttonVariants()}>
+              <CalendarIcon />
+              Play Today's Game
+            </Link>
+            <Popover>
+              <PopoverTrigger render={<Button size="icon" />}>
+                <PlusIcon />
+              </PopoverTrigger>
+              <PopoverContent>
+                <Calendar
+                  captionLayout="dropdown"
+                  mode="single"
+                  timeZone="America/Toronto"
+                />
+              </PopoverContent>
+            </Popover>
+          </ButtonGroup>
           <Link href="/submit" className={buttonVariants()}>
             <ImageIcon />
             Submit Photo

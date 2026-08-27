@@ -4,10 +4,14 @@ import { NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
 import { db } from "@/lib/db";
 
-async function getGameResult(gameId: number, userId: string) {
-  return await db.query.gameResult.findFirst({
+async function getRoundResults(gameId: number, userId: string) {
+  return await db.query.roundResult.findMany({
     where: {
-      gameId,
+      round: {
+        game: {
+          id: gameId,
+        },
+      },
       userId,
     },
   });
@@ -17,7 +21,7 @@ export async function GET({
   params,
 }: {
   params: Promise<{
-    id: number;
+    gameId: number;
   }>;
 }) {
   const session = await auth.api.getSession({
@@ -26,16 +30,16 @@ export async function GET({
 
   if (!session) unauthorized();
 
-  const { id: gameId } = await params;
+  const { gameId } = await params;
   const userId = session.user.id;
 
-  const gameResult = await getGameResult(gameId, userId);
+  const roundResults = await getRoundResults(gameId, userId);
 
-  if (!gameResult) notFound();
+  if (!roundResults) notFound();
 
-  return NextResponse.json(gameResult);
+  return NextResponse.json(roundResults);
 }
 
-export type GameResultResponse = NonNullable<
-  Awaited<ReturnType<typeof getGameResult>>
+export type RoundResultsResponse = NonNullable<
+  Awaited<ReturnType<typeof getRoundResults>>
 >;

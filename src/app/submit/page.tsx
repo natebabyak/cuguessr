@@ -3,7 +3,6 @@
 import { Form, type SubmitHandler, useForm } from "@formisch/react";
 import {
   CompassIcon,
-  Layers2Icon,
   LogOutIcon,
   MapPinIcon,
   NavigationIcon,
@@ -30,9 +29,12 @@ import {
   DEFAULT_ZOOM,
 } from "@/lib/constants";
 import { db } from "@/lib/db";
+import { calculateDistance } from "@/lib/math";
+import type { Coordinates } from "@/lib/types";
 import { cn } from "@/lib/utils";
 import { PhotoSchema, submitPhoto } from "./actions";
 
+const MAX_DISTANCE = 2_000;
 const ZOOM = 20;
 
 export default function Page() {
@@ -52,44 +54,44 @@ export default function Page() {
   };
 
   const [cursor, setCursor] = useState<"crosshair" | "grabbing">("crosshair");
+  const [cursorCoords, setCursorCoords] = useState<Coordinates | null>(null);
+  const [markerCoords, setMarkerCoords] = useState<Coordinates | null>(null);
 
-  const setMarkerCoordinatesWrapper = (coordinates: {
-    latitude: number;
-    longitude: number;
-  }) => {
-    const MAX_DISTANCE = 2_000;
-
-    const { latitude, longitude } = coordinates;
+  function handleClick(e: MapLayerMouseEvent) {
+    const { lat: latitude, lng: longitude } = e.lngLat;
 
     if (
-      calculateDistance(
-        { latitude: DEFAULT_LATITUDE, longitude: DEFAULT_LONGITUDE },
-        { latitude, longitude },
-      ) > MAX_DISTANCE
+      calculateDistance({
+        a: {
+          latitude,
+          longitude,
+        },
+        b: {
+          latitude: DEFAULT_LATITUDE,
+          longitude: DEFAULT_LONGITUDE,
+        },
+      }) > MAX_DISTANCE
     ) {
-      toast.add({ title: "Marker Too Far from Campus" });
+      toast.add({
+        title: "Location too far from campus",
+      });
+
       return;
     }
 
-    setMarkerCoordinates(coordinates);
-  };
-
-  const handleClick = (event: MapLayerMouseEvent) => {
-    const { lat, lng } = event.lngLat;
-    setMarkerCoordinatesWrapper({ latitude: lat, longitude: lng });
-  };
-
-  const handleMouseDown = () => {
-    setCursor("grabbing");
-  };
+    setMarkerCoords({
+      latitude,
+      longitude,
+    });
+  }
 
   const handleMouseMove = (event: MapLayerMouseEvent) => {
-    const { lat, lng } = event.lngLat;
-    setCursorCoordinates({ latitude: lat, longitude: lng });
-  };
+    const { lat: latitude, lng: longitude } = event.lngLat;
 
-  const handleMouseUp = () => {
-    setCursor("crosshair");
+    setCursorCoords({
+      latitude,
+      longitude,
+    });
   };
 
   const mapRef = useRef<MapRef>(null);
@@ -104,23 +106,25 @@ export default function Page() {
           zoom: DEFAULT_ZOOM,
         }}
         onClick={handleClick}
-        onMouseDown={handleMouseDown}
+        onMouseDown={() => setCursor("grabbing")}
         onMouseMove={handleMouseMove}
-        onMouseUp={handleMouseUp}
+        onMouseUp={() => setCursor("crosshair")}
         ref={mapRef}
       >
-        <Marker
-          anchor="bottom"
-          draggable={true}
-          latitude={markerCoordinates.latitude}
-          longitude={markerCoordinates.longitude}
-          onDrag={() => {
-            if (!cursorCoordinates) return;
-            setMarkerCoordinates(cursorCoordinates);
-          }}
-        >
-          <MapPinIcon fill="#fff" className="size-8 text-primary" />
-        </Marker>
+        {markerCoords && (
+          <Marker
+            anchor="bottom"
+            draggable={true}
+            latitude={markerCoords.latitude}
+            longitude={markerCoords.longitude}
+            onDrag={() => {
+              if (!cursorCoords) return;
+              setMarkerCoords(cursorCoords);
+            }}
+          >
+            <MapPinIcon fill="#fff" className="size-8 text-primary" />
+          </Marker>
+        )}
         <div className="pointer-events-none absolute grid h-dvh w-dvw grid-cols-2 grid-rows-2 px-2 pt-2 pb-10 md:px-4 md:pt-4 md:pb-12">
           <Item className="pointer-events-auto col-span-2 h-fit justify-start justify-self-start"></Item>
           <Button
@@ -135,26 +139,6 @@ export default function Page() {
             orientation="vertical"
             className="pointer-events-auto self-end justify-self-end"
           >
-            <ButtonGroup className="ml-auto">
-              <Button
-                onClick={() => {
-                  if (mapStyle === "hybrid") {
-                    setMapStyle("streets");
-                  } else {
-                    setMapStyle("hybrid");
-                  }
-                }}
-                size="icon-lg"
-                className="rounded-full"
-              >
-                <Layers2Icon
-                  className={cn(
-                    mapStyle === "hybrid" &&
-                      "[&>path:first-child]:fill-primary-foreground",
-                  )}
-                />
-              </Button>
-            </ButtonGroup>
             <ButtonGroup orientation="vertical" className="ml-auto">
               <Button
                 onClick={() => {
@@ -173,12 +157,12 @@ export default function Page() {
                 <CompassIcon />
               </Button>
               <Button
-                disabled={!markerCoordinates}
+                disabled={!markerCoords}
                 onClick={() => {
                   const map = mapRef.current;
-                  if (!map || !markerCoordinates) return;
+                  if (!map || !markerCoords) return;
 
-                  const { latitude, longitude } = markerCoordinates;
+                  const { latitude, longitude } = markerCoords;
 
                   map.flyTo({
                     center: [longitude, latitude],
@@ -212,10 +196,7 @@ export default function Page() {
               </Button>
             </ButtonGroup>
             <ButtonGroup>
-              <SubmitDialog
-                markerCoordinates={markerCoordinates}
-                photo={photo}
-              />
+              <Button />
             </ButtonGroup>
           </ButtonGroup>
         </div>

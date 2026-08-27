@@ -29,5 +29,5 @@ export default async function Page({
 
   if (!game) notFound();
 
-  return <Game id={game.id} />;
+  return <Game gameId={game.id} />;
 }

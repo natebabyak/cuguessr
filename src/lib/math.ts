@@ -1,3 +1,5 @@
+import type { Coordinates } from "@/lib/types";
+
 function toRadians(degrees: number): number {
   return (degrees * Math.PI) / 180;
 }
@@ -10,14 +12,8 @@ export function calculateDistance({
   a,
   b,
 }: {
-  a: {
-    latitude: number;
-    longitude: number;
-  };
-  b: {
-    latitude: number;
-    longitude: number;
-  };
+  a: Coordinates;
+  b: Coordinates;
 }) {
   return (
     2 *
