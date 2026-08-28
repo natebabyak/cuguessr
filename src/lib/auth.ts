@@ -1,9 +1,10 @@
 import { drizzleAdapter } from "@better-auth/drizzle-adapter/relations-v2";
 import { betterAuth } from "better-auth/minimal";
 import { anonymous, magicLink } from "better-auth/plugins";
-import { db } from "@/lib/db";
-import * as schema from "@/lib/db/schema";
-import { sendEmail } from "@/lib/email";
+import { tanstackStartCookies } from "better-auth/tanstack-start";
+import { db } from "#/lib/db";
+import * as schema from "#/lib/db/schema";
+import { sendEmail } from "#/lib/email";
 
 export const auth = betterAuth({
   database: drizzleAdapter(db, {
@@ -41,6 +42,7 @@ export const auth = betterAuth({
         });
       },
     }),
+    tanstackStartCookies(),
   ],
   advanced: {
     database: {

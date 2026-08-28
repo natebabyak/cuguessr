@@ -1,4 +1,4 @@
-import type { Coordinates } from "@/lib/types";
+import type { Coordinates } from "#/lib/types.ts";
 
 function toRadians(degrees: number): number {
   return (degrees * Math.PI) / 180;

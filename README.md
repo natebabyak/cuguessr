@@ -31,10 +31,11 @@ All photos are submitted by the community. Think you've got a good spot? [Submit
 
 ### Technologies Used
 
-- bun
-- MapTiler
 - Next.js
-- Supabase
+- Postgres
+
+- Cloudflare (Images, R2, Workers)
+- Neon
 
 <div align="end">
   <a href="#top">Back to Top</a>
@@ -44,21 +45,19 @@ All photos are submitted by the community. Think you've got a good spot? [Submit
 
 ### Prerequisites
 
+- Docker
 - pnpm
 
 ### Installation
 
-#### 1. Clone the repository
+#### 1. Clone repository
 
 ```bash
 git clone https://github.com/natebabyak/cuguessr.git
-```
-
-```bash
 cd cuguessr
 ```
 
-#### 2. Install the dependencies
+#### 2. Install dependencies
 
 ```bash
 pnpm install
@@ -90,6 +89,40 @@ R2_BUCKET_NAME=
 
 ```bash
 pnpm dlx auth@latest generate --output src/lib/auth/schema.ts --yes
+```
+
+### Tiles
+
+#### 1. Pull the PMTiles CLI Docker image
+
+```bash
+docker pull protomaps/go-pmtiles
+```
+
+#### 2. Extract the PMTiles file
+
+```bash
+docker run --rm \
+  -v "$(pwd):/data" \
+  protomaps/go-pmtiles \
+  extract \
+  https://build.protomaps.com/20260827.pmtiles \
+  /data/cu.pmtiles \
+  --bbox=-75.747256,45.3366786,-75.647256,45.4366786
+```
+
+#### 3. Configure Cloudflare R2 CORS
+
+```json
+[
+  {
+    "AllowedOrigins": ["http://localhost:3000"],
+    "AllowedMethods": ["GET", "HEAD"],
+    "AllowedHeaders": ["range", "if-match"],
+    "ExposeHeaders": ["etag"],
+    "MaxAgeSeconds": 3000
+  }
+]
 ```
 
 #### 6. Start the local database

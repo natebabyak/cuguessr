@@ -52,10 +52,6 @@ export const photo = pgTable("photo", {
   createdAt: timestamp("created_at", { withTimezone: true })
     .notNull()
     .defaultNow(),
-  updatedAt: timestamp("updated_at", { withTimezone: true })
-    .notNull()
-    .defaultNow()
-    .$onUpdate(() => new Date()),
 });
 
 export const report = pgTable("report", {
@@ -66,6 +62,9 @@ export const report = pgTable("report", {
   userId: text("user_id").references(() => user.id, { onDelete: "set null" }),
   description: text("description").notNull(),
   status: submissionStatus("status").notNull().default("pending"),
+  createdAt: timestamp("created_at", { withTimezone: true })
+    .notNull()
+    .defaultNow(),
 });
 
 export const round = pgTable(
@@ -80,7 +79,7 @@ export const round = pgTable(
       .references(() => photo.id, { onDelete: "cascade" }),
     number: integer("number").notNull(),
   },
-  (t) => [unique().on(t.gameId, t.photoId, t.number)],
+  (t) => [unique().on(t.gameId, t.number), unique().on(t.gameId, t.photoId)],
 );
 
 export const roundResult = pgTable(
