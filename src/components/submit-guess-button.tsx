@@ -1,16 +1,17 @@
 import { SendIcon } from "lucide-react";
 import { Button } from "#/components/ui/button";
-import type { Coordinates } from "#/lib/types";
 
-export function SubmitGuessButton({ guess }: { guess: Coordinates | null }) {
-  function submitGuess() {
-    if (!guess) return;
-  }
-
+export function SubmitGuessButton({
+  disabled,
+  onClick,
+}: {
+  disabled: boolean;
+  onClick: () => void;
+}) {
   return (
     <Button
-      disabled={!guess}
-      onClick={submitGuess}
+      disabled={disabled}
+      onClick={onClick}
       size="lg"
       className="pointer-events-auto rounded-full"
     >

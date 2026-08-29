@@ -1,4 +1,4 @@
-import { LocateFixedIcon } from "lucide-react";
+import { LocateFixedIcon, MapPinSearchIcon } from "lucide-react";
 import { useMap } from "react-map-gl/maplibre";
 import { Button } from "#/components/ui/button";
 import type { Coordinates } from "#/lib/types";
@@ -18,8 +18,13 @@ export function GoToMarkerButton({ marker }: { marker: Coordinates | null }) {
   }
 
   return (
-    <Button disabled={!marker} onClick={goToMarker} size="icon-lg">
-      <LocateFixedIcon />
+    <Button
+      disabled={!marker}
+      onClick={goToMarker}
+      size="icon-lg"
+      title="Go to marker"
+    >
+      <MapPinSearchIcon />
     </Button>
   );
 }

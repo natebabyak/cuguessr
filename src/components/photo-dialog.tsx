@@ -1,36 +1,56 @@
-"use client";
-
 import { ImageIcon } from "lucide-react";
-import Image from "next/image";
-import { useMemo, useState } from "react";
+import { useState } from "react";
 import { Gallery, Item } from "react-photoswipe-gallery";
-import { Button } from "@/components/ui/button";
+import { Button } from "#/components/ui/button";
 import {
   Dialog,
   DialogClose,
   DialogContent,
+  DialogDescription,
   DialogFooter,
+  DialogHeader,
+  DialogTitle,
   DialogTrigger,
-} from "@/components/ui/dialog";
+} from "#/components/ui/dialog";
 import {
   Drawer,
   DrawerClose,
   DrawerContent,
+  DrawerDescription,
   DrawerFooter,
+  DrawerHeader,
+  DrawerTitle,
   DrawerTrigger,
-} from "@/components/ui/drawer";
-import { useIsMobile } from "@/hooks/use-mobile";
+} from "#/components/ui/drawer";
+import { useIsMobile } from "#/hooks/use-mobile";
 
-export function PhotoDialog({ objectKey }: { objectKey: string }) {
+const TITLE = "Where was this photo taken?";
+const DESCRIPTION = "Click on the image to zoom in.";
+
+const PHOTOS_URL = import.meta.env.VITE_PHOTOS_URL;
+
+export function PhotoDialog({
+  objectKey,
+  height,
+  width,
+}: {
+  objectKey: string;
+  height: number;
+  width: number;
+}) {
   const isMobile = useIsMobile();
 
-  const [open, setOpen] = useState(false);
+  const [open, setOpen] = useState(true);
 
   if (isMobile) {
     return (
-      <Drawer onOpenChange={setOpen} open={open} showSwipeHandle>
+      <Drawer onOpenChange={setOpen} open={open}>
         <DrawerTrigger render={<PhotoDialogTrigger />} />
         <DrawerContent>
+          <DrawerHeader>
+            <DrawerTitle>{TITLE}</DrawerTitle>
+            <DrawerDescription>{DESCRIPTION}</DrawerDescription>
+          </DrawerHeader>
           <PhotoDialogLightbox />
           <DrawerFooter>
             <DrawerClose render={<PhotoDialogClose />} />
@@ -44,6 +64,10 @@ export function PhotoDialog({ objectKey }: { objectKey: string }) {
     <Dialog onOpenChange={setOpen} open={open}>
       <DialogTrigger render={<PhotoDialogTrigger />} />
       <DialogContent showCloseButton={false}>
+        <DialogHeader>
+          <DialogTitle>{TITLE}</DialogTitle>
+          <DialogDescription>{DESCRIPTION}</DialogDescription>
+        </DialogHeader>
         <PhotoDialogLightbox />
         <DialogFooter>
           <DialogClose render={<PhotoDialogClose />} />
@@ -54,11 +78,7 @@ export function PhotoDialog({ objectKey }: { objectKey: string }) {
 
   function PhotoDialogTrigger() {
     return (
-      <Button
-        onClick={() => setOpen(true)}
-        size="lg"
-        className="rounded-full transition-transform hover:scale-105"
-      >
+      <Button onClick={() => setOpen(true)} size="lg">
         <ImageIcon />
         View Photo
       </Button>
@@ -69,13 +89,27 @@ export function PhotoDialog({ objectKey }: { objectKey: string }) {
     return (
       <Gallery>
         <Item
-          original={`${process.env.NEXT_PUBLIC_IMAGE_URL}width=/${objectKey}`}
-          thumbnail={`${process.env.NEXT_PUBLIC_IMAGE_URL}${objectKey}`}
-          width="100"
-          height="100"
+          height={height}
+          original={`${PHOTOS_URL}/${objectKey}`}
+          thumbnail={`${PHOTOS_URL}/${objectKey}`}
+          width={width}
         >
           {({ ref, open }) => (
-            <Image alt="cuGuessr" onClick={open} ref={ref} src={imageSrc} />
+            <button
+              onClick={open}
+              type="button"
+              className="block w-full cursor-zoom-in overflow-hidden rounded-lg border-0 bg-transparent p-0"
+            >
+              <img
+                alt="round location"
+                height={height}
+                ref={ref}
+                src={`${PHOTOS_URL}/${objectKey}`}
+                style={{ aspectRatio: `${width} / ${height}` }}
+                width={width}
+                className="h-auto w-full rounded-lg object-cover"
+              />
+            </button>
           )}
         </Item>
       </Gallery>
@@ -84,7 +118,7 @@ export function PhotoDialog({ objectKey }: { objectKey: string }) {
 
   function PhotoDialogClose() {
     return (
-      <Button onClick={() => setOpen(false)} size="sm" variant="outline">
+      <Button onClick={() => setOpen(false)} size="lg">
         Done
       </Button>
     );

@@ -11,10 +11,10 @@
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as AdminRouteImport } from './routes/admin'
-import { Route as DailyRouteImport } from './routes/daily'
 import { Route as LeaderboardRouteImport } from './routes/leaderboard'
 import { Route as SignInRouteImport } from './routes/sign-in'
 import { Route as SubmitRouteImport } from './routes/submit'
+import { Route as DailyIndexRouteImport } from './routes/daily.index'
 import { Route as DailyDateRouteImport } from './routes/daily.$date'
 import { Route as ApiAuthSplatRouteImport } from './routes/api.auth.$'
 
@@ -26,11 +26,6 @@ const IndexRoute = IndexRouteImport.update({
 const AdminRoute = AdminRouteImport.update({
   id: '/admin',
   path: '/admin',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const DailyRoute = DailyRouteImport.update({
-  id: '/daily',
-  path: '/daily',
   getParentRoute: () => rootRouteImport,
 } as any)
 const LeaderboardRoute = LeaderboardRouteImport.update({
@@ -48,10 +43,15 @@ const SubmitRoute = SubmitRouteImport.update({
   path: '/submit',
   getParentRoute: () => rootRouteImport,
 } as any)
+const DailyIndexRoute = DailyIndexRouteImport.update({
+  id: '/daily/',
+  path: '/daily/',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const DailyDateRoute = DailyDateRouteImport.update({
-  id: '/$date',
-  path: '/$date',
-  getParentRoute: () => DailyRoute,
+  id: '/daily/$date',
+  path: '/daily/$date',
+  getParentRoute: () => rootRouteImport,
 } as any)
 const ApiAuthSplatRoute = ApiAuthSplatRouteImport.update({
   id: '/api/auth/$',
@@ -62,32 +62,32 @@ const ApiAuthSplatRoute = ApiAuthSplatRouteImport.update({
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/admin': typeof AdminRoute
-  '/daily': typeof DailyRouteWithChildren
   '/leaderboard': typeof LeaderboardRoute
   '/sign-in': typeof SignInRoute
   '/submit': typeof SubmitRoute
   '/daily/$date': typeof DailyDateRoute
+  '/daily/': typeof DailyIndexRoute
   '/api/auth/$': typeof ApiAuthSplatRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/admin': typeof AdminRoute
-  '/daily': typeof DailyRouteWithChildren
   '/leaderboard': typeof LeaderboardRoute
   '/sign-in': typeof SignInRoute
   '/submit': typeof SubmitRoute
   '/daily/$date': typeof DailyDateRoute
+  '/daily': typeof DailyIndexRoute
   '/api/auth/$': typeof ApiAuthSplatRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
   '/admin': typeof AdminRoute
-  '/daily': typeof DailyRouteWithChildren
   '/leaderboard': typeof LeaderboardRoute
   '/sign-in': typeof SignInRoute
   '/submit': typeof SubmitRoute
   '/daily/$date': typeof DailyDateRoute
+  '/daily/': typeof DailyIndexRoute
   '/api/auth/$': typeof ApiAuthSplatRoute
 }
 export interface FileRouteTypes {
@@ -95,41 +95,42 @@ export interface FileRouteTypes {
   fullPaths:
     | '/'
     | '/admin'
-    | '/daily'
     | '/leaderboard'
     | '/sign-in'
     | '/submit'
     | '/daily/$date'
+    | '/daily/'
     | '/api/auth/$'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
     | '/admin'
-    | '/daily'
     | '/leaderboard'
     | '/sign-in'
     | '/submit'
     | '/daily/$date'
+    | '/daily'
     | '/api/auth/$'
   id:
     | '__root__'
     | '/'
     | '/admin'
-    | '/daily'
     | '/leaderboard'
     | '/sign-in'
     | '/submit'
     | '/daily/$date'
+    | '/daily/'
     | '/api/auth/$'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   AdminRoute: typeof AdminRoute
-  DailyRoute: typeof DailyRouteWithChildren
   LeaderboardRoute: typeof LeaderboardRoute
   SignInRoute: typeof SignInRoute
   SubmitRoute: typeof SubmitRoute
+  DailyDateRoute: typeof DailyDateRoute
+  DailyIndexRoute: typeof DailyIndexRoute
   ApiAuthSplatRoute: typeof ApiAuthSplatRoute
 }
 
@@ -147,13 +148,6 @@ declare module '@tanstack/react-router' {
       path: '/admin'
       fullPath: '/admin'
       preLoaderRoute: typeof AdminRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/daily': {
-      id: '/daily'
-      path: '/daily'
-      fullPath: '/daily'
-      preLoaderRoute: typeof DailyRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/leaderboard': {
@@ -177,12 +171,19 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof SubmitRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/daily/': {
+      id: '/daily/'
+      path: '/daily'
+      fullPath: '/daily/'
+      preLoaderRoute: typeof DailyIndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/daily/$date': {
       id: '/daily/$date'
-      path: '/$date'
+      path: '/daily/$date'
       fullPath: '/daily/$date'
       preLoaderRoute: typeof DailyDateRouteImport
-      parentRoute: typeof DailyRoute
+      parentRoute: typeof rootRouteImport
     }
     '/api/auth/$': {
       id: '/api/auth/$'
@@ -194,23 +195,14 @@ declare module '@tanstack/react-router' {
   }
 }
 
-interface DailyRouteChildren {
-  DailyDateRoute: typeof DailyDateRoute
-}
-
-const DailyRouteChildren: DailyRouteChildren = {
-  DailyDateRoute: DailyDateRoute,
-}
-
-const DailyRouteWithChildren = DailyRoute._addFileChildren(DailyRouteChildren)
-
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AdminRoute: AdminRoute,
-  DailyRoute: DailyRouteWithChildren,
   LeaderboardRoute: LeaderboardRoute,
   SignInRoute: SignInRoute,
   SubmitRoute: SubmitRoute,
+  DailyDateRoute: DailyDateRoute,
+  DailyIndexRoute: DailyIndexRoute,
   ApiAuthSplatRoute: ApiAuthSplatRoute,
 }
 export const routeTree = rootRouteImport

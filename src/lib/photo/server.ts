@@ -1,7 +1,7 @@
 import { PutObjectCommand, S3Client } from "@aws-sdk/client-s3";
 import sharp from "sharp";
-import { db } from "./db";
-import { photo as photosTable } from "./db/schema";
+import { db } from "../db";
+import { photo as photosTable } from "../db/schema";
 
 const s3Client = new S3Client({
   region: "auto",
@@ -36,7 +36,6 @@ export async function createPhotoServer(
   );
 
   await db.insert(photosTable).values({
-    id: photoId,
     userId,
     objectKey: `photos/${photoId}.webp`,
     height,

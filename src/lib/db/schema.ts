@@ -2,11 +2,13 @@ import { defineRelations } from "drizzle-orm";
 import {
   date,
   doublePrecision,
+  index,
   integer,
   pgEnum,
   pgTable,
   primaryKey,
   serial,
+  smallint,
   text,
   timestamp,
   unique,
@@ -21,7 +23,7 @@ export const submissionStatus = pgEnum("submission_status", [
 
 export const game = pgTable("game", {
   id: serial("id").primaryKey(),
-  date: date("date").notNull().unique(),
+  date: date("date", { mode: "string" }).notNull().unique(),
 });
 
 export const gameResult = pgTable(
@@ -33,38 +35,68 @@ export const gameResult = pgTable(
     userId: text("user_id")
       .notNull()
       .references(() => user.id, { onDelete: "cascade" }),
-    points: integer("points").notNull(),
-    durationMs: integer("duration_ms").notNull(),
+    points: smallint("points").notNull(),
+    createdAt: timestamp("created_at", { withTimezone: true })
+      .notNull()
+      .defaultNow(),
   },
-  (t) => [primaryKey({ columns: [t.gameId, t.userId] })],
+  (t) => [
+    primaryKey({ columns: [t.gameId, t.userId] }),
+    index("game_result_user_id_idx").on(t.userId),
+  ],
 );
 
-export const photo = pgTable("photo", {
-  id: serial("id").primaryKey(),
-  userId: text("user_id").references(() => user.id, { onDelete: "set null" }),
-  objectKey: text("object_key").notNull().unique(),
-  height: integer("height").notNull(),
-  width: integer("width").notNull(),
-  latitude: doublePrecision("latitude").notNull(),
-  longitude: doublePrecision("longitude").notNull(),
-  status: submissionStatus("status").notNull().default("pending"),
-  createdAt: timestamp("created_at", { withTimezone: true })
-    .notNull()
-    .defaultNow(),
-});
+export const photo = pgTable(
+  "photo",
+  {
+    id: serial("id").primaryKey(),
+    userId: text("user_id").references(() => user.id, { onDelete: "set null" }),
+    objectKey: text("object_key").notNull().unique(),
+    height: integer("height").notNull(),
+    width: integer("width").notNull(),
+    latitude: doublePrecision("latitude").notNull(),
+    longitude: doublePrecision("longitude").notNull(),
+    status: submissionStatus("status").notNull().default("pending"),
+    createdAt: timestamp("created_at", { withTimezone: true })
+      .notNull()
+      .defaultNow(),
+    updatedAt: timestamp("updated_at", { withTimezone: true })
+      .notNull()
+      .defaultNow()
+      .$onUpdate(() => new Date()),
+  },
+  (t) => [
+    index("photo_user_id_idx").on(t.userId),
+    index("photo_status_idx").on(t.status),
+  ],
+);
 
-export const report = pgTable("report", {
-  id: serial("id").primaryKey(),
-  photoId: integer("photo_id")
-    .notNull()
-    .references(() => photo.id, { onDelete: "cascade" }),
-  userId: text("user_id").references(() => user.id, { onDelete: "set null" }),
-  description: text("description").notNull(),
-  status: submissionStatus("status").notNull().default("pending"),
-  createdAt: timestamp("created_at", { withTimezone: true })
-    .notNull()
-    .defaultNow(),
-});
+export const report = pgTable(
+  "report",
+  {
+    id: serial("id").primaryKey(),
+    photoId: integer("photo_id")
+      .notNull()
+      .references(() => photo.id, { onDelete: "cascade" }),
+    userId: text("user_id").references(() => user.id, {
+      onDelete: "set null",
+    }),
+    description: text("description").notNull(),
+    status: submissionStatus("status").notNull().default("pending"),
+    createdAt: timestamp("created_at", { withTimezone: true })
+      .notNull()
+      .defaultNow(),
+    updatedAt: timestamp("updated_at", { withTimezone: true })
+      .notNull()
+      .defaultNow()
+      .$onUpdate(() => new Date()),
+  },
+  (t) => [
+    index("report_photo_id_idx").on(t.photoId),
+    index("report_user_id_idx").on(t.userId),
+    index("report_status_idx").on(t.status),
+  ],
+);
 
 export const round = pgTable(
   "round",
@@ -76,9 +108,12 @@ export const round = pgTable(
     photoId: integer("photo_id")
       .notNull()
       .references(() => photo.id, { onDelete: "cascade" }),
-    number: integer("number").notNull(),
+    index: smallint("index").notNull(),
   },
-  (t) => [unique().on(t.gameId, t.number), unique().on(t.gameId, t.photoId)],
+  (t) => [
+    unique("round_game_id_index_unique").on(t.gameId, t.index),
+    unique("round_game_id_photo_id_unique").on(t.gameId, t.photoId),
+  ],
 );
 
 export const roundResult = pgTable(
@@ -90,16 +125,18 @@ export const roundResult = pgTable(
     userId: text("user_id")
       .notNull()
       .references(() => user.id, { onDelete: "cascade" }),
-    latitude: doublePrecision("latitude"),
-    longitude: doublePrecision("longitude"),
-    distance: doublePrecision("distance"),
-    points: integer("points"),
+    latitude: doublePrecision("latitude").notNull(),
+    longitude: doublePrecision("longitude").notNull(),
+    distance: doublePrecision("distance").notNull(),
+    points: smallint("points").notNull(),
     createdAt: timestamp("created_at", { withTimezone: true })
       .notNull()
       .defaultNow(),
-    durationMs: integer("duration_ms"),
   },
-  (t) => [primaryKey({ columns: [t.roundId, t.userId] })],
+  (t) => [
+    primaryKey({ columns: [t.roundId, t.userId] }),
+    index("round_result_user_id_idx").on(t.userId),
+  ],
 );
 
 export const relations = defineRelations(

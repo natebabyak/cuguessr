@@ -54,6 +54,10 @@ function RouteComponent() {
           <Link to="/daily" className={buttonVariants()}>
             Play Today's Game
           </Link>
+          <DropdownMenu>
+            <DropdownMenuTrigger />
+            <DropdownMenuContent></DropdownMenuContent>
+          </DropdownMenu>
         </div>
       </header>
       <main className="*:flex *:flex-col *:items-center *:justify-center [&_h2]:font-medium [&_h2]:text-3xl">

@@ -7,4 +7,9 @@
     "source.fixAll.biome": true,
   },
   "format_on_save": "on",
+  "languages": {
+    "JSONC": {
+      "formatter": "language_server"
+    }
+  }
 }

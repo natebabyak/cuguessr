@@ -1,7 +1,7 @@
 import { createServerFn } from "@tanstack/react-start";
 import z from "zod";
-import { ensureSession } from "./auth.functions";
-import { createPhotoServer } from "./photos.server";
+import { ensureSession } from "../auth.functions";
+import { createPhotoServer } from "./server";
 
 export const createPhoto = createServerFn({ method: "POST" })
   .validator(

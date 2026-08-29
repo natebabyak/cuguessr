@@ -4,36 +4,48 @@ import exifr from "exifr";
 import { LogOutIcon, MapPinIcon } from "lucide-react";
 import { useState } from "react";
 import { Marker } from "react-map-gl/maplibre";
-import { AppMap } from "@/components/app-map";
-import { GoToCenterButton } from "@/components/go-to-center-button";
-import { GoToMarkerButton } from "@/components/go-to-marker-button";
-import { GoToMyLocationButton } from "@/components/go-to-my-location-button";
-import { MapOverlay } from "@/components/map-overlay";
-import { Button, buttonVariants } from "@/components/ui/button";
-import { ButtonGroup } from "@/components/ui/button-group";
-import { Input } from "@/components/ui/input";
-import { Item, ItemContent, ItemHeader, ItemTitle } from "@/components/ui/item";
-import { toast } from "@/components/ui/toast";
+import z from "zod";
+import { AppMap } from "#/components/app-map";
+import { GoToCenterButton } from "#/components/go-to-center-button";
+import { GoToMarkerButton } from "#/components/go-to-marker-button";
+import { GoToMyLocationButton } from "#/components/go-to-my-location-button";
+import { MapOverlay } from "#/components/map-overlay";
+import { Button, buttonVariants } from "#/components/ui/button";
+import { ButtonGroup } from "#/components/ui/button-group";
+import { Input } from "#/components/ui/input";
+import { Item, ItemContent, ItemHeader, ItemTitle } from "#/components/ui/item";
+import { toast } from "#/components/ui/toast";
 import {
   DEFAULT_LATITUDE,
   DEFAULT_LONGITUDE,
   DEFAULT_ZOOM,
-} from "@/lib/constants";
-import { calculateDistance } from "@/lib/math";
-import type { Coordinates } from "@/lib/types";
+} from "#/lib/constants";
+import { calculateDistance } from "#/lib/scoring";
+import type { Coordinates } from "#/lib/types";
 
 export const Route = createFileRoute("/submit")({
   component: RouteComponent,
 });
 
+const schema = z.object({
+  photo: z.file().mime("image/*"),
+  coordinates: z.object({
+    latitude: z.number(),
+    longitude: z.number(),
+  }),
+});
+
 function RouteComponent() {
   const form = useForm({
     defaultValues: {
-      photo: null,
+      photo: undefined,
       coordinates: {
-        latitude: null,
-        longitude: null,
+        latitude: undefined,
+        longitude: undefined,
       },
+    },
+    validators: {
+      onSubmit: schema,
     },
     onSubmit: ({ value }) => {
       toast.promise(() => {}, {
@@ -113,7 +125,7 @@ function RouteComponent() {
             <ItemTitle>Photo</ItemTitle>
           </ItemHeader>
           <ItemContent>
-            <form.Field name="coordinates">
+            <form.Field name="">
               {(field) => (
                 <Input
                   accept="image/*"

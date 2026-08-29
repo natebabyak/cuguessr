@@ -1,14 +1,6 @@
-"use client";
-
-import {
-  Form,
-  Field as FormischField,
-  type SubmitHandler,
-  useForm,
-} from "@formisch/react";
+import { useForm } from "@tanstack/react-form";
 import { useState } from "react";
-import * as v from "valibot";
-import { Button } from "@/components/ui/button";
+import z from "zod";
 import {
   Dialog,
   DialogClose,
@@ -18,7 +10,7 @@ import {
   DialogHeader,
   DialogTitle,
   DialogTrigger,
-} from "@/components/ui/dialog";
+} from "#/components/ui/dialog";
 import {
   Drawer,
   DrawerClose,
@@ -28,47 +20,43 @@ import {
   DrawerHeader,
   DrawerTitle,
   DrawerTrigger,
-} from "@/components/ui/drawer";
-import {
-  Field,
-  FieldError,
-  FieldGroup,
-  FieldLabel,
-} from "@/components/ui/field";
+} from "#/components/ui/drawer";
+import { Field, FieldGroup, FieldLabel } from "#/components/ui/field";
 import {
   InputGroup,
   InputGroupAddon,
   InputGroupText,
   InputGroupTextarea,
-} from "@/components/ui/input-group";
-import { Spinner } from "@/components/ui/spinner";
-import { toast } from "@/components/ui/toast";
-import { useIsMobile } from "@/hooks/use-mobile";
+} from "#/components/ui/input-group";
+import { Spinner } from "#/components/ui/spinner";
+import { useIsMobile } from "#/hooks/use-mobile";
+import { Button } from "./ui/button";
 
 const TITLE = "Submit Report";
 const DESCRIPTION = "Enter a description to submit a report.";
 
-const schema = v.object({
-  description: v.pipe(
-    v.string(),
-    v.minLength(1, "Description is required."),
-    v.maxLength(255, "Description must be at most 255 characters."),
-  ),
+const reportSchema = z.object({
+  description: z
+    .string()
+    .min(1, "Description is required.")
+    .max(255, "Description must be at most 255 characters."),
 });
 
-export function ReportDialog({ photoId }: { photoId: string }) {
+export function ReportDialog({ photoId }: { photoId: number }) {
   const isMobile = useIsMobile();
 
   const form = useForm({
-    schema,
-    initialInput: {
+    defaultValues: {
       description: "",
     },
+    validators: {
+      onSubmit: reportSchema,
+    },
+    onSubmit: async ({ value }) => {
+      const { description } = value;
+      console.log(description);
+    },
   });
-
-  const handleSubmit: SubmitHandler<typeof schema> = async (output) => {
-    console.log(output);
-  };
 
   const [open, setOpen] = useState(false);
 
@@ -114,45 +102,62 @@ export function ReportDialog({ photoId }: { photoId: string }) {
 
   function SubmitDialogForm() {
     return (
-      <Form of={form} onSubmit={handleSubmit}>
+      <form
+        onSubmit={(e) => {
+          e.preventDefault();
+          form.handleSubmit();
+        }}
+      >
         <FieldGroup>
-          <FormischField of={form} path={["description"]}>
+          <form.Field name="description">
             {(field) => (
-              <Field data-invalid={field.errors !== null}>
+              <Field data-invalid={field.state.meta.errors.length > 0}>
                 <FieldLabel htmlFor="report-description">
                   Description
                 </FieldLabel>
                 <InputGroup>
                   <InputGroupTextarea
-                    {...field.props}
-                    aria-invalid={field.errors !== null}
+                    aria-invalid={field.state.meta.errors.length > 0}
+                    autoCapitalize="sentences"
+                    autoFocus
                     id="report-description"
+                    onInput={(e) =>
+                      field.handleChange(
+                        (e.target as HTMLTextAreaElement).value,
+                      )
+                    }
                     placeholder="Enter a description..."
-                    value={field.input ?? ""}
+                    value={field.state.value}
                   />
                   <InputGroupAddon align="block-end">
-                    <InputGroupText>{field.input?.length}/255</InputGroupText>
+                    <InputGroupText>
+                      {field.state.value.length}/255
+                    </InputGroupText>
                   </InputGroupAddon>
                 </InputGroup>
-                {field.errors && (
-                  <FieldError
-                    errors={field.errors.map((message) => ({ message }))}
-                  />
-                )}
               </Field>
             )}
-          </FormischField>
+          </form.Field>
         </FieldGroup>
-      </Form>
+      </form>
     );
   }
 
   function ReportDialogSubmit() {
     return (
-      <Button disabled={!form.isValid || form.isSubmitting}>
-        {form.isSubmitting && <Spinner />}
-        Submit
-      </Button>
+      <form.Subscribe
+        selector={(state) => ({
+          canSubmit: state.canSubmit,
+          isSubmitting: state.isSubmitting,
+        })}
+      >
+        {({ canSubmit, isSubmitting }) => (
+          <Button disabled={!canSubmit || isSubmitting}>
+            {isSubmitting && <Spinner />}
+            Submit
+          </Button>
+        )}
+      </form.Subscribe>
     );
   }
 

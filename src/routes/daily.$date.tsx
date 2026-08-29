@@ -1,54 +1,102 @@
 import { useQuery } from "@tanstack/react-query";
-import { createFileRoute, useParams } from "@tanstack/react-router";
-import { useState } from "react";
+import { createFileRoute, Link } from "@tanstack/react-router";
+import {
+  ArrowDownIcon,
+  ArrowLeftIcon,
+  MapPinCheckInsideIcon,
+  MapPinIcon,
+  MapPinXInsideIcon,
+  Share2Icon,
+  SkipForwardIcon,
+} from "lucide-react";
+import { useMemo, useState } from "react";
+import { Marker } from "react-map-gl/maplibre";
 import z from "zod";
-import { getSession } from "#/lib/auth.functions";
-import { authClient } from "#/lib/auth-client";
-import { getOrCreateGame } from "#/lib/game.functions";
+import { AppMap } from "#/components/app-map";
+import CountUp from "#/components/CountUp";
+import { GoToCenterButton } from "#/components/go-to-center-button";
+import { GoToMarkerButton } from "#/components/go-to-marker-button";
+import { MapOverlay } from "#/components/map-overlay";
+import { PhotoDialog } from "#/components/photo-dialog";
+import { ReportDialog } from "#/components/report-dialog";
+import { SubmitGuessButton } from "#/components/submit-guess-button";
+import { Button, buttonVariants } from "#/components/ui/button";
+import { ButtonGroup } from "#/components/ui/button-group";
+import {
+  Item,
+  ItemContent,
+  ItemDescription,
+  ItemMedia,
+  ItemTitle,
+} from "#/components/ui/item";
+import { Separator } from "#/components/ui/separator";
+import { Spinner } from "#/components/ui/spinner";
+import { toast } from "#/components/ui/toast";
+import {
+  DEFAULT_LATITUDE,
+  DEFAULT_LONGITUDE,
+  DEFAULT_ZOOM,
+} from "#/lib/constants";
+import { getGameByDate } from "#/lib/game/functions";
+import { gameResultQueryOptions } from "#/lib/game-result/queries";
+import { submitGuess } from "#/lib/round-result/functions";
+import { roundResultsQueryOptions } from "#/lib/round-result/queries";
+import type { Coordinates } from "#/lib/types";
 
-const MIN_DATE = "2026-03-11";
+const MIN_DATE = "2026-08-29";
 
 const MAX_DATE = Intl.DateTimeFormat("en-CA", {
   timeZone: "America/Toronto",
 }).format(Date.now());
 
-const DateSchema = z.iso
-  .date()
-  .refine((value) => value >= MIN_DATE && value <= MAX_DATE);
+const paramsSchema = z.object({
+  date: z.iso
+    .date()
+    .refine(
+      (value) => value >= MIN_DATE && value <= MAX_DATE,
+      `Date must be between ${MIN_DATE} and ${MAX_DATE}`,
+    ),
+});
 
 export const Route = createFileRoute("/daily/$date")({
   params: {
-    parse: (params) => ({
-      date: DateSchema.parse(params.date),
-    }),
+    parse: (params) => paramsSchema.parse(params),
+    stringify: (params) => ({ date: params.date }),
   },
-  loader: async () => {
-    const session = await getSession();
+  loader: async ({ params }) => {
+    const game = await getGameByDate({
+      data: {
+        date: params.date,
+      },
+    });
 
-    if (!session) {
-      await authClient.signIn.anonymous();
-    }
-
-    return await getSession();
+    return { game };
   },
   component: RouteComponent,
 });
 
 function RouteComponent() {
-  const { date } = useParams();
+  const { game } = Route.useLoaderData();
 
-  const gameQuery = useQuery({
-    queryKey: ["game"],
-    queryFn: () =>
-      getOrCreateGame({
-        data: {
-          date,
-        },
-      }),
-  });
+  const gameId = game?.id;
 
+  const { data: roundResults } = useQuery(
+    roundResultsQueryOptions(gameId as number),
+  );
+
+  const { data: gameResult } = useQuery(
+    gameResultQueryOptions(gameId as number),
+  );
+
+  const [cursor, setCursor] = useState<"crosshair" | "grabbing">("crosshair");
+  const [guess, setGuess] = useState<Coordinates | null>(null);
+  const [cursorCoords, setCursorCoords] = useState<Coordinates | null>(null);
   const [isRoundOver, setIsRoundOver] = useState(false);
-  const [isGameOver, setIsGameOver] = useState(false);
+  const [roundIndex, setRoundIndex] = useState(0);
+
+  const isGameOver = useMemo(() => roundIndex > 4, [roundIndex]);
+
+  if (!game || !roundResults) return <Spinner />;
 
   if (isGameOver)
     return (
@@ -59,30 +107,30 @@ function RouteComponent() {
             Guessr
           </h1>
           <p className="text-center font-medium text-2xl">
-            {gameResult.json} points
+            {gameResult?.points} points
           </p>
           <div className="mx-auto flex w-full max-w-xs flex-col gap-2">
-            {game.rounds.map((round, roundIndex) => (
+            {game?.rounds.map((round, roundIndex) => (
               <Item key={round.id} variant="outline">
-                <ItemMedia variant="icon">
-                  {scoreToEmoji(round.score || 0)}
-                </ItemMedia>
+                <ItemMedia variant="icon">EMOJI</ItemMedia>
                 <ItemContent className="grid grid-cols-2 grid-rows-2">
                   <ItemTitle className="col-span-2 justify-start justify-self-start">
                     Round {roundIndex + 1}
                   </ItemTitle>
                   <span className="self-end justify-self-start text-muted-foreground">
-                    {roundResults[roundIndex].distance?.toLocaleString(
-                      undefined,
+                    {roundResults?.[roundIndex].distance?.toLocaleString(
+                      "en-CA",
                       {
                         minimumFractionDigits: 0,
                         maximumFractionDigits: 0,
                       },
-                    ) ?? "0"}{" "}
+                    ) ?? 0}
                     m
                   </span>
                   <span className="justify-end justify-self-end text-muted-foreground">
-                    {round.score?.toLocaleString() ?? "0"} points
+                    {roundResults?.[roundIndex]?.points?.toLocaleString() ??
+                      "0"}{" "}
+                    points
                   </span>
                 </ItemContent>
               </Item>
@@ -91,24 +139,23 @@ function RouteComponent() {
           <div className="grid w-full grid-cols-1 grid-rows-2 gap-2 px-2">
             <Button
               onClick={async () => {
-                const emojis = game.rounds
-                  .map((round) => scoreToEmojis(round.score ?? 0))
-                  .join("\n");
-                const shareText = `cuGuessr ${title}\n\n${scoreString} points\n\n${emojis}\n\nPlay at https://cuguessr.com`;
+                const shareText = `cuGuessr #${gameId}\n\n${gameResult?.points} points \nhttps://cuguessr.com/daily`;
 
                 if (navigator.share) {
                   try {
                     await navigator.share({
-                      title: `cuGuessr ${title}`,
+                      title: `cuGuessr #${gameId}`,
                       text: shareText,
                     });
                   } catch {}
                 } else {
                   try {
                     await navigator.clipboard.writeText(shareText);
-                    toast.success("Copied to clipboard!");
+                    toast.add({ title: "Copied to clipboard!" });
                   } catch {
-                    toast.error("Something went wrong. Please try again.");
+                    toast.add({
+                      title: "Something went wrong. Please try again.",
+                    });
                   }
                 }
               }}
@@ -116,31 +163,25 @@ function RouteComponent() {
               variant="default"
               className="rounded-full"
             >
-              <Share2 />
+              <Share2Icon />
               Share Results
             </Button>
-            {gameType === "classic" && (
-              <Button
-                onClick={() => (window.location.href = "/classic")}
-                size="lg"
-                variant="outline"
-                className="rounded-full"
-              >
-                <RotateCcwIcon />
-                Play Again
-              </Button>
-            )}
-            <Button
-              asChild
-              size="lg"
-              variant="outline"
-              className="rounded-full"
+            )
+            <Link
+              to="/"
+              className={buttonVariants({ size: "lg", variant: "ghost" })}
             >
-              <Link href="/">
-                <HouseIcon />
-                Return Home
-              </Link>
-            </Button>
+              <ArrowLeftIcon />
+              Back to Home
+            </Link>
+            <div>
+              <Separator className="flex-1" />
+              <span>
+                <ArrowDownIcon />
+                Scroll down to compare
+              </span>
+              <Separator className="flex-1" />
+            </div>
           </div>
         </div>
       </div>
@@ -154,33 +195,26 @@ function RouteComponent() {
         longitude: DEFAULT_LONGITUDE,
         zoom: DEFAULT_ZOOM,
       }}
+      maxZoom={18}
       onClick={(e) => {
         if (isRoundOver) return;
-
         const { lat: latitude, lng: longitude } = e.lngLat;
-
-        setGuessMarkerCoordinates({
-          latitude,
-          longitude,
-        });
+        setGuess({ latitude, longitude });
       }}
       onMouseDown={() => setCursor("grabbing")}
       onMouseMove={(e) => {
         const { lat: latitude, lng: longitude } = e.lngLat;
-        setCursorCoordinates({
-          latitude,
-          longitude,
-        });
+        setCursorCoords({ latitude, longitude });
       }}
       onMouseUp={() => setCursor("crosshair")}
     >
       {isRoundOver ? (
         <div className="pointer-events-none absolute flex size-full flex-col justify-end gap-2 md:gap-4">
-          {guessMarkerCoordinates && (
+          {guess && (
             <Marker
               anchor="bottom"
-              latitude={guessMarkerCoordinates.latitude}
-              longitude={guessMarkerCoordinates.longitude}
+              latitude={guess.latitude}
+              longitude={guess.longitude}
             >
               <MapPinXInsideIcon fill="white" className="text-primary" />
             </Marker>
@@ -193,8 +227,16 @@ function RouteComponent() {
             <MapPinCheckInsideIcon fill="white" className="text-green-600" />
           </Marker>
           <div className="flex items-center justify-between px-2 md:px-4">
-            <PhotoDialog imageSrc={game.rounds[roundIndex].photo.objectKey} />
-            <ReportDialog photoId={game.rounds[roundIndex].photo.id} />
+            {game?.rounds[roundIndex].photo?.objectKey && (
+              <PhotoDialog
+                objectKey={game.rounds[roundIndex].photo.objectKey}
+                height={game.rounds[roundIndex].photo.height}
+                width={game.rounds[roundIndex].photo.width}
+              />
+            )}
+            {game?.rounds[roundIndex].photoId && (
+              <ReportDialog photoId={game.rounds[roundIndex].photoId} />
+            )}
           </div>
           <div className="pointer-events-auto grid grid-cols-3 gap-4 bg-background px-2 pt-2 pb-10 md:grid-cols-4 md:px-4 md:pt-4 md:pb-12">
             <div className="flex flex-col items-end">
@@ -203,7 +245,7 @@ function RouteComponent() {
               </span>
               <CountUp
                 from={0}
-                to={rounds[roundIndex].distance || 0}
+                to={roundResults[roundIndex].distance ?? 0}
                 className="ml-auto font-semibold text-2xl"
               />
               m
@@ -214,7 +256,7 @@ function RouteComponent() {
               </span>
               <CountUp
                 from={0}
-                to={rounds[roundIndex].score || 0}
+                to={roundResults?.[roundIndex].points ?? 0}
                 className="ml-auto font-semibold text-2xl"
               />
             </div>
@@ -224,27 +266,32 @@ function RouteComponent() {
               </span>
               <CountUp
                 from={
-                  rounds.reduce((acc, round) => acc + (round.score || 0), 0) -
-                  (rounds[roundIndex].score || 0)
+                  (roundResults?.reduce(
+                    (acc, result) => acc + (result.points ?? 0),
+                    0,
+                  ) ?? 0) - (roundResults?.[roundIndex].points ?? 0)
                 }
-                to={rounds.reduce((acc, round) => acc + (round.score || 0), 0)}
+                to={
+                  roundResults?.reduce(
+                    (acc, result) => acc + (result.points ?? 0),
+                    0,
+                  ) ?? 0
+                }
                 className="ml-auto font-semibold text-2xl"
               />
             </div>
             <Button
-              onClick={nextRound}
+              onClick={() => {}}
               size="lg"
               className="col-span-3 ml-auto w-fit hover:scale-105 md:col-span-1"
             >
-              {roundIndex === game?.rounds.length - 1
-                ? "Results"
-                : "Next Round"}
+              {roundIndex === 4 ? "Results" : "Next Round"}
               <SkipForwardIcon />
             </Button>
           </div>
         </div>
       ) : (
-        <div className="pointer-events-none absolute grid h-dvh w-dvw grid-cols-2 grid-rows-2 px-2 pt-2 pb-10 md:px-4 md:pt-4 md:pb-12">
+        <MapOverlay>
           {guess && (
             <Marker
               anchor="bottom"
@@ -253,43 +300,61 @@ function RouteComponent() {
               longitude={guess.longitude}
               onDrag={(e) => {
                 const { lat: latitude, lng: longitude } = e.lngLat;
-
-                setGuess({
-                  latitude,
-                  longitude,
-                });
+                setGuess({ latitude, longitude });
               }}
             >
               <MapPinIcon className="fill-white text-primary" />
             </Marker>
           )}
-          <Link href="/" className={buttonVariants({ size: "icon-lg" })}>
-            <LogOutIcon className="rotate-180" />
+          <Link
+            to="/"
+            className={buttonVariants({
+              size: "icon-lg",
+              className: "top-0 left-0",
+            })}
+          >
+            <ArrowLeftIcon />
           </Link>
-          <Item className="pointer-events-auto self-start justify-self-end">
+          <Item variant="outline" className="top-0 right-0 w-fit bg-background">
             <ItemContent>
               <ItemDescription>Round</ItemDescription>
-              <ItemTitle>placeholder</ItemTitle>
+              <ItemTitle className="ml-auto text-2xl">
+                {roundIndex + 1}
+              </ItemTitle>
             </ItemContent>
             <ItemContent>
               <ItemDescription>Points</ItemDescription>
-              <ItemTitle>placeholder</ItemTitle>
+              <ItemTitle className="ml-auto text-2xl">
+                {roundResults.reduce((acc, curr) => acc + curr.points, 0)}
+              </ItemTitle>
             </ItemContent>
           </Item>
-          <PhotoDialog objectKey={game.rounds.at(-1)?.photo?.objectKey} />
-          <ButtonGroup
-            orientation="vertical"
-            className="self-end justify-self-end"
-          >
-            <ButtonGroup orientation="vertical" className="ml-auto">
-              <GoToGuessButton guess={guess} />
+          <div className="bottom-0 left-0">
+            <PhotoDialog
+              objectKey={game.rounds[roundIndex].photo?.objectKey as string}
+              height={game.rounds[roundIndex].photo?.height as number}
+              width={game.rounds[roundIndex].photo?.width as number}
+            />
+          </div>
+          <div className="right-0 bottom-0 flex flex-col items-end gap-2 md:gap-4">
+            <ButtonGroup orientation="vertical">
+              <GoToMarkerButton marker={guess} />
               <GoToCenterButton />
             </ButtonGroup>
-            <ButtonGroup>
-              <SubmitGuessButton guess={guess} />
-            </ButtonGroup>
-          </ButtonGroup>
-        </div>
+            <SubmitGuessButton
+              disabled={!guess}
+              onClick={async () =>
+                await submitGuess({
+                  data: {
+                    roundId: game.rounds[roundIndex].id,
+                    latitude: guess?.latitude as number,
+                    longitude: guess?.longitude as number,
+                  },
+                })
+              }
+            />
+          </div>
+        </MapOverlay>
       )}
     </AppMap>
   );
