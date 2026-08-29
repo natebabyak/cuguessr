@@ -10,6 +10,7 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as AdminRouteImport } from './routes/admin'
 import { Route as DailyRouteImport } from './routes/daily'
 import { Route as LeaderboardRouteImport } from './routes/leaderboard'
 import { Route as SignInRouteImport } from './routes/sign-in'
@@ -20,6 +21,11 @@ import { Route as ApiAuthSplatRouteImport } from './routes/api.auth.$'
 const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AdminRoute = AdminRouteImport.update({
+  id: '/admin',
+  path: '/admin',
   getParentRoute: () => rootRouteImport,
 } as any)
 const DailyRoute = DailyRouteImport.update({
@@ -55,6 +61,7 @@ const ApiAuthSplatRoute = ApiAuthSplatRouteImport.update({
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/admin': typeof AdminRoute
   '/daily': typeof DailyRouteWithChildren
   '/leaderboard': typeof LeaderboardRoute
   '/sign-in': typeof SignInRoute
@@ -64,6 +71,7 @@ export interface FileRoutesByFullPath {
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/admin': typeof AdminRoute
   '/daily': typeof DailyRouteWithChildren
   '/leaderboard': typeof LeaderboardRoute
   '/sign-in': typeof SignInRoute
@@ -74,6 +82,7 @@ export interface FileRoutesByTo {
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
+  '/admin': typeof AdminRoute
   '/daily': typeof DailyRouteWithChildren
   '/leaderboard': typeof LeaderboardRoute
   '/sign-in': typeof SignInRoute
@@ -85,6 +94,7 @@ export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
   fullPaths:
     | '/'
+    | '/admin'
     | '/daily'
     | '/leaderboard'
     | '/sign-in'
@@ -94,6 +104,7 @@ export interface FileRouteTypes {
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
+    | '/admin'
     | '/daily'
     | '/leaderboard'
     | '/sign-in'
@@ -103,6 +114,7 @@ export interface FileRouteTypes {
   id:
     | '__root__'
     | '/'
+    | '/admin'
     | '/daily'
     | '/leaderboard'
     | '/sign-in'
@@ -113,6 +125,7 @@ export interface FileRouteTypes {
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
+  AdminRoute: typeof AdminRoute
   DailyRoute: typeof DailyRouteWithChildren
   LeaderboardRoute: typeof LeaderboardRoute
   SignInRoute: typeof SignInRoute
@@ -127,6 +140,13 @@ declare module '@tanstack/react-router' {
       path: '/'
       fullPath: '/'
       preLoaderRoute: typeof IndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/admin': {
+      id: '/admin'
+      path: '/admin'
+      fullPath: '/admin'
+      preLoaderRoute: typeof AdminRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/daily': {
@@ -186,6 +206,7 @@ const DailyRouteWithChildren = DailyRoute._addFileChildren(DailyRouteChildren)
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
+  AdminRoute: AdminRoute,
   DailyRoute: DailyRouteWithChildren,
   LeaderboardRoute: LeaderboardRoute,
   SignInRoute: SignInRoute,

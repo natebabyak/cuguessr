@@ -1,8 +1,14 @@
-import "dotenv/config";
-import { drizzle } from "drizzle-orm/node-postgres";
-import { authRelations } from "#/lib/db/auth-schema.ts";
-import { relations } from "#/lib/db/schema.ts";
+import { neon } from "@neondatabase/serverless";
+import { config } from "dotenv";
+import { drizzle } from "drizzle-orm/neon-http";
+import { authRelations } from "#/lib/db/auth-schema";
+import { relations } from "#/lib/db/schema";
 
-export const db = drizzle(process.env.DATABASE_URL as string, {
-  relations: { ...authRelations, ...relations },
+config({ path: ".env" });
+
+const sql = neon(process.env.DATABASE_URL as string);
+
+export const db = drizzle({
+  client: sql,
+  relations: { ...relations, ...authRelations },
 });

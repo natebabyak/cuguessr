@@ -6,20 +6,26 @@
 
 1. [About](#about)
    1. [Screenshots](#screenshots)
-   2. [Technologies Used](#technologies-used)
+   2. [Infrastructure](#infrastructure)
 2. [Getting Started](#getting-started)
    1. [Prerequisites](#prerequisites)
-   2. [Installation](#installation)
+   2. [Development](#development)
+   3. [Production](#production)
 3. [License](#license)
 4. [Acknowledgements](#acknowledgements)
 
 ## About
 
-**This app is not affiliated with Carleton University in any way.**
+> [!NOTE]
+> This app is not affiliated with Carleton University in any way.
 
 cuGuessr is a GeoGuessr-style game set entirely on Carleton's campus. Play the [daily challenge](https://cuguessr.com) and share your score with friends, or just see how well you actually know your school.
 
 All photos are submitted by the community. Think you've got a good spot? [Submit it here](https://cuguessr.com/submit).
+
+<div align="end">
+  <a href="#top">Back to Top</a>
+</div>
 
 ### Screenshots
 
@@ -29,13 +35,14 @@ All photos are submitted by the community. Think you've got a good spot? [Submit
   <img alt="Submit Screenshot" src="/public/submit.png" width="30%" />
 </div>
 
-### Technologies Used
+### Infrastructure
 
-- Next.js
-- Postgres
-
-- Cloudflare (Images, R2, Workers)
-- Neon
+- [Cloudflare R2](https://www.cloudflare.com/products/r2/)
+- [Cloudflare Workers](https://www.cloudflare.com/products/workers/)
+- [MapLibre GL JS](https://maplibre.org/projects/gl-js/)
+- [Neon](https://neon.com)
+- [PMTiles](https://github.com/protomaps/PMTiles)
+- [Tanstack Start](https://tanstack.com/start/latest)
 
 <div align="end">
   <a href="#top">Back to Top</a>
@@ -43,52 +50,36 @@ All photos are submitted by the community. Think you've got a good spot? [Submit
 
 ## Getting Started
 
-### Prerequisites
+### For Users
+
+Head on over to [cuguessr.com](https://cuguessr.com) to get started.
+
+### For Developers
+
+#### Prerequisites
 
 - Docker
 - pnpm
 
-### Installation
+#### Development
 
-#### 1. Clone repository
+##### 1. Clone repository
 
 ```bash
 git clone https://github.com/natebabyak/cuguessr.git
 cd cuguessr
 ```
 
-#### 2. Install dependencies
+##### 2. Install dependencies
 
 ```bash
 pnpm install
 ```
 
-#### 3. Configure the environment variables
+##### 3. Configure environment variables
 
 ```bash
-touch .env.local
-```
-
-```bash
-# Better Auth
-BETTER_AUTH_SECRET=
-BETTER_AUTH_URL=http://localhost:3000
-
-# Database
-DATABASE_URL=postgres://user:password@localhost:5432/db
-
-# R2
-NEXT_PUBLIC_R2_ACCOUNT_ID=
-R2_TOKEN_VALUE=
-R2_ACCESS_KEY_ID=
-R2_SECRET_ACCESS_KEY=
-R2_BUCKET_NAME=
-```
-
-#### 5. Generate the auth schema
-
-```bash
-pnpm dlx auth@latest generate --output src/lib/auth/schema.ts --yes
+pnpm dlx auth@latest generate --output src/lib/db/auth-schema.ts --yes
 ```
 
 ### Tiles

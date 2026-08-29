@@ -1,6 +1,10 @@
-import { createFileRoute } from "@tanstack/react-router";
+import { useQuery } from "@tanstack/react-query";
+import { createFileRoute, useParams } from "@tanstack/react-router";
 import { useState } from "react";
 import z from "zod";
+import { getSession } from "#/lib/auth.functions";
+import { authClient } from "#/lib/auth-client";
+import { getOrCreateGame } from "#/lib/game.functions";
 
 const MIN_DATE = "2026-03-11";
 
@@ -18,11 +22,31 @@ export const Route = createFileRoute("/daily/$date")({
       date: DateSchema.parse(params.date),
     }),
   },
-  beforeLoad: async () => {},
+  loader: async () => {
+    const session = await getSession();
+
+    if (!session) {
+      await authClient.signIn.anonymous();
+    }
+
+    return await getSession();
+  },
   component: RouteComponent,
 });
 
 function RouteComponent() {
+  const { date } = useParams();
+
+  const gameQuery = useQuery({
+    queryKey: ["game"],
+    queryFn: () =>
+      getOrCreateGame({
+        data: {
+          date,
+        },
+      }),
+  });
+
   const [isRoundOver, setIsRoundOver] = useState(false);
   const [isGameOver, setIsGameOver] = useState(false);
 

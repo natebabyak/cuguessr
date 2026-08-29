@@ -10,9 +10,8 @@ import {
   text,
   timestamp,
   unique,
-  uuid,
 } from "drizzle-orm/pg-core";
-import { user } from "@/lib/db/auth-schema";
+import { user } from "#/lib/db/auth-schema";
 
 export const submissionStatus = pgEnum("submission_status", [
   "pending",
@@ -41,7 +40,7 @@ export const gameResult = pgTable(
 );
 
 export const photo = pgTable("photo", {
-  id: uuid("id").primaryKey(),
+  id: serial("id").primaryKey(),
   userId: text("user_id").references(() => user.id, { onDelete: "set null" }),
   objectKey: text("object_key").notNull().unique(),
   height: integer("height").notNull(),
@@ -56,7 +55,7 @@ export const photo = pgTable("photo", {
 
 export const report = pgTable("report", {
   id: serial("id").primaryKey(),
-  photoId: uuid("photo_id")
+  photoId: integer("photo_id")
     .notNull()
     .references(() => photo.id, { onDelete: "cascade" }),
   userId: text("user_id").references(() => user.id, { onDelete: "set null" }),
@@ -74,7 +73,7 @@ export const round = pgTable(
     gameId: integer("game_id")
       .notNull()
       .references(() => game.id, { onDelete: "cascade" }),
-    photoId: uuid("photo_id")
+    photoId: integer("photo_id")
       .notNull()
       .references(() => photo.id, { onDelete: "cascade" }),
     number: integer("number").notNull(),

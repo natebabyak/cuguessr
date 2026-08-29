@@ -1,16 +1,20 @@
 import "../styles.css";
 import "maplibre-gl/dist/maplibre-gl.css";
 import "photoswipe/style.css";
+import type { QueryClient } from "@tanstack/react-query";
 import {
-  createRootRoute,
+  createRootRouteWithContext,
   HeadContent,
   Outlet,
   Scripts,
 } from "@tanstack/react-router";
 import { Toaster } from "#/components/ui/toast";
+import { ensureSession } from "#/lib/auth.functions";
 import { ThemeProvider } from "@/components/theme-provider";
 
-export const Route = createRootRoute({
+export const Route = createRootRouteWithContext<{
+  queryClient: QueryClient;
+}>()({
   head: () => ({
     meta: [
       {
@@ -21,10 +25,15 @@ export const Route = createRootRoute({
         content: "width=device-width, initial-scale=1",
       },
       {
-        title: "TanStack Start Starter",
+        title: "cuGuessr",
       },
     ],
   }),
+  beforeLoad: async () => {
+    const session = await ensureSession();
+
+    return { session };
+  },
   shellComponent: RootDocument,
 });
 

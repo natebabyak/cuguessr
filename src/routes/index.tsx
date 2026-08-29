@@ -14,6 +14,11 @@ import {
 import { Button, buttonVariants } from "#/components/ui/button";
 import { Calendar } from "#/components/ui/calendar";
 import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuTrigger,
+} from "#/components/ui/dropdown-menu";
+import {
   Item,
   ItemActions,
   ItemContent,
@@ -39,9 +44,17 @@ function RouteComponent() {
           <span className="text-primary">cu</span>
           Guessr
         </Link>
-        <Link to="/daily" className={buttonVariants()}>
-          Play Today's Game
-        </Link>
+        <div className="flex gap-2">
+          <Link
+            to="/sign-in"
+            className={buttonVariants({ variant: "outline" })}
+          >
+            Sign In
+          </Link>
+          <Link to="/daily" className={buttonVariants()}>
+            Play Today's Game
+          </Link>
+        </div>
       </header>
       <main className="*:flex *:flex-col *:items-center *:justify-center [&_h2]:font-medium [&_h2]:text-3xl">
         <section>
@@ -179,6 +192,12 @@ function RouteComponent() {
           </ul>
         </nav>
         <p>&copy; 2025-2026 Nate Babyak</p>
+        <a
+          href={`mailto:support@cuguessr.com?subject=cuGuessr Admin Request (User ID: ${10})&body=Please do not modify the subject line.`}
+          className={buttonVariants()}
+        >
+          Request Admin Access
+        </a>
       </footer>
     </div>
   );
