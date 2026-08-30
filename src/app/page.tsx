@@ -5,6 +5,7 @@ import {
   UploadIcon,
 } from "lucide-react";
 import Link from "next/link";
+import BlurText from "@/components/BlurText";
 import DriftWall from "@/components/DriftWall";
 import {
   Accordion,
@@ -49,12 +50,12 @@ export default async function Page() {
   });
 
   const driftWallItems = photos.map((photo) => ({
-    image: `${process.env.NEXT_PUBLIC_R2_URL}/${photo.objectKey}`,
+    image: `${process.env.NEXT_PUBLIC_R2_URL}/photos/${photo.objectKey}`,
   }));
 
   return (
     <div className="flex flex-col">
-      <header className="sticky top-0 flex items-center justify-between bg-background/90 p-4 backdrop-blur-md">
+      <header className="sticky top-0 flex items-center justify-between bg-background p-4 backdrop-blur-md">
         <Link href="/" className="font-semibold text-2xl">
           <span className="text-primary">cu</span>
           Guessr
@@ -77,34 +78,12 @@ export default async function Page() {
       </header>
       <main className="[&>section]:flex [&>section]:flex-col [&>section]:items-center [&>section]:justify-center [&_h2]:font-medium [&_h2]:text-3xl">
         <section>
-          <div className="h-150">
-            <DriftWall
-              items={driftWallItems}
-              columns={5}
-              tileWidth={200}
-              tileHeight={132}
-              gap={18}
-              tilt={16}
-              turn={-14}
-              perspective={1200}
-              depth={120}
-              speed={42}
-              direction="up"
-              variance={0.45}
-              parallax={0.6}
-              lift={64}
-              fade={0.6}
-              dim={0.55}
-              overlayColor="#060010"
-              radius={14}
-              roll={0}
-              pauseOnHover={false}
-              grayscale={false}
-            />
-          </div>
-          <h1 className="text-balance text-center font-medium text-5xl tracking-tighter">
-            Test your knowledge of the Carleton campus
-          </h1>
+          <BlurText
+            text="Test your knowledge of the Carleton campus"
+            delay={200}
+            animateBy="words"
+            direction="top"
+          />
           <Link href="/daily" className={buttonVariants()}>
             Play Today's Game
           </Link>
@@ -134,6 +113,33 @@ export default async function Page() {
             <UploadIcon />
             Submit Photo
           </Link>
+        </section>
+        <section>
+          <div className="h-screen w-full">
+            <DriftWall
+              items={driftWallItems}
+              columns={5}
+              tileWidth={200}
+              tileHeight={132}
+              gap={18}
+              tilt={16}
+              turn={-14}
+              perspective={1200}
+              depth={120}
+              speed={42}
+              direction="up"
+              variance={0.45}
+              parallax={0.6}
+              lift={64}
+              fade={0.6}
+              dim={0.55}
+              overlayColor="#060010"
+              radius={14}
+              roll={0}
+              pauseOnHover={false}
+              grayscale={false}
+            />
+          </div>
         </section>
         <section>
           <Item

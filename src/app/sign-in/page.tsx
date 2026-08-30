@@ -1,11 +1,11 @@
+"use client";
+
 import { SiDiscord, SiGithub } from "@icons-pack/react-simple-icons";
-import { useForm } from "@tanstack/react-form";
-import { createFileRoute, Link } from "@tanstack/react-router";
 import { AnimatePresence, motion } from "motion/react";
+import Link from "next/link";
 import { useState } from "react";
-import z from "zod";
-import { authClient } from "../../lib/auth-client";
-import { Button } from "../components/ui/button";
+import * as v from "valibot";
+import { Button } from "@/components/ui/button";
 import {
   Field,
   FieldDescription,
@@ -14,26 +14,23 @@ import {
   FieldLabel,
   FieldLegend,
   FieldSet,
-} from "../components/ui/field";
-import { Input } from "../components/ui/input";
-import { Separator } from "../components/ui/separator";
-import { Spinner } from "../components/ui/spinner";
+} from "@/components/ui/field";
+import { Input } from "@/components/ui/input";
+import { Separator } from "@/components/ui/separator";
+import { Spinner } from "@/components/ui/spinner";
+import { authClient } from "@/lib/auth-client";
 
-export const Route = createFileRoute("/sign-in")({
-  component: RouteComponent,
+const SignInSchema = v.object({
+  email: v.pipe(v.string(), v.email("Please enter a valid email address.")),
 });
 
-const schema = z.object({
-  email: z.email(),
-});
-
-function RouteComponent() {
+export default function Page() {
   const [screen, setScreen] = useState<"email" | "magicLink">("email");
 
   return (
     <div className="flex h-dvh w-full flex-col bg-linear-to-b from-muted/25 to-transparent">
       <header className="p-4 md:p-8">
-        <Link to="/" className="flex items-center font-semibold text-2xl">
+        <Link href="/" className="flex items-center font-semibold text-2xl">
           <span className="text-red-500">cu</span>
           Guessr
         </Link>
