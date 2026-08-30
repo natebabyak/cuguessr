@@ -1,4 +1,4 @@
-import { LocateFixedIcon, MapPinSearchIcon } from "lucide-react";
+import { MapPinSearchIcon } from "lucide-react";
 import { useMap } from "react-map-gl/maplibre";
 import { Button } from "#/components/ui/button";
 import type { Coordinates } from "#/lib/types";

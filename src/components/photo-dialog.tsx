@@ -1,4 +1,4 @@
-import { ImageIcon } from "lucide-react";
+import { ImageIcon, XIcon } from "lucide-react";
 import { useState } from "react";
 import { Gallery, Item } from "react-photoswipe-gallery";
 import { Button } from "#/components/ui/button";
@@ -51,7 +51,9 @@ export function PhotoDialog({
             <DrawerTitle>{TITLE}</DrawerTitle>
             <DrawerDescription>{DESCRIPTION}</DrawerDescription>
           </DrawerHeader>
-          <PhotoDialogLightbox />
+          <div className="p-4">
+            <PhotoDialogLightbox />
+          </div>
           <DrawerFooter>
             <DrawerClose render={<PhotoDialogClose />} />
           </DrawerFooter>
@@ -118,8 +120,9 @@ export function PhotoDialog({
 
   function PhotoDialogClose() {
     return (
-      <Button onClick={() => setOpen(false)} size="lg">
-        Done
+      <Button onClick={() => setOpen(false)} variant="outline">
+        <XIcon />
+        Close
       </Button>
     );
   }

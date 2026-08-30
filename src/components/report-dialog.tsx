@@ -1,4 +1,5 @@
 import { useForm } from "@tanstack/react-form";
+import { FlagIcon, SendIcon, XIcon } from "lucide-react";
 import { useState } from "react";
 import z from "zod";
 import {
@@ -30,6 +31,7 @@ import {
 } from "#/components/ui/input-group";
 import { Spinner } from "#/components/ui/spinner";
 import { useIsMobile } from "#/hooks/use-mobile";
+import { cn } from "#/lib/utils";
 import { Button } from "./ui/button";
 
 const TITLE = "Submit Report";
@@ -69,7 +71,9 @@ export function ReportDialog({ photoId }: { photoId: number }) {
             <DrawerTitle>{TITLE}</DrawerTitle>
             <DrawerDescription>{DESCRIPTION}</DrawerDescription>
           </DrawerHeader>
-          <SubmitDialogForm />
+          <div className="p-4">
+            <SubmitDialogForm />
+          </div>
           <DrawerFooter>
             <ReportDialogSubmit />
             <DrawerClose render={<ReportDialogClose />} />
@@ -97,7 +101,16 @@ export function ReportDialog({ photoId }: { photoId: number }) {
   );
 
   function ReportDialogTrigger() {
-    return <Button onClick={() => setOpen(true)}>Report</Button>;
+    return (
+      <Button
+        onClick={() => setOpen(true)}
+        size="icon-lg"
+        title="Report photo"
+        className="shadow"
+      >
+        <FlagIcon />
+      </Button>
+    );
   }
 
   function SubmitDialogForm() {
@@ -130,7 +143,11 @@ export function ReportDialog({ photoId }: { photoId: number }) {
                     value={field.state.value}
                   />
                   <InputGroupAddon align="block-end">
-                    <InputGroupText>
+                    <InputGroupText
+                      className={cn(
+                        field.state.value.length > 255 && "text-destructive",
+                      )}
+                    >
                       {field.state.value.length}/255
                     </InputGroupText>
                   </InputGroupAddon>
@@ -153,7 +170,7 @@ export function ReportDialog({ photoId }: { photoId: number }) {
       >
         {({ canSubmit, isSubmitting }) => (
           <Button disabled={!canSubmit || isSubmitting}>
-            {isSubmitting && <Spinner />}
+            {isSubmitting ? <Spinner /> : <SendIcon />}
             Submit
           </Button>
         )}
@@ -162,6 +179,11 @@ export function ReportDialog({ photoId }: { photoId: number }) {
   }
 
   function ReportDialogClose() {
-    return <Button variant="outline">Cancel</Button>;
+    return (
+      <Button onClick={() => setOpen(false)} type="button" variant="outline">
+        <XIcon />
+        Cancel
+      </Button>
+    );
   }
 }
