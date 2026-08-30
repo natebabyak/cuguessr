@@ -1,5 +1,5 @@
 import { queryOptions } from "@tanstack/react-query";
-import { getRoundResultsByGameId, getRoundResultsByRoundId } from "./functions";
+import { getRoundResultsByGameId } from "./functions";
 
 export const roundResultsByGameIdQueryOptions = (gameId: number) =>
   queryOptions({
@@ -11,16 +11,4 @@ export const roundResultsByGameIdQueryOptions = (gameId: number) =>
         },
       }) ?? [],
     enabled: !!gameId,
-  });
-
-export const roundResultsByRoundIdQueryOptions = (roundId: number) =>
-  queryOptions({
-    queryKey: ["round-results-by-round-id", roundId],
-    queryFn: () =>
-      getRoundResultsByRoundId({
-        data: {
-          roundId,
-        },
-      }) ?? [],
-    enabled: !!roundId,
   });

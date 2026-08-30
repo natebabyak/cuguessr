@@ -4,10 +4,10 @@ import { getGameResultByGameId } from "./functions";
 export const gameResultQueryOptions = (gameId: number) =>
   queryOptions({
     queryKey: ["game-result", gameId],
-    queryFn: () =>
-      getGameResultByGameId({
+    queryFn: async () =>
+      (await getGameResultByGameId({
         data: {
           gameId,
         },
-      }) ?? null,
+      })) ?? null,
   });

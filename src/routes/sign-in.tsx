@@ -1,7 +1,6 @@
 import { SiDiscord, SiGithub } from "@icons-pack/react-simple-icons";
 import { useForm } from "@tanstack/react-form";
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { ArrowLeftIcon } from "lucide-react";
 import { AnimatePresence, motion } from "motion/react";
 import { useState } from "react";
 import z from "zod";

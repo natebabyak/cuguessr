@@ -57,13 +57,11 @@ export const getGameByDateServer = createServerOnlyFn(async (date: string) => {
     },
     with: {
       rounds: {
+        orderBy: {
+          index: "asc",
+        },
         with: {
-          photo: {
-            columns: {
-              latitude: false,
-              longitude: false,
-            },
-          },
+          photo: true,
         },
       },
     },

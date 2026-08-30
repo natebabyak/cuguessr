@@ -15,7 +15,10 @@ export function useSubmitGuessMutation(gameId: number) {
         ["round-results", gameId],
         (old: (typeof newResult)[] | undefined) => {
           if (!old) return [newResult];
-          const filtered = old.filter((r) => r.roundId !== newResult.roundId);
+
+          const filtered = old.filter(
+            (result) => result.roundId !== newResult.roundId,
+          );
           return [...filtered, newResult];
         },
       );

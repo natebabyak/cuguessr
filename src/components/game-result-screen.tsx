@@ -30,27 +30,32 @@ export function GameResultScreen({
           {gameResult?.points} points
         </p>
         <div className="mx-auto flex w-full max-w-xs flex-col gap-2">
-          {game.rounds.map((round, roundIndex) => (
-            <Item key={round.id} variant="outline">
-              <ItemMedia variant="icon">EMOJI</ItemMedia>
-              <ItemContent className="grid grid-cols-2 grid-rows-2">
-                <ItemTitle className="col-span-2 justify-start justify-self-start">
-                  Round {roundIndex + 1}
-                </ItemTitle>
-                <span className="self-end justify-self-start text-muted-foreground">
-                  {roundResults[roundIndex].distance.toLocaleString("en-US", {
-                    minimumFractionDigits: 0,
-                    maximumFractionDigits: 0,
-                  }) ?? 0}
-                  m
-                </span>
-                <span className="justify-end justify-self-end text-muted-foreground">
-                  {roundResults[roundIndex]?.points?.toLocaleString() ?? "0"}{" "}
-                  points
-                </span>
-              </ItemContent>
-            </Item>
-          ))}
+          {game.rounds.map((round, roundIndex) => {
+            const result = roundResults.find(
+              (roundResult) => roundResult.roundId === round.id,
+            );
+
+            return (
+              <Item key={round.id} variant="outline">
+                <ItemMedia variant="icon">EMOJI</ItemMedia>
+                <ItemContent className="grid grid-cols-2 grid-rows-2">
+                  <ItemTitle className="col-span-2 justify-start justify-self-start">
+                    Round {roundIndex + 1}
+                  </ItemTitle>
+                  <span className="self-end justify-self-start text-muted-foreground">
+                    {(result?.distance ?? 0).toLocaleString("en-US", {
+                      minimumFractionDigits: 0,
+                      maximumFractionDigits: 0,
+                    })}
+                    m
+                  </span>
+                  <span className="justify-end justify-self-end text-muted-foreground">
+                    {result?.points?.toLocaleString() ?? "0"} points
+                  </span>
+                </ItemContent>
+              </Item>
+            );
+          })}
         </div>
         <div className="grid w-full grid-cols-1 grid-rows-2 gap-2 px-2">
           <Button

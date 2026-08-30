@@ -14,7 +14,7 @@ export const getRoundResultsByGameId = createServerFn({ method: "GET" })
   .handler(async ({ data }) => {
     const session = await ensureSession();
 
-    return await db.query.roundResult.findMany({
+    const results = await db.query.roundResult.findMany({
       where: {
         AND: [
           {
@@ -40,6 +40,10 @@ export const getRoundResultsByGameId = createServerFn({ method: "GET" })
         },
       },
     });
+
+    return results.sort(
+      (a, b) => (a.round?.index ?? 0) - (b.round?.index ?? 0),
+    );
   });
 
 export const getRoundResultsByRoundId = createServerFn({ method: "GET" })

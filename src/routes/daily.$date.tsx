@@ -52,6 +52,10 @@ function RouteComponent() {
   if (!game || !roundResults) return <Spinner />;
 
   return (
-    <Game game={game} roundResults={roundResults} gameResult={gameResult} />
+    <Game
+      game={game}
+      roundResults={roundResults}
+      gameResult={gameResult ?? null}
+    />
   );
 }
