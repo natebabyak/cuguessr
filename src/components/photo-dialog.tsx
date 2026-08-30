@@ -44,7 +44,7 @@ export function PhotoDialog({
 
   if (isMobile) {
     return (
-      <Drawer onOpenChange={setOpen} open={open}>
+      <Drawer open={open} onOpenChange={setOpen}>
         <DrawerTrigger render={<PhotoDialogTrigger />} />
         <DrawerContent>
           <DrawerHeader>
@@ -63,7 +63,7 @@ export function PhotoDialog({
   }
 
   return (
-    <Dialog onOpenChange={setOpen} open={open}>
+    <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger render={<PhotoDialogTrigger />} />
       <DialogContent showCloseButton={false}>
         <DialogHeader>

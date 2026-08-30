@@ -2,14 +2,12 @@ import "../styles.css";
 import "maplibre-gl/dist/maplibre-gl.css";
 import "photoswipe/style.css";
 import type { QueryClient } from "@tanstack/react-query";
-import { ReactQueryDevtools } from "@tanstack/react-query-devtools";
 import {
   createRootRouteWithContext,
   HeadContent,
   Outlet,
   Scripts,
 } from "@tanstack/react-router";
-import { TanStackRouterDevtools } from "@tanstack/react-router-devtools";
 import { ThemeProvider } from "#/components/theme-provider";
 import { Toaster } from "#/components/ui/toast";
 import { ensureSession } from "#/lib/auth.functions";
@@ -50,8 +48,6 @@ function RootDocument() {
           <Outlet />
           <Toaster />
         </ThemeProvider>
-        <TanStackRouterDevtools position="bottom-right" />
-        <ReactQueryDevtools buttonPosition="bottom-left" />
         <Scripts />
       </body>
     </html>

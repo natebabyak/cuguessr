@@ -17,7 +17,7 @@ export function GoToMyLocationButton() {
   }
 
   return (
-    <Button onClick={goToMyLocation} size="icon-lg">
+    <Button onClick={goToMyLocation} size="icon-lg" title="Go to my location">
       <NavigationIcon />
     </Button>
   );

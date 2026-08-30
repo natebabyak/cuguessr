@@ -41,23 +41,17 @@ export const Route = createFileRoute("/daily/$date")({
 
 function RouteComponent() {
   const { game } = Route.useLoaderData();
-  const gameId = game?.id;
 
   const { data: roundResults } = useQuery(
-    roundResultsByGameIdQueryOptions(gameId as number),
+    roundResultsByGameIdQueryOptions(game?.id as number),
   );
   const { data: gameResult } = useQuery(
-    gameResultQueryOptions(gameId as number),
+    gameResultQueryOptions(game?.id as number),
   );
 
   if (!game || !roundResults) return <Spinner />;
 
   return (
-    <Game
-      game={game}
-      gameId={game.id}
-      gameResult={gameResult}
-      roundResults={roundResults}
-    />
+    <Game game={game} roundResults={roundResults} gameResult={gameResult} />
   );
 }

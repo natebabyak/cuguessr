@@ -10,7 +10,14 @@ const config = defineConfig({
     tsconfigPaths: true,
   },
   plugins: [
-    devtools(),
+    devtools({
+      injectSource: {
+        enabled: false,
+        ignore: {
+          files: ["src/components/round-result-overlay.tsx"],
+        },
+      },
+    }),
     cloudflare({
       viteEnvironment: {
         name: "ssr",

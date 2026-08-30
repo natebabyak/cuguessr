@@ -196,11 +196,8 @@ function RouteComponent() {
           </ul>
         </nav>
         <p>&copy; 2025-2026 Nate Babyak</p>
-        <a
-          href={`mailto:support@cuguessr.com?subject=cuGuessr Admin Request (User ID: ${10})&body=Please do not modify the subject line.`}
-          className={buttonVariants()}
-        >
-          Request Admin Access
+        <a href="mailto:support@cuguessr.com" className={buttonVariants()}>
+          Contact Support
         </a>
       </footer>
     </div>

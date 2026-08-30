@@ -9,5 +9,5 @@ export const gameResultQueryOptions = (gameId: number) =>
         data: {
           gameId,
         },
-      }),
+      }) ?? null,
   });
