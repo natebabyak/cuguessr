@@ -4,21 +4,26 @@ import { Button } from "#/components/ui/button";
 import { DEFAULT_ZOOM } from "#/lib/constants";
 
 export function GoToMyLocationButton() {
-  const map = useMap();
+	const map = useMap();
 
-  function goToMyLocation() {
-    navigator.geolocation.getCurrentPosition((position) => {
-      map.current?.flyTo({
-        bearing: 0,
-        center: [position.coords.longitude, position.coords.latitude],
-        zoom: DEFAULT_ZOOM,
-      });
-    });
-  }
+	function goToMyLocation() {
+		navigator.geolocation.getCurrentPosition((position) => {
+			map.current?.flyTo({
+				bearing: 0,
+				center: [position.coords.longitude, position.coords.latitude],
+				zoom: DEFAULT_ZOOM,
+			});
+		});
+	}
 
-  return (
-    <Button onClick={goToMyLocation} size="icon-lg" title="Go to my location">
-      <NavigationIcon />
-    </Button>
-  );
+	return (
+		<Button
+			onClick={goToMyLocation}
+			size="icon-lg"
+			title="Go to my location"
+			type="button"
+		>
+			<NavigationIcon />
+		</Button>
+	);
 }

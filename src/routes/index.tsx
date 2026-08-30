@@ -5,6 +5,7 @@ import {
   PodiumIcon,
   UploadIcon,
 } from "lucide-react";
+import DriftWall from "#/components/DriftWall";
 import {
   Accordion,
   AccordionContent,
@@ -31,15 +32,29 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from "#/components/ui/popover";
+import { getGalleryPhotos } from "#/lib/photo/functions";
+
+const PHOTOS_URL = import.meta.env.VITE_PHOTOS_URL;
 
 export const Route = createFileRoute("/")({
+  loader: async () => {
+    const photos = await getGalleryPhotos();
+
+    return { photos };
+  },
   component: RouteComponent,
 });
 
 function RouteComponent() {
+  const { photos } = Route.useLoaderData();
+  const galleryItems = photos.map((photo) => ({
+    image: `${PHOTOS_URL}/${photo.objectKey}`,
+    title: `Campus photo ${photo.id}`,
+  }));
+
   return (
     <div className="flex flex-col">
-      <header className="sticky top-0 flex items-center justify-between p-4">
+      <header className="sticky top-0 flex items-center justify-between bg-background/90 p-4 backdrop-blur-md">
         <Link to="/" className="font-semibold text-2xl">
           <span className="text-primary">cu</span>
           Guessr
@@ -60,9 +75,34 @@ function RouteComponent() {
           </DropdownMenu>
         </div>
       </header>
-      <main className="*:flex *:flex-col *:items-center *:justify-center [&_h2]:font-medium [&_h2]:text-3xl">
+      <main className="[&>section]:flex [&>section]:flex-col [&>section]:items-center [&>section]:justify-center [&_h2]:font-medium [&_h2]:text-3xl">
         <section>
-          <h1 className="text-balance font-medium text-5xl">
+          <div className="h-150">
+            <DriftWall
+              items={galleryItems}
+              columns={5}
+              tileWidth={200}
+              tileHeight={132}
+              gap={18}
+              tilt={16}
+              turn={-14}
+              perspective={1200}
+              depth={120}
+              speed={42}
+              direction="up"
+              variance={0.45}
+              parallax={0.6}
+              lift={64}
+              fade={0.6}
+              dim={0.55}
+              overlayColor="#060010"
+              radius={14}
+              roll={0}
+              pauseOnHover={false}
+              grayscale={false}
+            />
+          </div>
+          <h1 className="text-balance text-center font-medium text-5xl tracking-tighter">
             Test your knowledge of the Carleton campus
           </h1>
           <Link to="/daily" className={buttonVariants()}>
@@ -117,7 +157,7 @@ function RouteComponent() {
         </section>
         <section className="min-h-[50vh]">
           <h2>FAQ</h2>
-          <Accordion>
+          <Accordion className="w-full max-w-md">
             <AccordionItem>
               <AccordionTrigger>Can I submit a photo?</AccordionTrigger>
               <AccordionContent>
@@ -172,7 +212,7 @@ function RouteComponent() {
             </AccordionItem>
           </Accordion>
         </section>
-        <section>
+        <section className="primary">
           <Link to="/daily" className={buttonVariants()}>
             Play Today's Game
           </Link>
