@@ -13,7 +13,7 @@ import {
   timestamp,
   unique,
 } from "drizzle-orm/pg-core";
-import { user } from "#/lib/db/auth-schema";
+import { user } from "./auth-schema";
 
 export const submissionStatus = pgEnum("submission_status", [
   "pending",

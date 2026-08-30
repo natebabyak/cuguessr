@@ -8,6 +8,9 @@
   },
   "format_on_save": "on",
   "languages": {
+    "JSON": {
+      "formatter": "language_server"
+    },
     "JSONC": {
       "formatter": "language_server"
     }
