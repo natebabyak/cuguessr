@@ -4,15 +4,12 @@
 // see the documentation: https://zed.dev/docs/configuring-zed#settings-files
 {
   "code_actions_on_format": {
-    "source.fixAll.biome": true,
+    "source.fixAll.biome": true
   },
   "format_on_save": "on",
-  "languages": {
-    "JSON": {
-      "formatter": "language_server"
-    },
-    "JSONC": {
-      "formatter": "language_server"
+  "formatter": {
+    "language_server": {
+      "name": "biome"
     }
   }
 }

@@ -1,10 +1,20 @@
-import { ArrowLeftIcon, MapPinIcon, SendIcon } from "lucide-react";
+"use client";
+
+import type { Feature, LineString } from "geojson";
+import {
+  ArrowLeftIcon,
+  MapPinCheckInsideIcon,
+  MapPinIcon,
+  SendIcon,
+} from "lucide-react";
 import { AnimatePresence, motion } from "motion/react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { useMemo, useRef, useState } from "react";
-import { type MapRef, Marker } from "react-map-gl/maplibre";
+import { Layer, type MapRef, Marker, Source } from "react-map-gl/maplibre";
 import { AppMap } from "@/components/app-map";
 import { GoToMarkerButton } from "@/components/go-to-marker-button";
+import { RecenterButton } from "@/components/recenter-button";
 import { Button, buttonVariants } from "@/components/ui/button";
 import { ButtonGroup } from "@/components/ui/button-group";
 import {
@@ -20,50 +30,55 @@ import {
   DEFAULT_ZOOM,
 } from "@/lib/constants";
 import type { Coordinates } from "@/lib/types";
-import { GameResultScreen } from "./game-result";
+import { submitGuess } from "./actions";
+import type { GameType } from "./page";
 import { PhotoDialog } from "./photo-dialog";
 import { ReportDialog } from "./report-dialog";
 import { RoundResultItem } from "./round-result-item";
-import { RoundResultOverlay } from "./round-result-overlay";
 
-export function Game({ game }: { game: any }) {
+type RoundResult = {
+  roundId: number;
+  distance: number;
+  points: number;
+};
+
+export function Game({ game }: { game: GameType }) {
+  const router = useRouter();
   const [cursor, setCursor] = useState<"crosshair" | "grabbing">("crosshair");
   const [guess, setGuess] = useState<Coordinates | null>(null);
   const [, setCursorCoords] = useState<Coordinates | null>(null);
   const [isRoundOver, setIsRoundOver] = useState(false);
-  const firstUncompletedRoundIndex = game.rounds.findIndex(
-    (round) =>
-      !roundResults.some((roundResult) => roundResult.roundId === round.id),
-  );
-  const initialRoundIndex =
-    firstUncompletedRoundIndex === -1
-      ? game.rounds.length
-      : firstUncompletedRoundIndex;
-  const [roundIndex, setRoundIndex] = useState(initialRoundIndex);
-  const [isGameOver, setIsGameOver] = useState(
-    initialRoundIndex >= game.rounds.length,
-  );
+  const [isSubmittingGuess, setIsSubmittingGuess] = useState(false);
+  const [roundIndex, setRoundIndex] = useState(0);
+  const [roundResults, setRoundResults] = useState<RoundResult[]>([]);
   const [isPhotoDialogOpen, setIsPhotoDialogOpen] = useState(true);
   const mapRef = useRef<MapRef>(null);
 
-  const submitGuessMutation = useSubmitGuessMutation(game.id);
   const currentRound = game.rounds[roundIndex];
   const currentResult = roundResults.find(
     (result) => result.roundId === currentRound?.id,
   );
   const answer = currentRound?.photo ?? null;
+  const lineGeoJson = useMemo<Feature<LineString> | null>(() => {
+    if (!guess || !answer) return null;
 
-  const [totalPoints, setTotalPoints] = useState(0);
+    return {
+      type: "Feature",
+      properties: {},
+      geometry: {
+        type: "LineString",
+        coordinates: [
+          [guess.longitude, guess.latitude],
+          [answer.longitude, answer.latitude],
+        ],
+      },
+    };
+  }, [answer, guess]);
 
-  if (isGameOver) {
-    return (
-      <GameResultScreen
-        game={game}
-        roundResults={roundResults}
-        gameResult={gameResult}
-      />
-    );
-  }
+  const totalPoints = roundResults.reduce(
+    (total, result) => total + result.points,
+    0,
+  );
 
   return (
     <AppMap
@@ -100,11 +115,32 @@ export function Game({ game }: { game: any }) {
           <MapPinIcon className="size-8 fill-white text-red-500 dark:fill-black" />
         </Marker>
       )}
-      <RoundResultOverlay
-        isRoundOver={isRoundOver}
-        guess={guess}
-        answer={answer}
-      />
+      {isRoundOver && guess && answer && lineGeoJson && (
+        <>
+          <Marker
+            anchor="bottom"
+            latitude={answer.latitude}
+            longitude={answer.longitude}
+          >
+            <MapPinCheckInsideIcon className="size-8 fill-white text-green-500 dark:fill-black" />
+          </Marker>
+          <Source id="line" type="geojson" data={lineGeoJson}>
+            <Layer
+              id="line-layer"
+              type="line"
+              layout={{
+                "line-cap": "round",
+                "line-join": "round",
+              }}
+              paint={{
+                "line-color": "#fff",
+                "line-width": 3,
+                "line-dasharray": [0, 2],
+              }}
+            />
+          </Source>
+        </>
+      )}
       <div className="pointer-events-none absolute inset-2 *:pointer-events-auto *:absolute md:inset-4">
         <Link
           href="/"
@@ -168,24 +204,29 @@ export function Game({ game }: { game: any }) {
             >
               <ButtonGroup orientation="vertical">
                 <GoToMarkerButton marker={guess} />
-                <GoToCenterButton />
+                <RecenterButton />
               </ButtonGroup>
               <Button
-                disabled={!guess || submitGuessMutation.isPending}
+                disabled={!guess || isSubmittingGuess}
                 onClick={async () => {
-                  if (!guess) return;
+                  if (!guess || !currentRound) return;
 
-                  await submitGuessMutation.mutateAsync({
-                    roundId: currentRound.id,
-                    latitude: guess.latitude,
-                    longitude: guess.longitude,
-                  });
-
-                  setIsRoundOver(true);
+                  setIsSubmittingGuess(true);
+                  try {
+                    const result = await submitGuess({
+                      roundId: currentRound.id,
+                      latitude: guess.latitude,
+                      longitude: guess.longitude,
+                    });
+                    setRoundResults((previous) => [...previous, result]);
+                    setIsRoundOver(true);
+                  } finally {
+                    setIsSubmittingGuess(false);
+                  }
                 }}
                 size="lg"
               >
-                {submitGuessMutation.isPending ? <Spinner /> : <SendIcon />}
+                {isSubmittingGuess ? <Spinner /> : <SendIcon />}
                 Submit Guess
               </Button>
             </motion.div>
@@ -215,9 +256,9 @@ export function Game({ game }: { game: any }) {
                 distance={Math.round(currentResult?.distance ?? 0)}
                 points={currentResult?.points ?? 0}
                 totalPoints={totalPoints}
-                isLastRound={roundIndex === 4}
+                isLastRound={roundIndex === game.rounds.length - 1}
                 handleClick={() => {
-                  if (roundIndex < 4) {
+                  if (roundIndex < game.rounds.length - 1) {
                     const nextRoundIndex = roundIndex + 1;
                     setRoundIndex(nextRoundIndex);
                     setIsPhotoDialogOpen(true);
@@ -226,7 +267,7 @@ export function Game({ game }: { game: any }) {
                       zoom: DEFAULT_ZOOM,
                     });
                   } else {
-                    setIsGameOver(true);
+                    router.refresh();
                   }
 
                   setIsRoundOver(false);

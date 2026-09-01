@@ -7,6 +7,8 @@ import { Protocol } from "pmtiles";
 import { useEffect, useMemo } from "react";
 import { Map as MapLibreMap, type MapProps } from "react-map-gl/maplibre";
 
+maplibregl.setWorkerUrl("/maplibre/maplibre-gl-worker.mjs");
+
 export function AppMap({
   children,
   ...props
@@ -16,7 +18,6 @@ export function AppMap({
   useEffect(() => {
     const protocol = new Protocol();
     maplibregl.addProtocol("pmtiles", protocol.tile);
-
     return () => {
       maplibregl.removeProtocol("pmtiles");
     };
@@ -48,10 +49,7 @@ export function AppMap({
     <MapLibreMap
       mapLib={maplibregl}
       mapStyle={mapStyle}
-      style={{
-        height: "100dvh",
-        width: "100dvw",
-      }}
+      style={{ height: "100dvh", width: "100dvw" }}
       {...props}
     >
       {children}

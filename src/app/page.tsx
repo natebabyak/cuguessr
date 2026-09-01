@@ -1,10 +1,13 @@
 import {
   ArrowUpRightIcon,
   CalendarIcon,
+  PlayIcon,
   PodiumIcon,
   UploadIcon,
 } from "lucide-react";
 import Link from "next/link";
+import { AppFooter } from "@/components/app-footer";
+import { AppHeader } from "@/components/app-header";
 import BlurText from "@/components/BlurText";
 import DriftWall from "@/components/DriftWall";
 import {
@@ -55,90 +58,36 @@ export default async function Page() {
 
   return (
     <div className="flex flex-col">
-      <header className="sticky top-0 flex items-center justify-between bg-background p-4 backdrop-blur-md">
-        <Link href="/" className="font-semibold text-2xl">
-          <span className="text-primary">cu</span>
-          Guessr
-        </Link>
-        <div className="flex gap-2">
-          <Link
-            href="/sign-in"
-            className={buttonVariants({ variant: "outline" })}
-          >
-            Sign In
-          </Link>
-          <Link href="/daily" className={buttonVariants()}>
-            Play Today's Game
-          </Link>
-          <DropdownMenu>
-            <DropdownMenuTrigger />
-            <DropdownMenuContent></DropdownMenuContent>
-          </DropdownMenu>
-        </div>
-      </header>
-      <main className="[&>section]:flex [&>section]:flex-col [&>section]:items-center [&>section]:justify-center [&_h2]:font-medium [&_h2]:text-3xl">
+      <AppHeader />
+      <main className="[&>section]:flex [&>section]:min-h-[50vh] [&>section]:flex-col [&>section]:items-center [&>section]:justify-center [&>section]:gap-4 [&_h2]:font-medium [&_h2]:text-3xl">
         <section>
-          <BlurText
-            text="Test your knowledge of the Carleton campus"
-            delay={200}
-            animateBy="words"
-            direction="top"
-          />
-          <Link href="/daily" className={buttonVariants()}>
-            Play Today's Game
-          </Link>
-          <Popover>
-            <PopoverTrigger render={<Button size="icon" />}>
-              <CalendarIcon />
-            </PopoverTrigger>
-            <PopoverContent>
-              <Calendar
-                captionLayout="dropdown"
-                mode="single"
-                timeZone="America/Toronto"
-              />
-            </PopoverContent>
-          </Popover>
-          <Link
-            href="/leaderboard"
-            className={buttonVariants({ size: "lg", variant: "outline" })}
-          >
-            <PodiumIcon />
-            Leaderboard
-          </Link>
-          <Link
-            href="/submit"
-            className={buttonVariants({ size: "lg", variant: "outline" })}
-          >
-            <UploadIcon />
-            Submit Photo
-          </Link>
-        </section>
-        <section>
-          <div className="h-screen w-full">
-            <DriftWall
-              items={driftWallItems}
-              columns={5}
-              tileWidth={200}
-              tileHeight={132}
-              gap={18}
-              tilt={16}
-              turn={-14}
-              perspective={1200}
-              depth={120}
-              speed={42}
-              direction="up"
-              variance={0.45}
-              parallax={0.6}
-              lift={64}
-              fade={0.6}
-              dim={0.55}
-              overlayColor="#060010"
-              radius={14}
-              roll={0}
-              pauseOnHover={false}
-              grayscale={false}
-            />
+          <h1 className="text-balance text-center font-medium text-5xl tracking-tighter">
+            How well do you know the Carleton campus?
+          </h1>
+          <p className="text-balance text-center text-muted-foreground">
+            Guess the location of 250+ user-submitted photos of the Carleton
+            campus.
+          </p>
+          <div className="flex flex-col gap-2">
+            <Link href="/daily" className={buttonVariants()}>
+              <PlayIcon />
+              Play Today's Game ()
+            </Link>
+            <Popover>
+              <PopoverTrigger>
+                <Button>
+                  <CalendarIcon />
+                  Play Previous Games
+                </Button>
+              </PopoverTrigger>
+              <PopoverContent>
+                <Calendar
+                  captionLayout="dropdown"
+                  mode="single"
+                  timeZone="America/Toronto"
+                />
+              </PopoverContent>
+            </Popover>
           </div>
         </section>
         <section>
@@ -161,91 +110,47 @@ export default async function Page() {
             </ItemActions>
           </Item>
         </section>
-        <section className="min-h-[50vh]">
+        <section>
+          <div className="h-screen w-full">
+            <DriftWall items={driftWallItems} />
+          </div>
+        </section>
+        <section>
           <h2>FAQ</h2>
           <Accordion className="w-full max-w-md">
             <AccordionItem>
               <AccordionTrigger>Can I submit a photo?</AccordionTrigger>
               <AccordionContent>
-                Yes! Submit photos taken anywhere on Carleton&apos;s campus{" "}
-                <Link href="/submit" className="underline underline-offset-4">
-                  here
-                </Link>
-                . Every submission is reviewed before going live and can be
-                removed at any time.
+                Probably! As long as it's taken on or around Carleton's campus
+                and reasonably possible, you can submit it. Challenging photos
+                are encouraged!
               </AccordionContent>
             </AccordionItem>
             <AccordionItem>
               <AccordionTrigger>
-                What do I do if I think an answer is incorrect?
+                What do I do if an answer is wrong?
               </AccordionTrigger>
               <AccordionContent>
-                Hit the report button in the bottom right after making a guess.
-                You can view the photo again before submitting to help explain
-                the issue.
+                Press the report button in the bottom left corner after
+                submitting a guess.
               </AccordionContent>
             </AccordionItem>
             <AccordionItem>
-              <AccordionTrigger>How do I contact the creator?</AccordionTrigger>
+              <AccordionTrigger>Do I need to sign in to play?</AccordionTrigger>
               <AccordionContent>
-                Open a{" "}
-                <a
-                  href="https://github.com/natebabyak/cuguessr/discussions"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="underline underline-offset-4"
-                >
-                  GitHub Discussion
-                </a>{" "}
-                or{" "}
-                <a
-                  href="https://github.com/natebabyak/cuguessr/issues"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="underline underline-offset-4"
-                >
-                  Issue
-                </a>{" "}
-                if you have a GitHub account, or reach out by{" "}
-                <a
-                  href="mailto:nate.babyak@outlook.com"
-                  className="underline underline-offset-4"
-                >
-                  email
-                </a>
-                . Bug reports, suggestions, and feedback are always welcome.
+                No. However, you will need to sign in to appear on the
+                leaderboard or be credited for submitted photos. When you create
+                an account, your stats will be saved.
               </AccordionContent>
+            </AccordionItem>
+            <AccordionItem>
+              <AccordionTrigger>Can I make a suggestion?</AccordionTrigger>
+              <AccordionContent></AccordionContent>
             </AccordionItem>
           </Accordion>
         </section>
-        <section className="primary">
-          <Link href="/daily" className={buttonVariants()}>
-            Play Today's Game
-          </Link>
-        </section>
       </main>
-      <footer className="border-t">
-        <nav>
-          <ul>
-            <li>
-              <Link href="/">Home</Link>
-            </li>
-            <li>
-              <Link href="/daily">Daily</Link>
-            </li>
-            <li>
-              <Link href="/leaderboard">Leaderboard</Link>
-            </li>
-            <li>
-              <Link href="/submit">Submit</Link>
-            </li>
-          </ul>
-        </nav>
-        <p>&copy; 2025-2026 Nate Babyak</p>
-        <a href="mailto:support@cuguessr.com" className={buttonVariants()}>
-          Contact Support
-        </a>
-      </footer>
+      <AppFooter />
     </div>
   );
 }

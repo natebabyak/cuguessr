@@ -1,4 +1,9 @@
-import { ArrowDownIcon, ArrowLeftIcon, Share2Icon } from "lucide-react";
+import {
+  ArrowDownIcon,
+  ArrowLeftIcon,
+  ArrowRightIcon,
+  Share2Icon,
+} from "lucide-react";
 import Link from "next/link";
 import { Button, buttonVariants } from "@/components/ui/button";
 import {
@@ -13,6 +18,28 @@ import { toast } from "@/components/ui/toast";
 import type { GameResultType } from "./page";
 
 export function GameResult({ gameResult }: { gameResult: GameResultType }) {
+  async function handleShare() {
+    const shareText = `cuGuessr #${gameResult.game?.date}\n\n${gameResult?.points} points \nhttps://cuguessr.com/daily`;
+
+    if (navigator.share) {
+      try {
+        await navigator.share({
+          title: `cuGuessr #${gameResult.game?.date}`,
+          text: shareText,
+        });
+      } catch {}
+    } else {
+      try {
+        await navigator.clipboard.writeText(shareText);
+        toast.add({ title: "Copied to clipboard!" });
+      } catch {
+        toast.add({
+          title: "Something went wrong. Please try again.",
+        });
+      }
+    }
+  }
+
   return (
     <div className="flex h-dvh w-dvw items-center justify-center">
       <div className="fade-in-0 slide-in-from-bottom-5 flex w-full max-w-sm animate-in flex-col gap-4 duration-700">
@@ -41,50 +68,25 @@ export function GameResult({ gameResult }: { gameResult: GameResultType }) {
             </Item>
           ))}
         </div>
-        <div className="grid w-full grid-cols-1 grid-rows-2 gap-2 px-2">
-          <Button
-            onClick={async () => {
-              const shareText = `cuGuessr #${gameResult.game?.date}\n\n${gameResult?.points} points \nhttps://cuguessr.com/daily`;
-
-              if (navigator.share) {
-                try {
-                  await navigator.share({
-                    title: `cuGuessr #${game.id}`,
-                    text: shareText,
-                  });
-                } catch {}
-              } else {
-                try {
-                  await navigator.clipboard.writeText(shareText);
-                  toast.add({ title: "Copied to clipboard!" });
-                } catch {
-                  toast.add({
-                    title: "Something went wrong. Please try again.",
-                  });
-                }
-              }
-            }}
-            size="lg"
-            variant="default"
-            className="rounded-full"
-          >
+        <div className="flex flex-col gap-2">
+          <Button onClick={handleShare} size="lg" variant="default">
             <Share2Icon />
             Share Results
           </Button>
-          <Link
-            href="/"
-            className={buttonVariants({ size: "lg", variant: "ghost" })}
-          >
-            <ArrowLeftIcon />
-            Back to Home
-          </Link>
-          <div>
-            <Separator className="flex-1" />
-            <span>
-              <ArrowDownIcon />
-              Scroll down to compare
-            </span>
-            <Separator className="flex-1" />
+          <div className="flex gap-2">
+            <Link href="/daily" className={buttonVariants({ size: "icon-lg" })}>
+              <ArrowLeftIcon />
+            </Link>
+            <Link
+              href="/"
+              className={buttonVariants({ size: "lg", variant: "ghost" })}
+            >
+              <ArrowLeftIcon />
+              Back to Home
+            </Link>
+            <Link href="/daily" className={buttonVariants({ size: "icon-lg" })}>
+              <ArrowRightIcon />
+            </Link>
           </div>
         </div>
       </div>
