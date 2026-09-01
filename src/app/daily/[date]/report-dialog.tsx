@@ -61,9 +61,7 @@ export function ReportDialog({ photoId }: { photoId: number }) {
   });
 
   const handleSubmit: SubmitHandler<typeof ReportSchema> = async (output) => {
-    try {
-      await createReport(output);
-    } catch {}
+    await createReport(output);
   };
 
   const [open, setOpen] = useState(false);

@@ -1,43 +1,32 @@
-import { Link } from "@tanstack/react-router";
 import { ArrowLeftIcon, MapPinIcon, SendIcon } from "lucide-react";
 import { AnimatePresence, motion } from "motion/react";
+import Link from "next/link";
 import { useMemo, useRef, useState } from "react";
 import { type MapRef, Marker } from "react-map-gl/maplibre";
-import { AppMap } from "../../../components/app-map";
-import { GoToMarkerButton } from "../../../components/go-to-marker-button";
-import { MapOverlay } from "../../../components/old/components/map-overlay";
-import { GoToCenterButton } from "../../../components/recenter-button";
+import { AppMap } from "@/components/app-map";
+import { GoToMarkerButton } from "@/components/go-to-marker-button";
+import { Button, buttonVariants } from "@/components/ui/button";
+import { ButtonGroup } from "@/components/ui/button-group";
+import {
+  Item,
+  ItemContent,
+  ItemDescription,
+  ItemTitle,
+} from "@/components/ui/item";
+import { Spinner } from "@/components/ui/spinner";
 import {
   DEFAULT_LATITUDE,
   DEFAULT_LONGITUDE,
   DEFAULT_ZOOM,
-} from "../../../lib/constants";
-import type { getGameByDate } from "../../../lib/OLD-TO-DELETE/game/functions";
-import type { getGameResultByGameId } from "../../../lib/OLD-TO-DELETE/game-result/functions";
-import type { getRoundResultsByGameId } from "../../../lib/OLD-TO-DELETE/round-result/functions";
-import { useSubmitGuessMutation } from "../../../lib/OLD-TO-DELETE/round-result/mutations";
-import type { Coordinates } from "../../../lib/types";
-import { GameResultScreen } from "./game-result-screen";
+} from "@/lib/constants";
+import type { Coordinates } from "@/lib/types";
+import { GameResultScreen } from "./game-result";
 import { PhotoDialog } from "./photo-dialog";
 import { ReportDialog } from "./report-dialog";
 import { RoundResultItem } from "./round-result-item";
 import { RoundResultOverlay } from "./round-result-overlay";
-import { Button, buttonVariants } from "./ui/button";
-import { ButtonGroup } from "./ui/button-group";
-import { Item, ItemContent, ItemDescription, ItemTitle } from "./ui/item";
-import { Spinner } from "./ui/spinner";
 
-export function Game({
-  game,
-  roundResults,
-  gameResult,
-}: {
-  game: NonNullable<Awaited<ReturnType<typeof getGameByDate>>>;
-  roundResults: NonNullable<
-    Awaited<ReturnType<typeof getRoundResultsByGameId>>
-  >;
-  gameResult: Awaited<ReturnType<typeof getGameResultByGameId>>;
-}) {
+export function Game({ game }: { game: any }) {
   const [cursor, setCursor] = useState<"crosshair" | "grabbing">("crosshair");
   const [guess, setGuess] = useState<Coordinates | null>(null);
   const [, setCursorCoords] = useState<Coordinates | null>(null);
@@ -64,14 +53,7 @@ export function Game({
   );
   const answer = currentRound?.photo ?? null;
 
-  const totalPoints = useMemo(
-    () =>
-      roundResults.reduce(
-        (acc, roundResult) => acc + (roundResult.points ?? 0),
-        0,
-      ),
-    [roundResults],
-  );
+  const [totalPoints, setTotalPoints] = useState(0);
 
   if (isGameOver) {
     return (
@@ -85,7 +67,6 @@ export function Game({
 
   return (
     <AppMap
-      ref={mapRef}
       cursor={cursor}
       initialViewState={{
         latitude: DEFAULT_LATITUDE,
@@ -126,7 +107,7 @@ export function Game({
       />
       <div className="pointer-events-none absolute inset-2 *:pointer-events-auto *:absolute md:inset-4">
         <Link
-          to="/"
+          href="/"
           className={buttonVariants({
             size: "icon-lg",
             className: "top-0 left-0",

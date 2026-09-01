@@ -22,3 +22,5 @@ export async function createReport(reportData: Report) {
     status: "pending",
   });
 }
+
+export async function createRoundResult() {}

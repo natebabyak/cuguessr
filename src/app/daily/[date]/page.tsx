@@ -1,11 +1,78 @@
-import { notFound } from "next/navigation";
+import { headers } from "next/headers";
+import { notFound, unauthorized } from "next/navigation";
+import { auth } from "@/lib/auth";
+import { MIN_DATE } from "@/lib/constants";
+import { db } from "@/lib/db";
+import { Game } from "./game";
+import { GameResult } from "./game-result";
 
-const MIN_DATE = "2026-08-29";
+async function getGameResult(date: string, userId: string) {
+  return await db.query.gameResult.findFirst({
+    where: {
+      AND: [
+        {
+          game: {
+            date,
+          },
+        },
+        {
+          userId,
+        },
+      ],
+    },
+    with: {
+      game: {
+        with: {
+          rounds: {
+            with: {
+              results: {
+                where: {
+                  userId,
+                },
+              },
+            },
+          },
+        },
+      },
+    },
+  });
+}
+
+export type GameResultType = NonNullable<
+  Awaited<ReturnType<typeof getGameResult>>
+>;
+
+async function getGame(date: string) {
+  return await db.query.game.findFirst({
+    where: {
+      date,
+    },
+    with: {
+      rounds: {
+        with: {
+          photo: {
+            columns: {
+              latitude: false,
+              longitude: false,
+            },
+          },
+        },
+        orderBy: {
+          index: "asc",
+        },
+      },
+    },
+  });
+}
+
+export type GameType = NonNullable<Awaited<ReturnType<typeof getGame>>>;
 
 export default async function Page({
   params,
 }: {
-  params: Promise<{ date: string }>;
+  params: Promise<{
+    date: string;
+  }>;
 }) {
   const { date } = await params;
 
@@ -13,7 +80,29 @@ export default async function Page({
     timeZone: "America/Toronto",
   }).format(Date.now());
 
-  if (date < MIN_DATE || date > maxDate) notFound();
+  if (date < MIN_DATE || date > maxDate) {
+    notFound();
+  }
 
-  return <div></div>;
+  const session = await auth.api.getSession({
+    headers: await headers(),
+  });
+
+  if (!session) {
+    unauthorized();
+  }
+
+  const gameResult = await getGameResult(date, session.user.id);
+
+  if (gameResult) {
+    return <GameResult gameResult={gameResult} />;
+  }
+
+  const game = await getGame(date);
+
+  if (!game) {
+    notFound();
+  }
+
+  return <Game game={game} />;
 }
