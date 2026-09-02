@@ -1,4 +1,5 @@
-import { headers } from "next/headers";
+"use client";
+
 import Link from "next/link";
 import { buttonVariants } from "@/components/ui/button";
 import {
@@ -8,16 +9,14 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { auth } from "@/lib/auth";
+import { authClient } from "@/lib/auth-client";
 import { Avatar, AvatarFallback, AvatarImage } from "./ui/avatar";
 
-export async function AppHeader() {
-  const session = await auth.api.getSession({
-    headers: await headers(),
-  });
+export function AppHeader() {
+  const { data: session, isPending, error } = authClient.useSession();
 
   return (
-    <header className="sticky top-0 flex items-center justify-between bg-background p-4">
+    <header className="sticky top-0 z-50 flex items-center justify-between bg-background/90 p-4 backdrop-blur-md">
       <Link href="/" className="font-semibold text-2xl">
         <span className="text-red-500">cu</span>
         Guessr

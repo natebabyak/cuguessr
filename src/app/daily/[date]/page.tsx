@@ -7,7 +7,7 @@ import { Game } from "./game";
 import { GameResult } from "./game-result";
 
 async function getGameResult(date: string, userId: string) {
-  const gameResult = await db.query.gameResult.findFirst({
+  return await db.query.gameResult.findFirst({
     where: {
       AND: [
         {
@@ -36,12 +36,6 @@ async function getGameResult(date: string, userId: string) {
       },
     },
   });
-
-  if (!gameResult?.game) {
-    throw new Error("Game result not found");
-  }
-
-  return gameResult;
 }
 
 export type GameResultType = NonNullable<

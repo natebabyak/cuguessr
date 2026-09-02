@@ -1,9 +1,4 @@
-import {
-  ArrowDownIcon,
-  ArrowLeftIcon,
-  ArrowRightIcon,
-  Share2Icon,
-} from "lucide-react";
+import { ArrowLeftIcon, ArrowRightIcon, Share2Icon } from "lucide-react";
 import Link from "next/link";
 import { Button, buttonVariants } from "@/components/ui/button";
 import {
@@ -13,7 +8,6 @@ import {
   ItemMedia,
   ItemTitle,
 } from "@/components/ui/item";
-import { Separator } from "@/components/ui/separator";
 import { toast } from "@/components/ui/toast";
 import type { GameResultType } from "./page";
 
@@ -31,7 +25,10 @@ export function GameResult({ gameResult }: { gameResult: GameResultType }) {
     } else {
       try {
         await navigator.clipboard.writeText(shareText);
-        toast.add({ title: "Copied to clipboard!" });
+
+        toast.add({
+          title: "Copied to clipboard!",
+        });
       } catch {
         toast.add({
           title: "Something went wrong. Please try again.",

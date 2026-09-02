@@ -9,6 +9,7 @@ import Link from "next/link";
 import { AppFooter } from "@/components/app-footer";
 import { AppHeader } from "@/components/app-header";
 import BlurText from "@/components/BlurText";
+import CountUp from "@/components/CountUp";
 import DriftWall from "@/components/DriftWall";
 import {
   Accordion,
@@ -18,11 +19,6 @@ import {
 } from "@/components/ui/accordion";
 import { Button, buttonVariants } from "@/components/ui/button";
 import { Calendar } from "@/components/ui/calendar";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
 import {
   Item,
   ItemActions,
@@ -36,6 +32,7 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from "@/components/ui/popover";
+import { Separator } from "@/components/ui/separator";
 import { db } from "@/lib/db";
 
 export default async function Page() {
@@ -59,32 +56,43 @@ export default async function Page() {
   return (
     <div className="flex flex-col">
       <AppHeader />
-      <main className="[&>section]:flex [&>section]:min-h-[50vh] [&>section]:flex-col [&>section]:items-center [&>section]:justify-center [&>section]:gap-4 [&_h2]:font-medium [&_h2]:text-3xl">
-        <section>
+      <main className="*:flex *:min-h-[50vh] *:flex-col *:items-center *:justify-center *:gap-4 [&_h2]:font-medium [&_h2]:text-3xl">
+        <section className="bg-linear-to-b from-transparent to-border/25">
           <h1 className="text-balance text-center font-medium text-5xl tracking-tighter">
-            How well do you know the Carleton campus?
+            <BlurText
+              text="How well do you know"
+              animateBy="words"
+              direction="bottom"
+              delay={0}
+            />
+            <BlurText
+              text="the Carleton campus?"
+              animateBy="words"
+              direction="bottom"
+              delay={500}
+            />
           </h1>
           <p className="text-balance text-center text-muted-foreground">
             Guess the location of 250+ user-submitted photos of the Carleton
             campus.
           </p>
-          <div className="flex flex-col gap-2">
+          <div className="flex w-full max-w-sm flex-col gap-2">
             <Link href="/daily" className={buttonVariants()}>
               <PlayIcon />
-              Play Today's Game ()
+              Play Today's Game
             </Link>
             <Popover>
-              <PopoverTrigger>
-                <Button>
-                  <CalendarIcon />
-                  Play Previous Games
-                </Button>
+              <PopoverTrigger render={<Button variant="outline" />}>
+                <CalendarIcon />
+                Play Previous Games
               </PopoverTrigger>
-              <PopoverContent>
+              <PopoverContent align="center" className="bg-background">
                 <Calendar
                   captionLayout="dropdown"
                   mode="single"
                   timeZone="America/Toronto"
+                  startMonth={new Date(2026, 8, 1)}
+                  endMonth={new Date()}
                 />
               </PopoverContent>
             </Popover>
@@ -111,10 +119,22 @@ export default async function Page() {
           </Item>
         </section>
         <section>
-          <div className="h-screen w-full">
-            <DriftWall items={driftWallItems} />
+          <h2>
+            <CountUp from={0} to={280} />+ User-Submitted Photos
+          </h2>
+          <p>
+            cuGuessr is powered by the community and every photo submitted is
+            welcomed
+          </p>
+          <Button className="w-full max-w-xs">
+            <UploadIcon />
+            Submit a Photo
+          </Button>
+          <div className="h-150 w-full">
+            <DriftWall items={driftWallItems} className="cursor-none" />
           </div>
         </section>
+        <Separator />
         <section>
           <h2>FAQ</h2>
           <Accordion className="w-full max-w-md">

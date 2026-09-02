@@ -410,7 +410,7 @@ const DriftWall = ({
     >
       <div
         ref={planeRef}
-        className="absolute left-1/2 top-1/2 flex cursor-pointer flex-row [transform-style:preserve-3d] [transform-origin:50%_50%] will-change-transform"
+        className="absolute top-1/2 left-1/2 flex cursor-pointer flex-row will-change-transform [transform-origin:50%_50%] [transform-style:preserve-3d]"
       >
         {columnItems.map((col, c) => {
           const meta = columnMeta[c];
@@ -421,7 +421,7 @@ const DriftWall = ({
               key={`col-${c}`}
             >
               <div
-                className="flex flex-col [transform-style:preserve-3d] will-change-transform"
+                className="flex flex-col will-change-transform [transform-style:preserve-3d]"
                 ref={(el) => {
                   trackRefs.current[c] = el;
                 }}

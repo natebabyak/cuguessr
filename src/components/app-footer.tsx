@@ -3,14 +3,19 @@
 import { MonitorIcon, MoonIcon, SunIcon } from "lucide-react";
 import Link from "next/link";
 import { useTheme } from "next-themes";
+import { useEffect, useState } from "react";
 import { buttonVariants } from "@/components/ui/button";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 export function AppFooter() {
   const { setTheme, theme } = useTheme();
 
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => setMounted(true), []);
+
   return (
-    <footer className="border-t">
+    <footer className="grid p-8">
       <nav>
         <ul>
           <li>
@@ -36,7 +41,7 @@ export function AppFooter() {
       <a href="mailto:support@cuguessr.com" className={buttonVariants()}>
         Contact Support
       </a>
-      <Tabs value={theme} onValueChange={setTheme}>
+      <Tabs value={mounted && theme} onValueChange={setTheme}>
         <TabsList>
           <TabsTrigger value="light">
             <SunIcon />
