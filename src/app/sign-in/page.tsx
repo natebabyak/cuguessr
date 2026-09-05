@@ -7,7 +7,8 @@ import {
   useForm,
 } from "@formisch/react";
 import { SiDiscord, SiGithub } from "@icons-pack/react-simple-icons";
-import { AnimatePresence, motion } from "motion/react";
+import { ArrowLeftIcon } from "lucide-react";
+import { AnimatePresence } from "motion/react";
 import { useState } from "react";
 import * as v from "valibot";
 import { AppHeader } from "@/components/app-header";
@@ -28,36 +29,25 @@ const SignInSchema = v.object({
   email: v.pipe(v.string(), v.email("Please enter a valid email address.")),
 });
 
-export default function Page() {
-  const [screen, setScreen] = useState<"email" | "magicLink">("email");
+function getCallbackURL() {
+  if (typeof window === "undefined") {
+    return "/daily";
+  }
 
-  return (
-    <div className="flex flex-col">
-      <AppHeader />
-      <main className="mx-auto w-full max-w-sm">
-        <AnimatePresence initial={false} mode="wait">
-          {screen === "email" ? (
-            <EmailScreen
-              key="email"
-              goToMagicLinkScreen={() => setScreen("magicLink")}
-            />
-          ) : (
-            <MagicLinkScreen
-              key="magicLink"
-              goToEmailScreen={() => setScreen("email")}
-            />
-          )}
-        </AnimatePresence>
-      </main>
-    </div>
-  );
+  try {
+    const referrer = document.referrer;
+    if (referrer) {
+      const url = new URL(referrer);
+      if (url.origin === window.location.origin) {
+        return `${url.pathname}${url.search}`;
+      }
+    }
+  } catch {}
+
+  return "/daily";
 }
 
-function EmailScreen({
-  goToMagicLinkScreen,
-}: {
-  goToMagicLinkScreen: () => void;
-}) {
+export default function Page() {
   const form = useForm({
     initialInput: {
       email: "",
@@ -65,100 +55,110 @@ function EmailScreen({
     schema: SignInSchema,
   });
 
+  const [screen, setScreen] = useState<"email" | "magicLink">("email");
+
   const handleSubmit: SubmitHandler<typeof SignInSchema> = async (output) => {
     await authClient.signIn.magicLink({
       email: output.email,
+      callbackURL: getCallbackURL(),
     });
 
-    goToMagicLinkScreen();
+    setScreen("magicLink");
   };
 
   return (
-    <Form of={form} onSubmit={handleSubmit}>
-      <FieldGroup>
-        <FieldGroup>
-          <Button
-            disabled={form.isSubmitting}
-            onClick={async () =>
-              await authClient.signIn.social({
-                provider: "discord",
-              })
-            }
-            variant="outline"
-          >
-            <SiDiscord />
-            Continue with Discord
-          </Button>
-          <Button
-            disabled={form.isSubmitting}
-            onClick={async () =>
-              await authClient.signIn.social({
-                provider: "github",
-              })
-            }
-            variant="outline"
-          >
-            <SiGithub />
-            Continue with GitHub
-          </Button>
-        </FieldGroup>
-        <FieldSeparator>or</FieldSeparator>
-        <FieldGroup>
-          <FormischField of={form} path={["email"]}>
-            {(field) => (
-              <Field data-invalid={field.errors !== null}>
-                <FieldLabel htmlFor="sign-in-email">Your Email</FieldLabel>
-                <Input
-                  aria-invalid={field.errors !== null}
-                  autoCapitalize="none"
-                  autoComplete="email"
-                  autoCorrect="off"
-                  id="sign-in-email"
-                  placeholder="Enter your email..."
-                  {...field.props}
-                />
-                <FieldDescription>
-                  Your email will not be shared with anyone.
-                </FieldDescription>
-                {field.errors && (
-                  <FieldError
-                    errors={field.errors.map((message) => ({ message }))}
-                  />
-                )}
-              </Field>
-            )}
-          </FormischField>
-          <Button disabled={!form.isValid || form.isSubmitting} type="submit">
-            {form.isSubmitting && <Spinner />}
-            Continue with Email
-          </Button>
-        </FieldGroup>
-      </FieldGroup>
-    </Form>
-  );
-}
-
-function MagicLinkScreen({ goToEmailScreen }: { goToEmailScreen: () => void }) {
-  return (
-    <motion.div
-      initial={{ opacity: 0, scale: 0.9, y: -16 }}
-      animate={{ opacity: 1, scale: 1, y: 0 }}
-      exit={{ opacity: 0, scale: 0.9, y: -16 }}
-      transition={{ duration: 0.25, ease: "easeOut" }}
-    >
-      <h1 className="mt-8 text-center font-medium text-2xl">
-        Check your email
-      </h1>
-      <p className="mt-2 text-balance text-center text-muted-foreground text-sm">
-        We sent a temporary sign in link to your email. Please check your inbox
-        and click the link to continue.
-      </p>
-      <div className="mt-8 flex flex-col gap-2">
-        <Button>Enter code manually</Button>
-        <Button onClick={goToEmailScreen} variant="ghost">
-          Back to sign in
-        </Button>
-      </div>
-    </motion.div>
+    <div className="flex flex-col">
+      <AppHeader />
+      <main className="flex min-h-[70vh] flex-col items-center justify-center">
+        <AnimatePresence initial={false} mode="wait">
+          {screen === "email" ? (
+            <Form of={form} onSubmit={handleSubmit}>
+              <FieldGroup className="w-sm">
+                <FieldGroup>
+                  <Button
+                    disabled={form.isSubmitting}
+                    onClick={async () =>
+                      await authClient.signIn.social({
+                        provider: "discord",
+                        callbackURL: getCallbackURL(),
+                      })
+                    }
+                    variant="outline"
+                  >
+                    <SiDiscord />
+                    Continue with Discord
+                  </Button>
+                  <Button
+                    disabled={form.isSubmitting}
+                    onClick={async () =>
+                      await authClient.signIn.social({
+                        provider: "github",
+                        callbackURL: getCallbackURL(),
+                      })
+                    }
+                    variant="outline"
+                  >
+                    <SiGithub />
+                    Continue with GitHub
+                  </Button>
+                </FieldGroup>
+                <FieldSeparator>or</FieldSeparator>
+                <FieldGroup>
+                  <FormischField of={form} path={["email"]}>
+                    {(field) => (
+                      <Field data-invalid={field.errors !== null}>
+                        <FieldLabel htmlFor="sign-in-email">
+                          Your Email
+                        </FieldLabel>
+                        <Input
+                          aria-invalid={field.errors !== null}
+                          autoCapitalize="none"
+                          autoComplete="email"
+                          autoCorrect="off"
+                          id="sign-in-email"
+                          placeholder="Enter your email..."
+                          {...field.props}
+                        />
+                        <FieldDescription>
+                          Your email will not be visible to others
+                        </FieldDescription>
+                        {field.errors && (
+                          <FieldError
+                            errors={field.errors.map((message) => ({
+                              message,
+                            }))}
+                          />
+                        )}
+                      </Field>
+                    )}
+                  </FormischField>
+                  <Button
+                    disabled={!form.isValid || form.isSubmitting}
+                    type="submit"
+                  >
+                    {form.isSubmitting && <Spinner />}
+                    Continue with Email
+                  </Button>
+                </FieldGroup>
+              </FieldGroup>
+            </Form>
+          ) : (
+            <div className="flex w-sm flex-col items-center gap-4">
+              <h1 className="mt-8 text-center font-medium text-2xl">
+                Check your email
+              </h1>
+              <p className="mt-2 text-balance text-center text-muted-foreground text-sm">
+                We sent a temporary sign in link to your email. Please check
+                your inbox and click the link to continue.
+              </p>
+              <Button onClick={() => setScreen("email")} variant="outline">
+                <ArrowLeftIcon />
+                Back to sign in
+              </Button>
+            </div>
+          )}
+        </AnimatePresence>
+      </main>
+    </div>
   );
 }

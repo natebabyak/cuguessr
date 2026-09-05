@@ -67,7 +67,7 @@ export function PhotoDialog({
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogTrigger render={<PhotoDialogTrigger />} />
-      <DialogContent showCloseButton={false}>
+      <DialogContent showCloseButton={false} className="max-h-[90svh]">
         <DialogHeader>
           <DialogTitle>{TITLE}</DialogTitle>
           <DialogDescription>{DESCRIPTION}</DialogDescription>
@@ -102,7 +102,7 @@ export function PhotoDialog({
             <button
               onClick={open}
               type="button"
-              className="block w-full cursor-zoom-in overflow-hidden rounded-lg border-0 bg-transparent p-0"
+              className="flex max-h-[min(60svh,calc(90svh-12rem))] w-full cursor-zoom-in items-center overflow-hidden rounded-lg border-0 bg-transparent p-0"
             >
               <Image
                 alt="round location"
@@ -110,9 +110,8 @@ export function PhotoDialog({
                 loading="eager"
                 ref={ref}
                 src={imageUrl}
-                style={{ aspectRatio: `${width} / ${height}` }}
                 width={width}
-                className="h-auto w-full rounded-lg object-cover"
+                className="h-auto w-full rounded-lg object-cover object-center"
               />
             </button>
           )}

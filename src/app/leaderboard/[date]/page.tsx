@@ -26,6 +26,9 @@ export default async function Page({
           date,
         },
       },
+      submittedBy: {
+        isAnonymous: false,
+      },
     },
     orderBy: {
       points: "desc",
@@ -35,17 +38,22 @@ export default async function Page({
       submittedBy: {
         columns: {
           name: true,
+          isAnonymous: true,
         },
       },
     },
   });
+
+  const rankedResults = roundResults.filter(
+    (result) => !result.submittedBy?.isAnonymous,
+  );
 
   return (
     <div className="flex flex-col">
       <AppHeader />
       <main className="flex flex-col items-center gap-4 p-4">
         <h1>cuGuessr</h1>
-        <p>Played {roundResults.length} times</p>
+        <p>Played {rankedResults.length} times</p>
         <Separator />
         <h2>Summary</h2>
         <Separator />
@@ -56,7 +64,7 @@ export default async function Page({
         <div className="w-full max-w-md rounded-md border">
           <DataTable
             columns={columns}
-            data={roundResults.map((result, index) => ({
+            data={rankedResults.map((result, index) => ({
               rank: index + 1,
               player: result.submittedBy?.name ?? "?",
               score: result.points,

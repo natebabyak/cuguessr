@@ -8,14 +8,31 @@ import { calculateDistance, calculatePoints } from "@/lib/scoring";
 import type { Guess } from "./guess-schema";
 import type { Report } from "./report-schema";
 
-export async function submitReport(reportData: Report) {
-  const session = await auth.api.getSession({
-    headers: await headers(),
+async function requireSession() {
+  const requestHeaders = await headers();
+
+  let session = await auth.api.getSession({
+    headers: requestHeaders,
   });
+
+  if (!session) {
+    await auth.api.signInAnonymous({
+      headers: requestHeaders,
+    });
+    session = await auth.api.getSession({
+      headers: requestHeaders,
+    });
+  }
 
   if (!session) {
     throw new Error("Unauthorized");
   }
+
+  return session;
+}
+
+export async function submitReport(reportData: Report) {
+  const session = await requireSession();
 
   await db.insert(report).values({
     photoId: reportData.photoId,
@@ -26,13 +43,7 @@ export async function submitReport(reportData: Report) {
 }
 
 export async function submitGuess(guessData: Guess) {
-  const session = await auth.api.getSession({
-    headers: await headers(),
-  });
-
-  if (!session) {
-    throw new Error("Unauthorized");
-  }
+  const session = await requireSession();
 
   const round = await db.query.round.findFirst({
     where: {
@@ -73,5 +84,9 @@ export async function submitGuess(guessData: Guess) {
     roundId: guessData.roundId,
     distance,
     points,
+    photo: {
+      latitude: round.photo.latitude,
+      longitude: round.photo.longitude,
+    },
   };
 }

@@ -260,7 +260,7 @@ const AccordionGallery = ({
   return (
     <div
       ref={rootRef}
-      className={`flex ${vertical ? "flex-col" : "flex-row"} max-[520px]:!flex-col w-full max-w-full [perspective:1400px] max-[520px]:[perspective:none] ${className}`}
+      className={`flex ${vertical ? "flex-col" : "flex-row"} max-[520px]:flex-col! w-full max-w-full perspective-[1400px] max-[520px]:perspective-none ${className}`}
       style={{
         gap: `${gap}px`,
         height: vertical ? `${Math.round(height * 1.6)}px` : `${height}px`,
@@ -277,7 +277,7 @@ const AccordionGallery = ({
             ref={(el: HTMLElement | null) => {
               panelRefs.current[i] = el;
             }}
-            className="group max-[520px]:!transform-none relative block min-h-0 min-w-0 flex-[1_1_0] cursor-pointer overflow-hidden bg-[#0a0713] no-underline outline-none [box-shadow:0_10px_30px_-18px_rgba(0,0,0,0.8)] [transform-origin:center] [transform-style:preserve-3d] max-[520px]:min-h-[84px] focus-visible:[box-shadow:0_0_0_2px_var(--ag-accent),0_10px_30px_-18px_rgba(0,0,0,0.8)]"
+            className="group max-[520px]:transform-none! relative block min-h-0 min-w-0 flex-[1_1_0] cursor-pointer overflow-hidden bg-[#0a0713] no-underline outline-none [box-shadow:0_10px_30px_-18px_rgba(0,0,0,0.8)] origin-center transform-3d max-[520px]:min-h-[84px] focus-visible:[box-shadow:0_0_0_2px_var(--ag-accent),0_10px_30px_-18px_rgba(0,0,0,0.8)]"
             style={
               {
                 borderRadius: `${radius}px`,
@@ -295,12 +295,12 @@ const AccordionGallery = ({
             aria-current={isActive ? "true" : undefined}
             aria-label={item.label}
           >
-            <span className="absolute inset-0 overflow-hidden [border-radius:inherit]">
+            <span className="absolute inset-0 overflow-hidden rounded-[inherit]">
               <span
                 ref={(el: HTMLElement | null) => {
                   mediaRefs.current[i] = el;
                 }}
-                className="absolute top-1/2 left-1/2 [filter:grayscale(var(--ag-gray,1))]"
+                className="absolute top-1/2 left-1/2 filter-[grayscale(var(--ag-gray,1))]"
                 style={{
                   width: vertical ? "100%" : "var(--ag-media-size, 320px)",
                   height: vertical ? "var(--ag-media-size, 320px)" : "100%",
@@ -322,7 +322,7 @@ const AccordionGallery = ({
             </span>
             {showLabels && (
               <span
-                className="pointer-events-none absolute right-5 bottom-5 left-5 z-[2] flex items-center gap-3"
+                className="pointer-events-none absolute right-5 bottom-5 left-5 z-2 flex items-center gap-3"
                 aria-hidden="true"
               >
                 <span

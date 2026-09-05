@@ -1,7 +1,11 @@
 "use client";
 
-import { ArrowLeftIcon, Share2Icon } from "lucide-react";
-import { motion } from "motion/react";
+import {
+  ArrowLeftIcon,
+  PodiumIcon,
+  Share2Icon,
+  UserPlusIcon,
+} from "lucide-react";
 import Link from "next/link";
 import { Button, buttonVariants } from "@/components/ui/button";
 import { Item, ItemContent } from "@/components/ui/item";
@@ -12,14 +16,17 @@ import {
 } from "@/components/ui/progress";
 import { toast } from "@/components/ui/toast";
 import { MIN_DATE } from "@/lib/constants";
+import type { UserStats } from "@/lib/stats";
 
 interface ResultsProps {
   date: string;
   roundResults: {
-    roundId: string;
+    roundId: number;
     distance: number;
     points: number;
   }[];
+  isAnonymous: boolean;
+  stats: UserStats | null;
 }
 
 function getGameNumber(date: string): number {
@@ -42,7 +49,12 @@ function getEmoji(points: number) {
   return "🟥";
 }
 
-export function Results({ date, roundResults }: ResultsProps) {
+export function Results({
+  date,
+  roundResults,
+  isAnonymous,
+  stats,
+}: ResultsProps) {
   const gameNumber = getGameNumber(date);
   const totalPoints = roundResults
     .reduce((acc, { points }) => acc + points, 0)
@@ -51,7 +63,8 @@ export function Results({ date, roundResults }: ResultsProps) {
 
   async function handleShareResults() {
     const shareText = [
-      `cuGuessr #${gameNumber} (${date})`,
+      `cuGuessr #${gameNumber}`,
+      date,
       "",
       `${totalPoints} points`,
       emojis,
@@ -77,17 +90,23 @@ export function Results({ date, roundResults }: ResultsProps) {
   }
 
   return (
-    <div className="flex h-svh flex-col items-center justify-center gap-4">
-      <motion.h1 className="text-center font-semibold text-5xl">
+    <div className="flex min-h-svh flex-col items-center justify-center gap-4 p-4">
+      <h1 className="text-center font-semibold text-5xl">
         <span className="text-red-500">cu</span>
         Guessr #{gameNumber}
-      </motion.h1>
-      <p className="size-lg text-muted-foreground">{date}</p>
+      </h1>
+      <p className="text-lg text-muted-foreground">{date}</p>
       <p className="font-medium text-3xl">{totalPoints} points</p>
+      {!isAnonymous && stats ? (
+        <p className="text-muted-foreground text-sm">
+          {stats.currentStreak}-day streak · {stats.gamesPlayed}{" "}
+          {stats.gamesPlayed === 1 ? "game" : "games"} played
+        </p>
+      ) : null}
       <ul className="flex w-full max-w-xs flex-col gap-2">
         {roundResults.map((r, index) => (
           <li key={r.roundId}>
-            <Item variant="outline">
+            <Item variant="outline" size="xs">
               <ItemContent>
                 <Progress max={5000} value={r.points}>
                   <ProgressLabel>Round {index + 1}</ProgressLabel>
@@ -110,7 +129,27 @@ export function Results({ date, roundResults }: ResultsProps) {
         ))}
       </ul>
       <div className="grid w-full max-w-sm gap-4">
-        <Button onClick={handleShareResults} size="lg">
+        {isAnonymous ? (
+          <Link
+            href="/sign-in"
+            className={buttonVariants({
+              size: "lg",
+            })}
+          >
+            <UserPlusIcon />
+            Create an account
+          </Link>
+        ) : (
+          <Link href="/leaderboard" className={buttonVariants({ size: "lg" })}>
+            <PodiumIcon />
+            View Leaderboard
+          </Link>
+        )}
+        <Button
+          onClick={handleShareResults}
+          size="lg"
+          variant={isAnonymous ? "outline" : "default"}
+        >
           <Share2Icon />
           Share Results
         </Button>

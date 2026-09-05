@@ -1,16 +1,19 @@
 "use client";
 
 import type { Feature, LineString } from "geojson";
+import { gsap } from "gsap";
 import {
   ArrowLeftIcon,
   MapPinCheckInsideIcon,
   MapPinIcon,
   SendIcon,
 } from "lucide-react";
+import type { ExpressionSpecification } from "maplibre-gl";
 import { AnimatePresence, motion } from "motion/react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { useMemo, useRef, useState } from "react";
+import { useTheme } from "next-themes";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { Layer, type MapRef, Marker, Source } from "react-map-gl/maplibre";
 import { AppMap } from "@/components/app-map";
 import { GoToMarkerButton } from "@/components/go-to-marker-button";
@@ -24,6 +27,7 @@ import {
   ItemTitle,
 } from "@/components/ui/item";
 import { Spinner } from "@/components/ui/spinner";
+import { authClient } from "@/lib/auth-client";
 import {
   DEFAULT_LATITUDE,
   DEFAULT_LONGITUDE,
@@ -34,6 +38,16 @@ import { submitGuess } from "./actions";
 import { PhotoDialog } from "./photo-dialog";
 import { ReportDialog } from "./report-dialog";
 import { RoundResultItem } from "./round-result-item";
+
+type RoundResult = {
+  roundId: number;
+  distance: number;
+  points: number;
+  photo?: {
+    latitude: number;
+    longitude: number;
+  };
+};
 
 interface GameProps {
   game: {
@@ -49,19 +63,25 @@ interface GameProps {
       };
     }[];
   };
-  savedRoundResults: {
-    roundId: number;
-    distance: number;
-    points: number;
-    photo: {
-      latitude: number;
-      longitude: number;
-    };
-  }[];
+  savedRoundResults: RoundResult[];
+}
+
+function easeInOut(t: number) {
+  return t * t * (3 - 2 * t);
+}
+
+function lineGradient(
+  progress: number,
+  color: string,
+): ExpressionSpecification {
+  return ["step", ["line-progress"], color, progress, "rgba(0,0,0,0)"];
 }
 
 export function Game({ game, savedRoundResults }: GameProps) {
   const router = useRouter();
+  const { resolvedTheme } = useTheme();
+  const lineColor = resolvedTheme === "dark" ? "#fff" : "#000";
+  const { data: session, isPending } = authClient.useSession();
   const [cursor, setCursor] = useState<"crosshair" | "grabbing">("crosshair");
   const [guess, setGuess] = useState<Coordinates | null>(null);
   const [, setCursorCoords] = useState<Coordinates | null>(null);
@@ -73,11 +93,17 @@ export function Game({ game, savedRoundResults }: GameProps) {
   const [isPhotoDialogOpen, setIsPhotoDialogOpen] = useState(true);
   const mapRef = useRef<MapRef>(null);
 
+  useEffect(() => {
+    if (isPending || session) return;
+
+    void authClient.signIn.anonymous();
+  }, [isPending, session]);
+
   const currentRound = game.rounds[roundIndex];
   const currentResult = roundResults.find(
     (result) => result.roundId === currentRound?.id,
   );
-  const answer = useMemo(() => currentRound?.photo ?? null, [currentRound]);
+  const answer = currentResult?.photo ?? null;
 
   const lineGeoJson = useMemo<Feature<LineString> | null>(() => {
     if (!guess || !answer) return null;
@@ -95,6 +121,62 @@ export function Game({ game, savedRoundResults }: GameProps) {
     };
   }, [answer, guess]);
 
+  useEffect(() => {
+    if (!isRoundOver || !guess || !answer || !mapRef.current) return;
+
+    const map = mapRef.current;
+    const minLat = Math.min(guess.latitude, answer.latitude);
+    const maxLat = Math.max(guess.latitude, answer.latitude);
+    const minLng = Math.min(guess.longitude, answer.longitude);
+    const maxLng = Math.max(guess.longitude, answer.longitude);
+
+    map.flyTo({
+      center: [guess.longitude, guess.latitude],
+      zoom: 20,
+      duration: 1000,
+      easing: easeInOut,
+    });
+
+    let lineTween: gsap.core.Tween | null = null;
+
+    const revealTimeout = window.setTimeout(() => {
+      const state = { progress: 0 };
+
+      lineTween = gsap.to(state, {
+        progress: 1,
+        duration: 2,
+        ease: "power1.inOut",
+        onUpdate: () => {
+          map
+            .getMap()
+            .setPaintProperty(
+              "line-layer",
+              "line-gradient",
+              lineGradient(state.progress, lineColor),
+            );
+        },
+      });
+
+      map.fitBounds(
+        [
+          [minLng, minLat],
+          [maxLng, maxLat],
+        ],
+        {
+          bearing: 0,
+          duration: 2000,
+          easing: easeInOut,
+          padding: { top: 100, bottom: 200, left: 50, right: 50 },
+        },
+      );
+    }, 1000);
+
+    return () => {
+      window.clearTimeout(revealTimeout);
+      lineTween?.kill();
+    };
+  }, [isRoundOver, guess, answer, lineColor]);
+
   const totalPoints = roundResults.reduce(
     (total, result) => total + result.points,
     0,
@@ -102,6 +184,7 @@ export function Game({ game, savedRoundResults }: GameProps) {
 
   return (
     <AppMap
+      ref={mapRef}
       cursor={cursor}
       initialViewState={{
         latitude: DEFAULT_LATITUDE,
@@ -144,7 +227,7 @@ export function Game({ game, savedRoundResults }: GameProps) {
           >
             <MapPinCheckInsideIcon className="size-8 fill-white text-green-500 dark:fill-black" />
           </Marker>
-          <Source id="line" type="geojson" data={lineGeoJson}>
+          <Source id="line" type="geojson" lineMetrics data={lineGeoJson}>
             <Layer
               id="line-layer"
               type="line"
@@ -153,9 +236,8 @@ export function Game({ game, savedRoundResults }: GameProps) {
                 "line-join": "round",
               }}
               paint={{
-                "line-color": "#fff",
                 "line-width": 3,
-                "line-dasharray": [0, 2],
+                "line-gradient": lineGradient(0, lineColor),
               }}
             />
           </Source>
@@ -270,7 +352,9 @@ export function Game({ game, savedRoundResults }: GameProps) {
                     onOpenChange={setIsPhotoDialogOpen}
                   />
                 )}
-                <ReportDialog photoId={game.rounds[roundIndex]?.photoId} />
+                {game.rounds[roundIndex]?.photo && (
+                  <ReportDialog photoId={game.rounds[roundIndex].photo.id} />
+                )}
               </div>
               <RoundResultItem
                 distance={Math.round(currentResult?.distance ?? 0)}
@@ -285,6 +369,8 @@ export function Game({ game, savedRoundResults }: GameProps) {
                     mapRef.current?.flyTo({
                       center: [DEFAULT_LONGITUDE, DEFAULT_LATITUDE],
                       zoom: DEFAULT_ZOOM,
+                      duration: 1000,
+                      easing: easeInOut,
                     });
                   } else {
                     router.refresh();

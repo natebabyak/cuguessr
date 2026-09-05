@@ -9,30 +9,30 @@ export async function POST(request: Request) {
     return new Response("Unauthorized");
   }
 
-  await db.transaction(async (tx) => {
-    const date = Intl.DateTimeFormat("en-CA", {
-      timeZone: "America/Toronto",
-    }).format(Date.now());
+  const date = Intl.DateTimeFormat("en-CA", {
+    timeZone: "America/Toronto",
+  }).format(Date.now());
 
-    const [{ id: gameId }] = await tx.insert(game).values({ date }).returning();
+  const [{ id: gameId }] = await db.insert(game).values({ date }).returning();
 
-    const photos = await tx.query.photo.findMany({
-      columns: {
-        id: true,
-      },
-      where: {
-        status: "approved",
-      },
-      orderBy: () => sql`RANDOM()`,
-      limit: 5,
-    });
-
-    await tx.insert(round).values(
-      photos.map(({ id: photoId }, index) => ({
-        gameId,
-        photoId,
-        index,
-      })),
-    );
+  const photos = await db.query.photo.findMany({
+    columns: {
+      id: true,
+    },
+    where: {
+      status: "approved",
+    },
+    orderBy: () => sql`RANDOM()`,
+    limit: 5,
   });
+
+  await db.insert(round).values(
+    photos.map(({ id: photoId }, index) => ({
+      gameId,
+      photoId,
+      index,
+    })),
+  );
+
+  return new Response("OK");
 }

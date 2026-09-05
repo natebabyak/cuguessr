@@ -2,7 +2,9 @@ import { drizzleAdapter } from "@better-auth/drizzle-adapter/relations-v2";
 import { betterAuth } from "better-auth/minimal";
 import { nextCookies } from "better-auth/next-js";
 import { anonymous, magicLink } from "better-auth/plugins";
+import { and, eq, notInArray } from "drizzle-orm";
 import { db } from "@/lib/db";
+import { photo, report, roundResult } from "@/lib/db/schema";
 import { sendEmail } from "@/lib/email";
 import * as authSchema from "./db/auth-schema";
 import * as schema from "./db/schema";
@@ -31,7 +33,47 @@ export const auth = betterAuth({
     },
   },
   plugins: [
-    anonymous(),
+    anonymous({
+      onLinkAccount: async ({ anonymousUser, newUser }) => {
+        const anonymousUserId = anonymousUser.user.id;
+        const newUserId = newUser.user.id;
+
+        if (anonymousUserId === newUserId) {
+          return;
+        }
+
+        const existingResults = await db
+          .select({ roundId: roundResult.roundId })
+          .from(roundResult)
+          .where(eq(roundResult.userId, newUserId));
+
+        const existingRoundIds = existingResults.map(
+          (result) => result.roundId,
+        );
+
+        await db
+          .update(roundResult)
+          .set({ userId: newUserId })
+          .where(
+            existingRoundIds.length > 0
+              ? and(
+                  eq(roundResult.userId, anonymousUserId),
+                  notInArray(roundResult.roundId, existingRoundIds),
+                )
+              : eq(roundResult.userId, anonymousUserId),
+          );
+
+        await db
+          .update(report)
+          .set({ userId: newUserId })
+          .where(eq(report.userId, anonymousUserId));
+
+        await db
+          .update(photo)
+          .set({ userId: newUserId })
+          .where(eq(photo.userId, anonymousUserId));
+      },
+    }),
     magicLink({
       sendMagicLink: async ({ email, token, url }) => {
         await sendEmail({

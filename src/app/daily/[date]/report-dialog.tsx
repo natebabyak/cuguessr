@@ -28,12 +28,7 @@ import {
   DrawerTitle,
   DrawerTrigger,
 } from "@/components/ui/drawer";
-import {
-  Field,
-  FieldError,
-  FieldGroup,
-  FieldLabel,
-} from "@/components/ui/field";
+import { Field, FieldError, FieldGroup } from "@/components/ui/field";
 import {
   InputGroup,
   InputGroupAddon,
@@ -131,15 +126,13 @@ export function ReportDialog({ photoId }: { photoId: number }) {
           <FormischField of={form} path={["description"]}>
             {(field) => (
               <Field data-invalid={field.errors !== null}>
-                <FieldLabel htmlFor="report-description">
-                  Report Description
-                </FieldLabel>
                 <InputGroup>
                   <InputGroupTextarea
                     aria-invalid={field.errors !== null}
                     autoCapitalize="sentences"
                     autoComplete="off"
                     id="report-description"
+                    placeholder="Enter a description..."
                     {...field.props}
                   />
                   <InputGroupAddon align="block-end">

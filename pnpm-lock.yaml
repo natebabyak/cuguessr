@@ -77,6 +77,9 @@ importers:
       nodemailer:
         specifier: ^9.0.6
         version: 9.0.6
+      ogl:
+        specifier: ^1.0.11
+        version: 1.0.11
       photoswipe:
         specifier: ^5.4.4
         version: 5.4.4
@@ -121,7 +124,7 @@ importers:
         specifier: 2.5.11
         version: 2.5.11
       '@tailwindcss/postcss':
-        specifier: ^4
+        specifier: ^4.3.3
         version: 4.3.3
       '@types/geojson':
         specifier: ^7946.0.16
@@ -2714,6 +2717,9 @@ packages:
   object-treeify@1.1.33:
     resolution: {integrity: sha512-EFVjAYfzWqWsBMRHPMAXLCDIJnpMhdWAqR7xG6M6a2cs6PMFpl/+Z20w9zDW4vkxOFfddegBKq9Rehd0bxWE7A==}
     engines: {node: '>= 10'}
+
+  ogl@1.0.11:
+    resolution: {integrity: sha512-kUpC154AFfxi16pmZUK4jk3J+8zxwTWGPo03EoYA8QPbzikHoaC82n6pNTbd+oEaJonaE8aPWBlX7ad9zrqLsA==}
 
   on-finished@2.4.1:
     resolution: {integrity: sha512-oVlzkg3ENAhCk2zdv7IJwd/QUD4z2RxRwpkcGY8psCVcCYZNq4wYnVWALHM+brtuJjePWiYF/ClmuDr8Ch5+kg==}
@@ -5380,6 +5386,8 @@ snapshots:
   object-inspect@1.13.4: {}
 
   object-treeify@1.1.33: {}
+
+  ogl@1.0.11: {}
 
   on-finished@2.4.1:
     dependencies:

@@ -5,14 +5,19 @@ import * as maplibregl from "maplibre-gl";
 import { useTheme } from "next-themes";
 import { Protocol } from "pmtiles";
 import { useEffect, useMemo } from "react";
-import { Map as MapLibreMap, type MapProps } from "react-map-gl/maplibre";
+import {
+  Map as MapLibreMap,
+  type MapProps,
+  type MapRef,
+} from "react-map-gl/maplibre";
 
 maplibregl.setWorkerUrl("/maplibre/maplibre-gl-worker.mjs");
 
 export function AppMap({
   children,
+  ref,
   ...props
-}: React.PropsWithChildren<MapProps>) {
+}: React.PropsWithChildren<MapProps> & { ref?: React.Ref<MapRef> }) {
   const { theme } = useTheme();
 
   useEffect(() => {
@@ -47,6 +52,7 @@ export function AppMap({
 
   return (
     <MapLibreMap
+      ref={ref}
       mapLib={maplibregl}
       mapStyle={mapStyle}
       style={{ height: "100dvh", width: "100dvw" }}

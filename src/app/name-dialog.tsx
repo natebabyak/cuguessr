@@ -7,7 +7,7 @@ import {
   type SubmitHandler,
   useForm,
 } from "@formisch/react";
-import { CheckIcon, PenIcon, XIcon } from "lucide-react";
+import { CheckIcon, XIcon } from "lucide-react";
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import {
@@ -18,7 +18,6 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle,
-  DialogTrigger,
 } from "@/components/ui/dialog";
 import {
   Drawer,
@@ -28,9 +27,8 @@ import {
   DrawerFooter,
   DrawerHeader,
   DrawerTitle,
-  DrawerTrigger,
 } from "@/components/ui/drawer";
-import { DropdownMenuItem } from "@/components/ui/dropdown-menu";
+
 import {
   Field,
   FieldError,
@@ -48,8 +46,15 @@ const TITLE = "Change Name";
 const DESCRIPTION =
   "This is your public display name that will be shown to other players.";
 
-export function NameDialog() {
+export function NameDialog({
+  open,
+  onOpenChange,
+}: {
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
+}) {
   const isMobile = useIsMobile();
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   const form = useForm({
     schema: NameSchema,
@@ -58,22 +63,25 @@ export function NameDialog() {
     },
   });
 
-  const [open, setOpen] = useState(false);
-
   const handleSubmit: SubmitHandler<typeof NameSchema> = async (output) => {
-    toast
-      .promise(changeName(output), {
+    setIsSubmitting(true);
+
+    try {
+      await toast.promise(changeName(output), {
         loading: "Submitting...",
         success: "Name changed successfully!",
         error: "Failed to change name.",
-      })
-      .finally(() => setOpen(false));
+      });
+
+      window.location.reload();
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   if (isMobile) {
     return (
-      <Drawer onOpenChange={setOpen} open={open}>
-        <DrawerTrigger render={<NameDialogTrigger />} />
+      <Drawer onOpenChange={onOpenChange} open={open}>
         <DrawerContent>
           <DrawerHeader>
             <DrawerTitle>{TITLE}</DrawerTitle>
@@ -92,8 +100,7 @@ export function NameDialog() {
   }
 
   return (
-    <Dialog onOpenChange={setOpen} open={open}>
-      <DialogTrigger render={<NameDialogTrigger />} />
+    <Dialog onOpenChange={onOpenChange} open={open}>
       <DialogContent>
         <DialogHeader>
           <DialogTitle>{TITLE}</DialogTitle>
@@ -108,23 +115,9 @@ export function NameDialog() {
     </Dialog>
   );
 
-  function NameDialogTrigger() {
-    return (
-      <DropdownMenuItem
-        onSelect={(e) => {
-          e.preventDefault();
-          setOpen(true);
-        }}
-      >
-        <PenIcon />
-        Change Name
-      </DropdownMenuItem>
-    );
-  }
-
   function NameDialogForm() {
     return (
-      <Form of={form} onSubmit={handleSubmit}>
+      <Form id="change-name-form" of={form} onSubmit={handleSubmit}>
         <FieldGroup>
           <FormischField of={form} path={["name"]}>
             {(field) => (
@@ -151,7 +144,12 @@ export function NameDialog() {
 
   function NameDialogSubmit() {
     return (
-      <Button disabled={!form.isValid || form.isSubmitting} type="submit">
+      <Button
+        disabled={!form.isValid || form.isSubmitting || isSubmitting}
+        form="change-name-form"
+        onClick={() => setIsSubmitting(true)}
+        type="submit"
+      >
         {form.isSubmitting ? <Spinner /> : <CheckIcon />}
         Done
       </Button>
@@ -163,7 +161,7 @@ export function NameDialog() {
       <Button
         onClick={() => {
           reset(form);
-          setOpen(false);
+          onOpenChange(false);
         }}
         type="button"
         variant="outline"
