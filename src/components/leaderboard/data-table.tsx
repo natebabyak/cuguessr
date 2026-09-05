@@ -1,12 +1,9 @@
 "use client";
 
 import { type ColumnDef, type RowData, useTable } from "@tanstack/react-table";
-import { ArrowUpRightIcon, PodiumIcon } from "lucide-react";
-import Link from "next/link";
-import { buttonVariants } from "@/components/ui/button";
+import { PodiumIcon } from "lucide-react";
 import {
   Empty,
-  EmptyContent,
   EmptyDescription,
   EmptyHeader,
   EmptyMedia,
@@ -83,12 +80,6 @@ export function DataTable<TData extends RowData & { isCurrentUser?: boolean }>({
                     score.
                   </EmptyDescription>
                 </EmptyHeader>
-                <EmptyContent>
-                  <Link href="/daily" className={buttonVariants()}>
-                    Play Today&apos;s Game
-                    <ArrowUpRightIcon />
-                  </Link>
-                </EmptyContent>
               </Empty>
             </TableCell>
           </TableRow>

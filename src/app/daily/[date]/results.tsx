@@ -90,6 +90,11 @@ export function Results({
           {stats.gamesPlayed === 1 ? "game" : "games"} played
         </p>
       ) : null}
+      {isAnonymous ? (
+        <p className="max-w-sm text-center text-muted-foreground text-sm">
+          Create an account to appear on the leaderboard and keep your streak.
+        </p>
+      ) : null}
       <ul className="flex w-full max-w-xs flex-col gap-2">
         {roundResults.map((r, index) => (
           <li key={r.roundId}>
@@ -116,27 +121,26 @@ export function Results({
         ))}
       </ul>
       <div className="grid w-full max-w-sm gap-4">
+        <Link
+          href={`/leaderboard/${date}`}
+          className={buttonVariants({ size: "lg" })}
+        >
+          <PodiumIcon />
+          View Leaderboard
+        </Link>
         {isAnonymous ? (
           <Link
             href="/sign-in"
             className={buttonVariants({
               size: "lg",
+              variant: "outline",
             })}
           >
             <UserPlusIcon />
             Create an account
           </Link>
-        ) : (
-          <Link href="/leaderboard" className={buttonVariants({ size: "lg" })}>
-            <PodiumIcon />
-            View Leaderboard
-          </Link>
-        )}
-        <Button
-          onClick={handleShareResults}
-          size="lg"
-          variant={isAnonymous ? "outline" : "default"}
-        >
+        ) : null}
+        <Button onClick={handleShareResults} size="lg" variant="outline">
           <Share2Icon />
           Share Results
         </Button>

@@ -6,17 +6,21 @@ import { useTheme } from "next-themes";
 import { useEffect, useState } from "react";
 import { buttonVariants } from "@/components/ui/button";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { authClient } from "@/lib/auth-client";
 
 export function AppFooter() {
   const { setTheme, theme } = useTheme();
+  const { data: session } = authClient.useSession();
 
   const [mounted, setMounted] = useState(false);
 
   useEffect(() => setMounted(true), []);
 
+  const isSignedIn = Boolean(session && !session.user.isAnonymous);
+
   return (
     <footer className="border-t p-8">
-      <div className="grid max-w-5xl md:grid-cols-2 2xl:grid-cols-4">
+      <div className="mx-auto grid max-w-5xl md:grid-cols-2 2xl:grid-cols-4">
         <div className="flex flex-col gap-2">
           <p className="font-semibold text-muted-foreground text-xs uppercase">
             Navigation
@@ -49,10 +53,10 @@ export function AppFooter() {
               </li>
               <li>
                 <Link
-                  href="/submit"
+                  href="/sign-in"
                   className="relative text-lg after:absolute after:bottom-0 after:left-0 after:h-0.5 after:w-full after:origin-right after:scale-x-0 after:bg-current after:transition-transform after:duration-300 hover:after:origin-left hover:after:scale-x-100"
                 >
-                  Submit
+                  {isSignedIn ? "Account" : "Sign in"}
                 </Link>
               </li>
             </ul>

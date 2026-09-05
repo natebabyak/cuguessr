@@ -48,71 +48,76 @@ export function AppHeader() {
   }, [isSignedIn]);
 
   return (
-    <header className="sticky top-0 z-50 flex items-center justify-between border-b bg-background/90 p-4 backdrop-blur-md">
-      <Link href="/" className="font-semibold text-2xl">
-        <span className="text-primary">cu</span>
-        Guessr
-      </Link>
-      {isSignedIn && session ? (
-        <>
-          <DropdownMenu open={open} onOpenChange={setOpen}>
-            <DropdownMenuTrigger
-              render={
-                <Button size="icon-lg" variant="ghost">
-                  <Avatar>
-                    <AvatarImage src={session.user.image ?? undefined} />
-                    <AvatarFallback>
-                      {session.user.name.charAt(0).toUpperCase()}
-                    </AvatarFallback>
-                  </Avatar>
-                </Button>
-              }
-            />
-            <DropdownMenuContent align="end" side="bottom">
-              <DropdownMenuGroup>
-                <DropdownMenuLabel>
-                  Signed in as {session.user.name}
-                </DropdownMenuLabel>
-                {stats ? (
-                  <DropdownMenuLabel className="font-normal text-muted-foreground">
-                    {stats.currentStreak}-day streak · {stats.gamesPlayed}{" "}
-                    {stats.gamesPlayed === 1 ? "game" : "games"}
-                  </DropdownMenuLabel>
-                ) : null}
-              </DropdownMenuGroup>
-              <DropdownMenuGroup>
-                <DropdownMenuItem
-                  onClick={() => {
-                    setOpen(false);
-                    setNameDialogOpen(true);
-                  }}
-                >
-                  <PenIcon />
-                  Change Name
-                </DropdownMenuItem>
-              </DropdownMenuGroup>
-              <DropdownMenuSeparator />
-              <DropdownMenuGroup>
-                <DropdownMenuItem
-                  closeOnClick={false}
-                  onClick={async () => await authClient.signOut()}
-                >
-                  <LogOutIcon />
-                  Sign out
-                </DropdownMenuItem>
-              </DropdownMenuGroup>
-            </DropdownMenuContent>
-          </DropdownMenu>
-          <NameDialog open={nameDialogOpen} onOpenChange={setNameDialogOpen} />
-        </>
-      ) : (
-        <Link
-          href="/sign-in"
-          className={buttonVariants({ variant: "outline" })}
-        >
-          Sign in
+    <header className="sticky top-0 z-50 border-b bg-background/90 p-4 backdrop-blur-md">
+      <div className="flex items-center justify-between max-w-5xl mx-auto">
+        <Link href="/" className="font-semibold text-2xl">
+          <span className="text-primary">cu</span>
+          Guessr
         </Link>
-      )}
+        {isSignedIn && session ? (
+          <>
+            <DropdownMenu open={open} onOpenChange={setOpen}>
+              <DropdownMenuTrigger
+                render={
+                  <Button size="icon-lg" variant="ghost">
+                    <Avatar>
+                      <AvatarImage src={session.user.image ?? undefined} />
+                      <AvatarFallback>
+                        {session.user.name.charAt(0).toUpperCase()}
+                      </AvatarFallback>
+                    </Avatar>
+                  </Button>
+                }
+              />
+              <DropdownMenuContent align="end" side="bottom">
+                <DropdownMenuGroup>
+                  <DropdownMenuLabel>
+                    Signed in as {session.user.name}
+                  </DropdownMenuLabel>
+                  {stats ? (
+                    <DropdownMenuLabel className="font-normal text-muted-foreground">
+                      {stats.currentStreak}-day streak · {stats.gamesPlayed}{" "}
+                      {stats.gamesPlayed === 1 ? "game" : "games"}
+                    </DropdownMenuLabel>
+                  ) : null}
+                </DropdownMenuGroup>
+                <DropdownMenuGroup>
+                  <DropdownMenuItem
+                    onClick={() => {
+                      setOpen(false);
+                      setNameDialogOpen(true);
+                    }}
+                  >
+                    <PenIcon />
+                    Change Name
+                  </DropdownMenuItem>
+                </DropdownMenuGroup>
+                <DropdownMenuSeparator />
+                <DropdownMenuGroup>
+                  <DropdownMenuItem
+                    closeOnClick={false}
+                    onClick={async () => await authClient.signOut()}
+                  >
+                    <LogOutIcon />
+                    Sign out
+                  </DropdownMenuItem>
+                </DropdownMenuGroup>
+              </DropdownMenuContent>
+            </DropdownMenu>
+            <NameDialog
+              open={nameDialogOpen}
+              onOpenChange={setNameDialogOpen}
+            />
+          </>
+        ) : (
+          <Link
+            href="/sign-in"
+            className={buttonVariants({ variant: "outline" })}
+          >
+            Sign in
+          </Link>
+        )}
+      </div>
     </header>
   );
 }

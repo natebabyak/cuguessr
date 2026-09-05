@@ -1,14 +1,10 @@
-import {
-  ChevronLeftIcon,
-  ChevronRightIcon,
-  PlayIcon,
-  UserPlusIcon,
-} from "lucide-react";
+import { PlayIcon, UserPlusIcon } from "lucide-react";
 import { headers } from "next/headers";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { AppFooter } from "@/components/app-footer";
-import { AppHeader } from "@/components/app-header";
+import { columns } from "@/components/leaderboard/columns";
+import { DataTable } from "@/components/leaderboard/data-table";
 import { buttonVariants } from "@/components/ui/button";
 import {
   Item,
@@ -19,18 +15,8 @@ import {
 import { auth } from "@/lib/auth";
 import { MIN_DATE } from "@/lib/constants";
 import { db } from "@/lib/db";
-import { addDays, getGameNumber } from "@/lib/game";
-import { columns } from "./columns";
-import { DataTable } from "./data-table";
-
-type RankedEntry = {
-  userId: string;
-  rank: number;
-  player: string;
-  score: number;
-  submittedAt: Date;
-  isCurrentUser: boolean;
-};
+import { getGameNumber } from "@/lib/game";
+import { getDailyLeaderboard } from "@/lib/leaderboard";
 
 export default async function Page({
   params,
@@ -49,19 +35,6 @@ export default async function Page({
     notFound();
   }
 
-  const game = await db.query.game.findFirst({
-    columns: {
-      id: true,
-    },
-    where: {
-      date,
-    },
-  });
-
-  if (!game) {
-    notFound();
-  }
-
   const session = await auth.api.getSession({
     headers: await headers(),
   });
@@ -69,94 +42,24 @@ export default async function Page({
   const isAnonymous = !session || Boolean(session.user.isAnonymous);
   const currentUserId = session?.user.id ?? null;
 
-  const roundResults = await db.query.roundResult.findMany({
-    columns: {
-      userId: true,
-      points: true,
-      createdAt: true,
-    },
-    where: {
-      round: {
-        gameId: game.id,
-      },
-      submittedBy: {
-        isAnonymous: false,
-      },
-    },
-    with: {
-      submittedBy: {
-        columns: {
-          id: true,
-          name: true,
-          isAnonymous: true,
-        },
-      },
-    },
-  });
+  const leaderboard = await getDailyLeaderboard(
+    date,
+    currentUserId,
+    isAnonymous,
+  );
 
-  const byUser = new Map<
-    string,
-    {
-      name: string;
-      points: number[];
-      submittedAt: Date;
-    }
-  >();
-
-  for (const result of roundResults) {
-    if (!result.submittedBy || result.submittedBy.isAnonymous) {
-      continue;
-    }
-
-    const existing = byUser.get(result.userId);
-    if (existing) {
-      existing.points.push(result.points);
-      if (result.createdAt > existing.submittedAt) {
-        existing.submittedAt = result.createdAt;
-      }
-    } else {
-      byUser.set(result.userId, {
-        name: result.submittedBy.name,
-        points: [result.points],
-        submittedAt: result.createdAt,
-      });
-    }
+  if (!leaderboard) {
+    notFound();
   }
 
-  const completedGames = [...byUser.entries()]
-    .filter(([, entry]) => entry.points.length >= 5)
-    .map(([userId, entry]) => ({
-      userId,
-      player: entry.name,
-      score: entry.points.reduce((total, value) => total + value, 0),
-      submittedAt: entry.submittedAt,
-    }))
-    .sort((a, b) => {
-      if (b.score !== a.score) {
-        return b.score - a.score;
-      }
-      return a.submittedAt.getTime() - b.submittedAt.getTime();
-    });
-
-  const rankedResults: RankedEntry[] = completedGames.map((entry, index) => ({
-    ...entry,
-    rank: index + 1,
-    isCurrentUser: !isAnonymous && currentUserId === entry.userId,
-  }));
-
-  const playerCount = rankedResults.length;
-  const averageScore =
-    playerCount > 0
-      ? Math.round(
-          rankedResults.reduce((total, entry) => total + entry.score, 0) /
-            playerCount,
-        )
-      : 0;
-  const topEntry = playerCount > 0 ? rankedResults[0] : null;
-  const yourBoardResult =
-    !isAnonymous && currentUserId
-      ? rankedResults.find((entry) => entry.userId === currentUserId)
-      : undefined;
+  const {
+    gameId,
+    rankedResults,
+    playerCount,
+    averageScore,
+    topEntry,
+    yourBoardResult,
+  } = leaderboard;
 
   const yourRoundResults = currentUserId
     ? await db.query.roundResult.findMany({
@@ -167,7 +70,7 @@ export default async function Page({
           AND: [
             {
               round: {
-                gameId: game.id,
+                gameId,
               },
             },
             {
@@ -184,51 +87,17 @@ export default async function Page({
     0,
   );
   const yourFinished = yourRoundCount >= 5;
-
   const gameNumber = getGameNumber(date);
-  const previousDate = addDays(date, -1);
-  const nextDate = addDays(date, 1);
-  const canGoPrevious = previousDate >= MIN_DATE;
-  const canGoNext = nextDate <= maxDate;
 
   return (
-    <div className="flex flex-col">
-      <AppHeader />
-      <main className="flex min-h-svh flex-col items-center gap-4 p-4">
+    <div className="flex min-h-svh flex-col">
+      <main className="flex flex-1 flex-col items-center gap-4 p-4 py-12">
         <h1 className="text-center font-semibold text-5xl">
           <span className="text-primary">cu</span>
           Guessr #{gameNumber}
         </h1>
 
-        <div className="flex items-center gap-2">
-          {canGoPrevious ? (
-            <Link
-              href={`/leaderboard/${previousDate}`}
-              className={buttonVariants({ size: "icon-sm", variant: "ghost" })}
-              aria-label="Previous day"
-            >
-              <ChevronLeftIcon />
-            </Link>
-          ) : (
-            <span className="inline-flex size-8 items-center justify-center opacity-40">
-              <ChevronLeftIcon className="size-4" />
-            </span>
-          )}
-          <p className="text-lg text-muted-foreground">{date}</p>
-          {canGoNext ? (
-            <Link
-              href={`/leaderboard/${nextDate}`}
-              className={buttonVariants({ size: "icon-sm", variant: "ghost" })}
-              aria-label="Next day"
-            >
-              <ChevronRightIcon />
-            </Link>
-          ) : (
-            <span className="inline-flex size-8 items-center justify-center opacity-40">
-              <ChevronRightIcon className="size-4" />
-            </span>
-          )}
-        </div>
+        <p className="text-lg text-muted-foreground">{date}</p>
 
         <section className="flex w-full max-w-xs flex-col gap-2">
           <h2 className="font-medium text-lg">Summary</h2>
