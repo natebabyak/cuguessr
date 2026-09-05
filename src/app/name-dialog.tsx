@@ -1,3 +1,5 @@
+"use client";
+
 import {
   Form,
   Field as FormischField,
@@ -5,7 +7,7 @@ import {
   type SubmitHandler,
   useForm,
 } from "@formisch/react";
-import { FlagIcon, SendIcon, XIcon } from "lucide-react";
+import { CheckIcon, PenIcon, XIcon } from "lucide-react";
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import {
@@ -28,47 +30,42 @@ import {
   DrawerTitle,
   DrawerTrigger,
 } from "@/components/ui/drawer";
+import { DropdownMenuItem } from "@/components/ui/dropdown-menu";
 import {
   Field,
   FieldError,
   FieldGroup,
   FieldLabel,
 } from "@/components/ui/field";
-import {
-  InputGroup,
-  InputGroupAddon,
-  InputGroupText,
-  InputGroupTextarea,
-} from "@/components/ui/input-group";
+import { Input } from "@/components/ui/input";
 import { Spinner } from "@/components/ui/spinner";
 import { toast } from "@/components/ui/toast";
 import { useIsMobile } from "@/hooks/use-is-mobile";
-import { cn } from "@/lib/utils";
-import { submitReport } from "./actions";
-import { ReportSchema } from "./report-schema";
+import { changeName } from "./actions";
+import { NameSchema } from "./name-schema";
 
-const TITLE = "Submit Report";
-const DESCRIPTION = "Enter a description to submit a report.";
+const TITLE = "Change Name";
+const DESCRIPTION =
+  "This is your public display name that will be shown to other players.";
 
-export function ReportDialog({ photoId }: { photoId: number }) {
+export function NameDialog() {
   const isMobile = useIsMobile();
 
   const form = useForm({
-    schema: ReportSchema,
+    schema: NameSchema,
     initialInput: {
-      photoId,
-      description: "",
+      name: "",
     },
   });
 
   const [open, setOpen] = useState(false);
 
-  const handleSubmit: SubmitHandler<typeof ReportSchema> = async (output) => {
+  const handleSubmit: SubmitHandler<typeof NameSchema> = async (output) => {
     toast
-      .promise(submitReport(output), {
+      .promise(changeName(output), {
         loading: "Submitting...",
-        success: "Report submitted successfully!",
-        error: "Failed to submit report.",
+        success: "Name changed successfully!",
+        error: "Failed to change name.",
       })
       .finally(() => setOpen(false));
   };
@@ -76,18 +73,18 @@ export function ReportDialog({ photoId }: { photoId: number }) {
   if (isMobile) {
     return (
       <Drawer onOpenChange={setOpen} open={open}>
-        <DrawerTrigger render={<ReportDialogTrigger />} />
+        <DrawerTrigger render={<NameDialogTrigger />} />
         <DrawerContent>
           <DrawerHeader>
             <DrawerTitle>{TITLE}</DrawerTitle>
             <DrawerDescription>{DESCRIPTION}</DrawerDescription>
           </DrawerHeader>
           <div className="p-4">
-            <SubmitDialogForm />
+            <NameDialogForm />
           </div>
           <DrawerFooter>
-            <ReportDialogSubmit />
-            <DrawerClose render={<ReportDialogClose />} />
+            <NameDialogSubmit />
+            <DrawerClose render={<NameDialogClose />} />
           </DrawerFooter>
         </DrawerContent>
       </Drawer>
@@ -96,62 +93,49 @@ export function ReportDialog({ photoId }: { photoId: number }) {
 
   return (
     <Dialog onOpenChange={setOpen} open={open}>
-      <DialogTrigger render={<ReportDialogTrigger />} />
+      <DialogTrigger render={<NameDialogTrigger />} />
       <DialogContent>
         <DialogHeader>
           <DialogTitle>{TITLE}</DialogTitle>
           <DialogDescription>{DESCRIPTION}</DialogDescription>
         </DialogHeader>
-        <SubmitDialogForm />
+        <NameDialogForm />
         <DialogFooter>
-          <DialogClose render={<ReportDialogClose />} />
-          <ReportDialogSubmit />
+          <DialogClose render={<NameDialogClose />} />
+          <NameDialogSubmit />
         </DialogFooter>
       </DialogContent>
     </Dialog>
   );
 
-  function ReportDialogTrigger() {
+  function NameDialogTrigger() {
     return (
-      <Button
-        onClick={() => setOpen(true)}
-        size="icon-lg"
-        title="Report photo"
-        type="button"
+      <DropdownMenuItem
+        onSelect={(e) => {
+          e.preventDefault();
+          setOpen(true);
+        }}
       >
-        <FlagIcon />
-      </Button>
+        <PenIcon />
+        Change Name
+      </DropdownMenuItem>
     );
   }
 
-  function SubmitDialogForm() {
+  function NameDialogForm() {
     return (
       <Form of={form} onSubmit={handleSubmit}>
         <FieldGroup>
-          <FormischField of={form} path={["description"]}>
+          <FormischField of={form} path={["name"]}>
             {(field) => (
               <Field data-invalid={field.errors !== null}>
-                <FieldLabel htmlFor="report-description">
-                  Report Description
-                </FieldLabel>
-                <InputGroup>
-                  <InputGroupTextarea
-                    aria-invalid={field.errors !== null}
-                    autoCapitalize="sentences"
-                    autoComplete="off"
-                    id="report-description"
-                    {...field.props}
-                  />
-                  <InputGroupAddon align="block-end">
-                    <InputGroupText
-                      className={cn(
-                        (field.input?.length ?? 0) > 255 && "text-destructive",
-                      )}
-                    >
-                      {field.input?.length ?? 0}/255
-                    </InputGroupText>
-                  </InputGroupAddon>
-                </InputGroup>
+                <FieldLabel htmlFor="new-name">New Name</FieldLabel>
+                <Input
+                  aria-invalid={field.errors !== null}
+                  autoComplete="off"
+                  id="new-name"
+                  {...field.props}
+                />
                 {field.errors && (
                   <FieldError
                     errors={field.errors.map((message) => ({ message }))}
@@ -165,16 +149,16 @@ export function ReportDialog({ photoId }: { photoId: number }) {
     );
   }
 
-  function ReportDialogSubmit() {
+  function NameDialogSubmit() {
     return (
       <Button disabled={!form.isValid || form.isSubmitting} type="submit">
-        {form.isSubmitting ? <Spinner /> : <SendIcon />}
-        Submit
+        {form.isSubmitting ? <Spinner /> : <CheckIcon />}
+        Done
       </Button>
     );
   }
 
-  function ReportDialogClose() {
+  function NameDialogClose() {
     return (
       <Button
         onClick={() => {

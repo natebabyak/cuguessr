@@ -1,66 +1,10 @@
 import { headers } from "next/headers";
-import { notFound, unauthorized } from "next/navigation";
+import { notFound } from "next/navigation";
 import { auth } from "@/lib/auth";
 import { MIN_DATE } from "@/lib/constants";
 import { db } from "@/lib/db";
 import { Game } from "./game";
-import { GameResult } from "./game-result";
-
-async function getGameResult(date: string, userId: string) {
-  return await db.query.gameResult.findFirst({
-    where: {
-      AND: [
-        {
-          game: {
-            date,
-          },
-        },
-        {
-          userId,
-        },
-      ],
-    },
-    with: {
-      game: {
-        with: {
-          rounds: {
-            with: {
-              results: {
-                where: {
-                  userId,
-                },
-              },
-            },
-          },
-        },
-      },
-    },
-  });
-}
-
-export type GameResultType = NonNullable<
-  Awaited<ReturnType<typeof getGameResult>>
->;
-
-async function getGame(date: string) {
-  return await db.query.game.findFirst({
-    where: {
-      date,
-    },
-    with: {
-      rounds: {
-        with: {
-          photo: true,
-        },
-        orderBy: {
-          index: "asc",
-        },
-      },
-    },
-  });
-}
-
-export type GameType = NonNullable<Awaited<ReturnType<typeof getGame>>>;
+import { Results } from "./results";
 
 export default async function Page({
   params,
@@ -84,20 +28,75 @@ export default async function Page({
   });
 
   if (!session) {
-    unauthorized();
+    await auth.api.signInAnonymous();
   }
 
-  const gameResult = await getGameResult(date, session.user.id);
-
-  if (gameResult) {
-    return <GameResult gameResult={gameResult} />;
-  }
-
-  const game = await getGame(date);
+  const game = await db.query.game.findFirst({
+    where: {
+      date,
+    },
+    with: {
+      rounds: {
+        columns: {
+          id: true,
+        },
+        with: {
+          photo: {
+            columns: {
+              id: true,
+              objectKey: true,
+              height: true,
+              width: true,
+            },
+          },
+        },
+        orderBy: {
+          index: "asc",
+        },
+      },
+    },
+  });
 
   if (!game) {
     notFound();
   }
 
-  return <Game game={game} />;
+  const roundResults = await db.query.roundResult.findMany({
+    columns: {
+      roundId: true,
+      distance: true,
+      points: true,
+    },
+    where: {
+      AND: [
+        {
+          round: {
+            gameId: game.id,
+          },
+        },
+        {
+          userId: session.user.id,
+        },
+      ],
+    },
+    with: {
+      round: {
+        columns: {},
+        with: {
+          photo: {
+            columns: {
+              latitude: true,
+              longitude: true,
+            },
+          },
+        },
+      },
+    },
+  });
+
+  if (roundResults.length >= 5) {
+    return <Results date={date} roundResults={roundResults} />;
+  }
+
+  return <Game game={game} savedRoundResults={roundResults} />;
 }

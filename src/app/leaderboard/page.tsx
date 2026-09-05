@@ -1,5 +1,9 @@
 import { redirect } from "next/navigation";
 
 export default async function Page() {
-  redirect("/leaderboard/today");
+  redirect(
+    `/leaderboard/${Intl.DateTimeFormat("en-CA", {
+      timeZone: "America/Toronto",
+    }).format(new Date())}`,
+  );
 }

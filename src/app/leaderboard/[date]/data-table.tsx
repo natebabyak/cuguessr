@@ -1,7 +1,7 @@
 "use client";
 
 import { type ColumnDef, type RowData, useTable } from "@tanstack/react-table";
-import { ArrowRightIcon, ArrowUpRightIcon, PodiumIcon } from "lucide-react";
+import { ArrowUpRightIcon, PodiumIcon } from "lucide-react";
 import Link from "next/link";
 import { buttonVariants } from "@/components/ui/button";
 import {

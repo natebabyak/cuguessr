@@ -107,6 +107,7 @@ export function PhotoDialog({
               <Image
                 alt="round location"
                 height={height}
+                loading="eager"
                 ref={ref}
                 src={imageUrl}
                 style={{ aspectRatio: `${width} / ${height}` }}

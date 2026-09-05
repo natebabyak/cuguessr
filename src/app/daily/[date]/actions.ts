@@ -8,7 +8,7 @@ import { calculateDistance, calculatePoints } from "@/lib/scoring";
 import type { Guess } from "./guess-schema";
 import type { Report } from "./report-schema";
 
-export async function createReport(reportData: Report) {
+export async function submitReport(reportData: Report) {
   const session = await auth.api.getSession({
     headers: await headers(),
   });

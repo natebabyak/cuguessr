@@ -8,13 +8,13 @@ import {
 } from "@formisch/react";
 import { SiDiscord, SiGithub } from "@icons-pack/react-simple-icons";
 import { AnimatePresence, motion } from "motion/react";
-import Link from "next/link";
 import { useState } from "react";
 import * as v from "valibot";
 import { AppHeader } from "@/components/app-header";
 import { Button } from "@/components/ui/button";
 import {
   Field,
+  FieldDescription,
   FieldError,
   FieldGroup,
   FieldLabel,
@@ -117,6 +117,9 @@ function EmailScreen({
                   placeholder="Enter your email..."
                   {...field.props}
                 />
+                <FieldDescription>
+                  Your email will not be shared with anyone.
+                </FieldDescription>
                 {field.errors && (
                   <FieldError
                     errors={field.errors.map((message) => ({ message }))}

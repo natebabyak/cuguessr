@@ -31,26 +31,45 @@ import {
 } from "@/lib/constants";
 import type { Coordinates } from "@/lib/types";
 import { submitGuess } from "./actions";
-import type { GameType } from "./page";
 import { PhotoDialog } from "./photo-dialog";
 import { ReportDialog } from "./report-dialog";
 import { RoundResultItem } from "./round-result-item";
 
-type RoundResult = {
-  roundId: number;
-  distance: number;
-  points: number;
-};
+interface GameProps {
+  game: {
+    id: number;
+    date: string;
+    rounds: {
+      id: number;
+      photo: {
+        id: number;
+        objectKey: string;
+        height: number;
+        width: number;
+      };
+    }[];
+  };
+  savedRoundResults: {
+    roundId: number;
+    distance: number;
+    points: number;
+    photo: {
+      latitude: number;
+      longitude: number;
+    };
+  }[];
+}
 
-export function Game({ game }: { game: GameType }) {
+export function Game({ game, savedRoundResults }: GameProps) {
   const router = useRouter();
   const [cursor, setCursor] = useState<"crosshair" | "grabbing">("crosshair");
   const [guess, setGuess] = useState<Coordinates | null>(null);
   const [, setCursorCoords] = useState<Coordinates | null>(null);
   const [isRoundOver, setIsRoundOver] = useState(false);
   const [isSubmittingGuess, setIsSubmittingGuess] = useState(false);
-  const [roundIndex, setRoundIndex] = useState(0);
-  const [roundResults, setRoundResults] = useState<RoundResult[]>([]);
+  const [roundIndex, setRoundIndex] = useState(savedRoundResults.length);
+  const [roundResults, setRoundResults] =
+    useState<RoundResult[]>(savedRoundResults);
   const [isPhotoDialogOpen, setIsPhotoDialogOpen] = useState(true);
   const mapRef = useRef<MapRef>(null);
 
@@ -58,7 +77,8 @@ export function Game({ game }: { game: GameType }) {
   const currentResult = roundResults.find(
     (result) => result.roundId === currentRound?.id,
   );
-  const answer = currentRound?.photo ?? null;
+  const answer = useMemo(() => currentRound?.photo ?? null, [currentRound]);
+
   const lineGeoJson = useMemo<Feature<LineString> | null>(() => {
     if (!guess || !answer) return null;
 

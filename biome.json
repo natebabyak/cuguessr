@@ -1,5 +1,5 @@
 {
-  "$schema": "https://biomejs.dev/schemas/2.4.2/schema.json",
+  "$schema": "https://biomejs.dev/schemas/2.5.11/schema.json",
   "vcs": {
     "enabled": true,
     "clientKind": "git",
@@ -7,7 +7,18 @@
   },
   "files": {
     "ignoreUnknown": true,
-    "includes": ["**", "!node_modules", "!.next", "!dist", "!build"]
+    "includes": [
+      "**",
+      "!node_modules",
+      "!.next",
+      "!dist",
+      "!build",
+      "!public/maplibre",
+      "!src/components/ui",
+      "!src/components/AccordionGallery.tsx",
+      "!src/components/CountUp.tsx",
+      "!src/components/DriftWall.tsx"
+    ]
   },
   "formatter": {
     "enabled": true,
@@ -22,7 +33,6 @@
   "linter": {
     "enabled": true,
     "rules": {
-      "recommended": true,
       "nursery": {
         "useSortedClasses": {
           "level": "error",

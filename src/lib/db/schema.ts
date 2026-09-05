@@ -26,26 +26,6 @@ export const game = pgTable("game", {
   date: date("date", { mode: "string" }).notNull().unique(),
 });
 
-export const gameResult = pgTable(
-  "game_result",
-  {
-    gameId: integer("game_id")
-      .notNull()
-      .references(() => game.id, { onDelete: "cascade" }),
-    userId: text("user_id")
-      .notNull()
-      .references(() => user.id, { onDelete: "cascade" }),
-    points: smallint("points").notNull(),
-    createdAt: timestamp("created_at", { withTimezone: true })
-      .notNull()
-      .defaultNow(),
-  },
-  (t) => [
-    primaryKey({ columns: [t.gameId, t.userId] }),
-    index("game_result_user_id_idx").on(t.userId),
-  ],
-);
-
 export const photo = pgTable(
   "photo",
   {
@@ -142,7 +122,6 @@ export const roundResult = pgTable(
 export const relations = defineRelations(
   {
     game,
-    gameResult,
     photo,
     report,
     round,
@@ -152,16 +131,6 @@ export const relations = defineRelations(
   (r) => ({
     game: {
       rounds: r.many.round(),
-    },
-    gameResult: {
-      game: r.one.game({
-        from: r.gameResult.gameId,
-        to: r.game.id,
-      }),
-      submittedBy: r.one.user({
-        from: r.gameResult.userId,
-        to: r.user.id,
-      }),
     },
     photo: {
       reports: r.many.report(),
@@ -203,7 +172,6 @@ export const relations = defineRelations(
       }),
     },
     user: {
-      gameResults: r.many.gameResult(),
       photos: r.many.photo(),
       reports: r.many.report(),
       roundResults: r.many.roundResult(),

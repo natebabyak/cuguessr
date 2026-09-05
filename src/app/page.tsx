@@ -1,14 +1,8 @@
-import {
-  ArrowUpRightIcon,
-  CalendarIcon,
-  PlayIcon,
-  PodiumIcon,
-  UploadIcon,
-} from "lucide-react";
+import { PlayIcon, UploadIcon } from "lucide-react";
 import Link from "next/link";
+import AccordionGallery from "@/components/AccordionGallery";
 import { AppFooter } from "@/components/app-footer";
 import { AppHeader } from "@/components/app-header";
-import BlurText from "@/components/BlurText";
 import CountUp from "@/components/CountUp";
 import DriftWall from "@/components/DriftWall";
 import {
@@ -17,23 +11,9 @@ import {
   AccordionItem,
   AccordionTrigger,
 } from "@/components/ui/accordion";
-import { Button, buttonVariants } from "@/components/ui/button";
-import { Calendar } from "@/components/ui/calendar";
-import {
-  Item,
-  ItemActions,
-  ItemContent,
-  ItemDescription,
-  ItemMedia,
-  ItemTitle,
-} from "@/components/ui/item";
-import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
-} from "@/components/ui/popover";
-import { Separator } from "@/components/ui/separator";
+import { buttonVariants } from "@/components/ui/button";
 import { db } from "@/lib/db";
+import { PlayPreviousGames } from "./play-previous-games";
 
 export default async function Page() {
   const photos = await db.query.photo.findMany({
@@ -56,86 +36,46 @@ export default async function Page() {
   return (
     <div className="flex flex-col">
       <AppHeader />
-      <main className="*:flex *:min-h-[50vh] *:flex-col *:items-center *:justify-center *:gap-4 [&_h2]:font-medium [&_h2]:text-3xl">
-        <section className="bg-linear-to-b from-transparent to-border/25">
+      <main className="[&_h2]:font-medium [&_h2]:text-3xl [&_p]:text-lg [&_p]:text-muted-foreground">
+        <section className="flex min-h-[50vh] flex-col items-center justify-center gap-4">
           <h1 className="text-balance text-center font-medium text-5xl tracking-tighter">
-            <BlurText
-              text="How well do you know"
-              animateBy="words"
-              direction="bottom"
-              delay={0}
-            />
-            <BlurText
-              text="the Carleton campus?"
-              animateBy="words"
-              direction="bottom"
-              delay={500}
-            />
+            How well do you know the Carleton campus?
           </h1>
-          <p className="text-balance text-center text-muted-foreground">
+          <p>
             Guess the location of 250+ user-submitted photos of the Carleton
             campus.
           </p>
-          <div className="flex w-full max-w-sm flex-col gap-2">
+          <div className="grid w-sm gap-2">
             <Link href="/daily" className={buttonVariants()}>
               <PlayIcon />
               Play Today's Game
             </Link>
-            <Popover>
-              <PopoverTrigger render={<Button variant="outline" />}>
-                <CalendarIcon />
-                Play Previous Games
-              </PopoverTrigger>
-              <PopoverContent align="center" className="bg-background">
-                <Calendar
-                  captionLayout="dropdown"
-                  mode="single"
-                  timeZone="America/Toronto"
-                  startMonth={new Date(2026, 8, 1)}
-                  endMonth={new Date()}
-                />
-              </PopoverContent>
-            </Popover>
+            <PlayPreviousGames />
           </div>
         </section>
-        <section>
-          <Item
-            render={<Link href="/leaderboard" />}
-            variant="outline"
-            className="w-full max-w-xs"
-          >
-            <ItemMedia>
-              <PodiumIcon />
-            </ItemMedia>
-            <ItemContent>
-              <ItemTitle>Leaderboard</ItemTitle>
-              <ItemDescription>
-                Compete with other players for the top spot
-              </ItemDescription>
-            </ItemContent>
-            <ItemActions>
-              <ArrowUpRightIcon className="size-5" />
-            </ItemActions>
-          </Item>
+        <section className="flex min-h-[50vh] flex-col items-center justify-center gap-4">
+          <AccordionGallery items={driftWallItems.slice(0, 5)} />
         </section>
-        <section>
+        <section className="flex min-h-[50vh] flex-col items-center justify-center gap-4">
           <h2>
             <CountUp from={0} to={280} />+ User-Submitted Photos
           </h2>
           <p>
-            cuGuessr is powered by the community and every photo submitted is
-            welcomed
+            cuGuessr is powered by the Carleton community and every photo
+            submitted makes the game better.
           </p>
-          <Button className="w-full max-w-xs">
+          <Link
+            href="/submit"
+            className={buttonVariants({ className: "w-sm" })}
+          >
             <UploadIcon />
             Submit a Photo
-          </Button>
+          </Link>
           <div className="h-150 w-full">
             <DriftWall items={driftWallItems} className="cursor-none" />
           </div>
         </section>
-        <Separator />
-        <section>
+        <section className="flex min-h-[50vh] flex-col items-center justify-center gap-4">
           <h2>FAQ</h2>
           <Accordion className="w-full max-w-md">
             <AccordionItem>

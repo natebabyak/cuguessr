@@ -4,6 +4,7 @@
   height="24"
   viewBox="0 0 24 24"
 >
+  <title>cuGuessr</title>
   <defs>
     <mask id="m">
       <path
@@ -13,8 +14,8 @@
       <circle cx="12" cy="10" r="3" fill="#000" />
     </mask>
     <linearGradient id="g" x1="0%" y1="0%" x2="100%" y2="100%">
-      <stop offset="0%" stop-color="oklch(63.7% 0.237 25.331)" />
-      <stop offset="100%" stop-color="oklch(57.7% 0.245 27.325)" />
+      <stop offset="0%" stop-color="#fb2c36" />
+      <stop offset="100%" stop-color="#e7000b" />
     </linearGradient>
   </defs>
   <path

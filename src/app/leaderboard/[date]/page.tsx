@@ -1,29 +1,35 @@
-import { useMemo } from "react";
 import { AppFooter } from "@/components/app-footer";
 import { AppHeader } from "@/components/app-header";
-import { Item, ItemContent, ItemHeader } from "@/components/ui/item";
+import { Item, ItemContent } from "@/components/ui/item";
 import { Separator } from "@/components/ui/separator";
 import { db } from "@/lib/db";
 import { columns } from "./columns";
 import { DataTable } from "./data-table";
 
-export default async function Page() {
-  const today = Intl.DateTimeFormat("en-CA", {
-    timeZone: "America/Toronto",
-  }).format(new Date());
+export default async function Page({
+  params,
+}: {
+  params: Promise<{
+    date: string;
+  }>;
+}) {
+  const { date } = await params;
 
-  const gameResults = await db.query.gameResult.findMany({
+  const roundResults = await db.query.roundResult.findMany({
     columns: {
       points: true,
       createdAt: true,
     },
     where: {
-      game: {
-        date: today,
+      round: {
+        game: {
+          date,
+        },
       },
     },
     orderBy: {
       points: "desc",
+      createdAt: "asc",
     },
     with: {
       submittedBy: {
@@ -39,7 +45,7 @@ export default async function Page() {
       <AppHeader />
       <main className="flex flex-col items-center gap-4 p-4">
         <h1>cuGuessr</h1>
-        <p>Played {gameResults.length} times</p>
+        <p>Played {roundResults.length} times</p>
         <Separator />
         <h2>Summary</h2>
         <Separator />
@@ -50,7 +56,7 @@ export default async function Page() {
         <div className="w-full max-w-md rounded-md border">
           <DataTable
             columns={columns}
-            data={gameResults.map((result, index) => ({
+            data={roundResults.map((result, index) => ({
               rank: index + 1,
               player: result.submittedBy?.name ?? "?",
               score: result.points,
