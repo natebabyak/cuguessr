@@ -1,4 +1,5 @@
 import { PlayIcon, PodiumIcon, UploadIcon } from "lucide-react";
+import { headers } from "next/headers";
 import Link from "next/link";
 import AccordionGallery from "@/components/AccordionGallery";
 import { AppFooter } from "@/components/app-footer";
@@ -10,9 +11,49 @@ import {
   AccordionTrigger,
 } from "@/components/ui/accordion";
 import { buttonVariants } from "@/components/ui/button";
+import { auth } from "@/lib/auth";
 import { db } from "@/lib/db";
 
 export default async function Page() {
+  const today = Intl.DateTimeFormat("en-CA", {
+    timeZone: "America/Toronto",
+  }).format(new Date());
+
+  const session = await auth.api.getSession({
+    headers: await headers(),
+  });
+
+  const todayRoundCount = session
+    ? (
+        await db.query.roundResult.findMany({
+          columns: {
+            roundId: true,
+          },
+          where: {
+            AND: [
+              {
+                userId: session.user.id,
+              },
+              {
+                round: {
+                  game: {
+                    date: today,
+                  },
+                },
+              },
+            ],
+          },
+        })
+      ).length
+    : 0;
+
+  const dailyCta =
+    todayRoundCount >= 5
+      ? { label: "View Results" }
+      : todayRoundCount > 0
+        ? { label: `Continue Today's Game (${todayRoundCount}/5)` }
+        : { label: "Play Today's Game" };
+
   const photos = await db.query.photo.findMany({
     columns: {
       objectKey: true,
@@ -51,7 +92,7 @@ export default async function Page() {
           <div className="grid w-sm gap-4">
             <Link href="/daily" className={buttonVariants()}>
               <PlayIcon />
-              Play Today's Game
+              {dailyCta.label}
             </Link>
             <Link
               href="/leaderboard"

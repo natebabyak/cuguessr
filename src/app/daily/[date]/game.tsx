@@ -215,7 +215,7 @@ export function Game({ game, savedRoundResults }: GameProps) {
             setGuess({ latitude, longitude });
           }}
         >
-          <MapPinIcon className="size-8 fill-white text-red-500 dark:fill-black" />
+          <MapPinIcon className="size-8 fill-white text-primary dark:fill-black" />
         </Marker>
       )}
       {isRoundOver && guess && answer && lineGeoJson && (

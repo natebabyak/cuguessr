@@ -50,7 +50,7 @@ export function AppHeader() {
   return (
     <header className="sticky top-0 z-50 flex items-center justify-between border-b bg-background/90 p-4 backdrop-blur-md">
       <Link href="/" className="font-semibold text-2xl">
-        <span className="text-red-500">cu</span>
+        <span className="text-primary">cu</span>
         Guessr
       </Link>
       {isSignedIn && session ? (

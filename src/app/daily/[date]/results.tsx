@@ -15,7 +15,7 @@ import {
   ProgressValue,
 } from "@/components/ui/progress";
 import { toast } from "@/components/ui/toast";
-import { MIN_DATE } from "@/lib/constants";
+import { getGameNumber } from "@/lib/game";
 import type { UserStats } from "@/lib/stats";
 
 interface ResultsProps {
@@ -27,19 +27,6 @@ interface ResultsProps {
   }[];
   isAnonymous: boolean;
   stats: UserStats | null;
-}
-
-function getGameNumber(date: string): number {
-  const [startYear, startMonth, startDay] = MIN_DATE.split("-").map(Number);
-  const [targetYear, targetMonth, targetDay] = date.split("-").map(Number);
-
-  const startUtc = Date.UTC(startYear, startMonth - 1, startDay);
-  const targetUtc = Date.UTC(targetYear, targetMonth - 1, targetDay);
-
-  const MS_PER_DAY = 1000 * 60 * 60 * 24;
-  const diffInDays = Math.floor((targetUtc - startUtc) / MS_PER_DAY);
-
-  return diffInDays + 1;
 }
 
 function getEmoji(points: number) {
@@ -92,7 +79,7 @@ export function Results({
   return (
     <div className="flex min-h-svh flex-col items-center justify-center gap-4 p-4">
       <h1 className="text-center font-semibold text-5xl">
-        <span className="text-red-500">cu</span>
+        <span className="text-primary">cu</span>
         Guessr #{gameNumber}
       </h1>
       <p className="text-lg text-muted-foreground">{date}</p>

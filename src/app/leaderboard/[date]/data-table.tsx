@@ -23,12 +23,12 @@ import {
 import type { Features } from "./features";
 import { features } from "./features";
 
-interface DataTableProps<TData extends RowData> {
+interface DataTableProps<TData extends RowData & { isCurrentUser?: boolean }> {
   columns: ColumnDef<Features, TData>[];
   data: TData[];
 }
 
-export function DataTable<TData extends RowData>({
+export function DataTable<TData extends RowData & { isCurrentUser?: boolean }>({
   columns,
   data,
 }: DataTableProps<TData>) {
@@ -58,7 +58,10 @@ export function DataTable<TData extends RowData>({
       <TableBody>
         {table.getRowModel().rows?.length ? (
           table.getRowModel().rows.map((row) => (
-            <TableRow key={row.id}>
+            <TableRow
+              key={row.id}
+              data-state={row.original.isCurrentUser ? "selected" : undefined}
+            >
               {row.getAllCells().map((cell) => (
                 <TableCell key={cell.id}>
                   <table.FlexRender cell={cell} />
@@ -82,7 +85,7 @@ export function DataTable<TData extends RowData>({
                 </EmptyHeader>
                 <EmptyContent>
                   <Link href="/daily" className={buttonVariants()}>
-                    Play Today's Game
+                    Play Today&apos;s Game
                     <ArrowUpRightIcon />
                   </Link>
                 </EmptyContent>

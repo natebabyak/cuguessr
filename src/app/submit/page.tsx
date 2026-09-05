@@ -195,7 +195,7 @@ export default function Page() {
               setInput(form, { path: ["longitude"], input: longitude });
             }}
           >
-            <MapPinIcon className="size-8 fill-white text-red-500 dark:fill-black" />
+            <MapPinIcon className="size-8 fill-white text-primary dark:fill-black" />
           </Marker>
         )}
         <div className="pointer-events-none absolute inset-2 *:pointer-events-auto *:absolute md:inset-4">
