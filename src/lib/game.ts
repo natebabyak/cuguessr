@@ -12,10 +12,3 @@ export function getGameNumber(date: string): number {
 
   return diffInDays + 1;
 }
-
-export function addDays(dateString: string, days: number) {
-  const [year, month, day] = dateString.split("-").map(Number);
-  const date = new Date(Date.UTC(year, month - 1, day));
-  date.setUTCDate(date.getUTCDate() + days);
-  return date.toISOString().slice(0, 10);
-}

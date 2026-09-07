@@ -42,7 +42,7 @@ export function PhotoDialog({
 }) {
   const isMobile = useIsMobile();
 
-  const imageUrl = `${process.env.NEXT_PUBLIC_R2_URL}/photos/${objectKey}`;
+  const imageUrl = `photos/${objectKey}`;
 
   if (isMobile) {
     return (
@@ -108,7 +108,9 @@ export function PhotoDialog({
                 alt="round location"
                 height={height}
                 loading="eager"
+                quality={75}
                 ref={ref}
+                sizes="(max-width: 768px) 100vw, 600px"
                 src={imageUrl}
                 width={width}
                 className="h-auto w-full rounded-lg object-cover object-center"

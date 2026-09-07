@@ -2,7 +2,6 @@ import { PlayIcon, UserPlusIcon } from "lucide-react";
 import { headers } from "next/headers";
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { AppFooter } from "@/components/app-footer";
 import { columns } from "@/components/leaderboard/columns";
 import { DataTable } from "@/components/leaderboard/data-table";
 import { buttonVariants } from "@/components/ui/button";
@@ -16,7 +15,6 @@ import { auth } from "@/lib/auth";
 import { MIN_DATE } from "@/lib/constants";
 import { db } from "@/lib/db";
 import { getGameNumber } from "@/lib/game";
-import { getDailyLeaderboard } from "@/lib/leaderboard";
 
 export default async function Page({
   params,

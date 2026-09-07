@@ -2,7 +2,6 @@
 
 import { headers } from "next/headers";
 import { auth } from "@/lib/auth";
-import { getUserStats, type UserStats } from "@/lib/stats";
 import type { Name } from "./name-schema";
 
 export async function changeName(nameData: Name) {
@@ -25,16 +24,4 @@ export async function changeName(nameData: Name) {
   } catch (error) {
     throw new Error("Failed to update name", { cause: error });
   }
-}
-
-export async function getMyStats(): Promise<UserStats | null> {
-  const session = await auth.api.getSession({
-    headers: await headers(),
-  });
-
-  if (!session || session.user.isAnonymous) {
-    return null;
-  }
-
-  return getUserStats(session.user.id);
 }

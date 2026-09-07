@@ -10,6 +10,7 @@ const SCORE_EXPONENT = 2.5;
 function degreesToRadians(degrees: number): number {
   return (degrees * Math.PI) / 180;
 }
+
 export function calculateDistance({
   a,
   b,

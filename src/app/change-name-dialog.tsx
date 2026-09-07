@@ -27,8 +27,8 @@ import {
   DrawerFooter,
   DrawerHeader,
   DrawerTitle,
+  DrawerTrigger,
 } from "@/components/ui/drawer";
-
 import {
   Field,
   FieldError,
@@ -46,15 +46,10 @@ const TITLE = "Change Name";
 const DESCRIPTION =
   "This is your public display name that will be shown to other players.";
 
-export function NameDialog({
-  open,
-  onOpenChange,
-}: {
-  open: boolean;
-  onOpenChange: (open: boolean) => void;
-}) {
+export function ChangeNameDialog() {
   const isMobile = useIsMobile();
-  const [isSubmitting, setIsSubmitting] = useState(false);
+
+  const [open, setOpen] = useState(false);
 
   const form = useForm({
     schema: NameSchema,
@@ -64,35 +59,28 @@ export function NameDialog({
   });
 
   const handleSubmit: SubmitHandler<typeof NameSchema> = async (output) => {
-    setIsSubmitting(true);
-
-    try {
-      await toast.promise(changeName(output), {
-        loading: "Submitting...",
-        success: "Name changed successfully!",
-        error: "Failed to change name.",
-      });
-
-      window.location.reload();
-    } finally {
-      setIsSubmitting(false);
-    }
+    await toast.promise(changeName(output), {
+      loading: "Loading...",
+      success: "Name changed successfully!",
+      error: "Failed to change name.",
+    });
   };
 
   if (isMobile) {
     return (
-      <Drawer onOpenChange={onOpenChange} open={open}>
+      <Drawer open={open} onOpenChange={setOpen}>
+        <DrawerTrigger render={<ChangeNameDialogTrigger />} />
         <DrawerContent>
           <DrawerHeader>
             <DrawerTitle>{TITLE}</DrawerTitle>
             <DrawerDescription>{DESCRIPTION}</DrawerDescription>
           </DrawerHeader>
           <div className="p-4">
-            <NameDialogForm />
+            <ChangeNameDialogForm />
           </div>
           <DrawerFooter>
-            <NameDialogSubmit />
-            <DrawerClose render={<NameDialogClose />} />
+            <ChangeNameDialogSubmit />
+            <DrawerClose render={<ChangeNameDialogClose />} />
           </DrawerFooter>
         </DrawerContent>
       </Drawer>
@@ -100,22 +88,27 @@ export function NameDialog({
   }
 
   return (
-    <Dialog onOpenChange={onOpenChange} open={open}>
+    <Dialog open={open} onOpenChange={setOpen}>
+      <DrawerTrigger render={<ChangeNameDialogTrigger />} />
       <DialogContent>
         <DialogHeader>
           <DialogTitle>{TITLE}</DialogTitle>
           <DialogDescription>{DESCRIPTION}</DialogDescription>
         </DialogHeader>
-        <NameDialogForm />
+        <ChangeNameDialogForm />
         <DialogFooter>
-          <DialogClose render={<NameDialogClose />} />
-          <NameDialogSubmit />
+          <DialogClose render={<ChangeNameDialogClose />} />
+          <ChangeNameDialogSubmit />
         </DialogFooter>
       </DialogContent>
     </Dialog>
   );
 
-  function NameDialogForm() {
+  function ChangeNameDialogTrigger() {
+    return <Button onClick={() => setOpen(true)}>Change Name</Button>;
+  }
+
+  function ChangeNameDialogForm() {
     return (
       <Form id="change-name-form" of={form} onSubmit={handleSubmit}>
         <FieldGroup>
@@ -142,12 +135,11 @@ export function NameDialog({
     );
   }
 
-  function NameDialogSubmit() {
+  function ChangeNameDialogSubmit() {
     return (
       <Button
-        disabled={!form.isValid || form.isSubmitting || isSubmitting}
+        disabled={!form.isValid || form.isSubmitting}
         form="change-name-form"
-        onClick={() => setIsSubmitting(true)}
         type="submit"
       >
         {form.isSubmitting ? <Spinner /> : <CheckIcon />}
@@ -156,12 +148,12 @@ export function NameDialog({
     );
   }
 
-  function NameDialogClose() {
+  function ChangeNameDialogClose() {
     return (
       <Button
         onClick={() => {
           reset(form);
-          onOpenChange(false);
+          setOpen(false);
         }}
         type="button"
         variant="outline"

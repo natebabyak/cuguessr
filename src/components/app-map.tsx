@@ -37,7 +37,7 @@ export function AppMap({
       sources: {
         protomaps: {
           type: "vector" as const,
-          url: `pmtiles://${process.env.NEXT_PUBLIC_R2_URL}/tiles/cu.pmtiles`,
+          url: `pmtiles://${process.env.NEXT_PUBLIC_CDN_URL}/tiles/cu.pmtiles`,
         },
       },
       layers: layers(

@@ -3,7 +3,6 @@ import { notFound } from "next/navigation";
 import { auth } from "@/lib/auth";
 import { MIN_DATE } from "@/lib/constants";
 import { db } from "@/lib/db";
-import { getUserStats } from "@/lib/stats";
 import { Game } from "./game";
 import { Results } from "./results";
 
@@ -107,18 +106,7 @@ export default async function Page({
   }));
 
   if (savedRoundResults.length >= 5) {
-    const isAnonymous = !session || Boolean(session.user.isAnonymous);
-    const stats =
-      !isAnonymous && session ? await getUserStats(session.user.id) : null;
-
-    return (
-      <Results
-        date={date}
-        roundResults={savedRoundResults}
-        isAnonymous={isAnonymous}
-        stats={stats}
-      />
-    );
+    return <Results date={date} roundResults={savedRoundResults} />;
   }
 
   return (

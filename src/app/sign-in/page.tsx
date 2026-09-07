@@ -13,7 +13,7 @@ import Link from "next/link";
 import { useEffect, useState } from "react";
 import * as v from "valibot";
 import { getMyStats } from "@/app/actions";
-import { NameDialog } from "@/app/name-dialog";
+import { NameDialog } from "@/app/change-name-dialog";
 import { Button, buttonVariants } from "@/components/ui/button";
 import {
   Field,
