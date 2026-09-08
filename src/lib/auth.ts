@@ -8,12 +8,29 @@ import { photo, report, roundResult } from "@/lib/db/schema";
 import { sendEmail } from "@/lib/email";
 import * as authSchema from "./db/auth-schema";
 import * as schema from "./db/schema";
+import { generateUsername } from "./generate-username";
 
 export const auth = betterAuth({
   database: drizzleAdapter(db, {
     provider: "pg",
     schema: { ...schema, ...authSchema },
   }),
+  databaseHooks: {
+    user: {
+      create: {
+        before: async (user) => {
+          if (!user.name) {
+            return {
+              data: {
+                ...user,
+                name: generateUsername(),
+              },
+            };
+          }
+        },
+      },
+    },
+  },
   user: {
     additionalFields: {
       isAdmin: {
@@ -75,11 +92,11 @@ export const auth = betterAuth({
       },
     }),
     magicLink({
-      sendMagicLink: async ({ email, token, url }) => {
+      sendMagicLink: async ({ email, url }) => {
         await sendEmail({
-          from: "noreply@cuguessr.com",
+          from: '"cuGuessr" <noreply@cuguessr.com>',
           to: email,
-          subject: "Sign in link for cuGuessr",
+          subject: "Your temporary cuGuessr sign in link",
           html: `
             <!DOCTYPE html>
             <html lang="en">
@@ -88,23 +105,31 @@ export const auth = betterAuth({
                 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
                 <title>Sign in to cuGuessr</title>
               </head>
-              <body style="margin: 0; padding: 40px 20px; background-color: #ffffff; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; color: #111827; -webkit-font-smoothing: antialiased;">
-                <div style="max-width: 400px; margin: 0 auto;">
-                  <a href="https://cuguessr.com" target="_blank" style="display: inline-block; text-decoration: none; color: #000000; font-size: 18px; font-weight: 700; letter-spacing: -0.02em; margin-bottom: 32px;">
-                    cuGuessr
+              <body
+                style="margin: 0; padding: 56px 24px; background-color: #ffffff; font-family: 'Geist', ui-sans-serif, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; color: #0a0a0a; -webkit-font-smoothing: antialiased;"
+              >
+                <div style="max-width: 380px; margin: 0 auto;">
+                  <a
+                    href="https://www.cuguessr.com"
+                    target="_blank"
+                    style="display: inline-flex; text-decoration: none; color: #0a0a0a; font-size: 24px; font-weight: 600; letter-spacing: -0.01em; margin-bottom: 40px;"
+                  >
+                    <span style="color: #b91c1c;">cu</span>Guessr
                   </a>
-                  <h1 style="margin: 0 0 24px 0; font-size: 20px; font-weight: 600; color: #0f172a; letter-spacing: -0.01em;">
-                    Sign in to your account
-                  </h1>
-                  <a href="${url}" target="_blank" style="display: block; width: 100%; box-sizing: border-box; background-color: #5e6ad2; color: #ffffff; font-size: 14px; font-weight: 500; text-align: center; text-decoration: none; padding: 12px 16px; border-radius: 6px; margin-bottom: 24px;">
-                    Sign in to cuGuessr &rarr;
-                  </a>
-                  <p style="margin: 0 0 24px 0; font-size: 14px; line-height: 1.5; color: #64748b;">
-                    This link will expire in 5 minutes. If the button above does not work, you can paste the link directly into your browser or enter the code below. If you didn't request this, you can safely ignore this email.
+                  <p style="margin: 0 0 20px 0; font-size: 14px; line-height: 1.5; color: #0a0a0a;">
+                    Click below to sign in.
                   </p>
-                  <div style="display: inline-block; background-color: #f8fafc; border: 1px solid #e2e8f0; border-radius: 6px; padding: 10px 16px; font-family: 'SFMono-Regular', Consolas, 'Liberation Mono', Menlo, monospace; font-size: 18px; font-weight: 600; color: #0f172a; letter-spacing: 0.2em;">
-                    ${token}
-                  </div>
+                  <a
+                    href="${url}"
+                    target="_blank"
+                    style="display: block; width: 100%; box-sizing: border-box; background-color: #b91c1c; color: #fef2f2; font-size: 14px; font-weight: 500; text-align: center; text-decoration: none; height: 44px; line-height: 44px; border-radius: 10px; border: 1px solid transparent; margin-bottom: 28px;"
+                  >
+                    Sign in
+                  </a>
+                  <div style="height: 1px; background-color: #e5e5e5; margin-bottom: 20px;"></div>
+                  <p style="margin: 0; font-size: 12px; line-height: 1.5; color: #737373;">
+                    This link expires in 5 minutes. If you didn't request it, you can ignore this email.
+                  </p>
                 </div>
               </body>
             </html>

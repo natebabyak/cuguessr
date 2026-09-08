@@ -43,6 +43,7 @@ export function PhotoDialog({
   const isMobile = useIsMobile();
 
   const imageUrl = `photos/${objectKey}`;
+  const fullResUrl = `${process.env.NEXT_PUBLIC_CDN_URL}/cdn-cgi/image/width=${width},quality=75,format=auto/${imageUrl}`;
 
   if (isMobile) {
     return (
@@ -94,8 +95,8 @@ export function PhotoDialog({
       <Gallery>
         <Item
           height={height}
-          original={imageUrl}
-          thumbnail={imageUrl}
+          original={fullResUrl}
+          thumbnail={fullResUrl}
           width={width}
         >
           {({ ref, open }) => (
@@ -107,7 +108,7 @@ export function PhotoDialog({
               <Image
                 alt="round location"
                 height={height}
-                loading="eager"
+                priority
                 quality={75}
                 ref={ref}
                 sizes="(max-width: 768px) 100vw, 600px"

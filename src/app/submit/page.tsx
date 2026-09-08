@@ -227,7 +227,12 @@ export default function Page() {
                       <EmptyHeader>
                         <EmptyMedia variant={thumbnailUrl ? "default" : "icon"}>
                           {thumbnailUrl ? (
-                            <Image src={thumbnailUrl} alt="Thumbnail" />
+                            <Image
+                              src={thumbnailUrl}
+                              alt="Thumbnail"
+                              height={100}
+                              width={100}
+                            />
                           ) : (
                             <ImageIcon />
                           )}
