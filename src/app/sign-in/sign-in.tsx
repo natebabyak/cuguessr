@@ -46,22 +46,17 @@ export function SignIn() {
     initialInput: {
       email: "",
     },
-    validate: "initial",
+    validate: "submit",
     revalidate: "input",
   });
 
-  const [isPending, setIsPending] = useState(false);
   const [step, setStep] = useState<"email" | "magic-link">("email");
 
   const handleSubmit: SubmitHandler<typeof SignInSchema> = async (output) => {
-    setIsPending(true);
-
     const { error } = await authClient.signIn.magicLink({
       email: output.email,
       callbackURL: "/",
     });
-
-    setIsPending(false);
 
     if (error) {
       toast.add({
@@ -98,13 +93,11 @@ export function SignIn() {
                     <FieldGroup>
                       <Button
                         disabled={form.isSubmitting}
-                        onClick={async () => {
-                          setIsPending(true);
+                        onClick={async () =>
                           await authClient.signIn.social({
                             provider: "discord",
-                          });
-                          setIsPending(false);
-                        }}
+                          })
+                        }
                         type="button"
                         variant="outline"
                       >
@@ -113,13 +106,11 @@ export function SignIn() {
                       </Button>
                       <Button
                         disabled={form.isSubmitting}
-                        onClick={async () => {
-                          setIsPending(true);
+                        onClick={async () =>
                           await authClient.signIn.social({
                             provider: "github",
-                          });
-                          setIsPending(false);
-                        }}
+                          })
+                        }
                         type="button"
                         variant="outline"
                       >
@@ -131,37 +122,41 @@ export function SignIn() {
                     <FieldGroup>
                       <FormischField of={form} path={["email"]}>
                         {(field) => (
-                          <Field data-invalid={field.errors !== null}>
-                            <FieldLabel htmlFor="sign-in-email">
-                              Your Email
-                            </FieldLabel>
-                            <Input
-                              aria-invalid={field.errors !== null}
-                              autoCapitalize="none"
-                              autoComplete="email"
-                              autoCorrect="off"
-                              disabled={isPending}
-                              id="sign-in-email"
-                              placeholder="you@example.com"
-                              {...field.props}
-                            />
-                            {field.errors && (
-                              <FieldError
-                                errors={field.errors.map((message) => ({
-                                  message,
-                                }))}
+                          <>
+                            <Field data-invalid={field.errors !== null}>
+                              <FieldLabel htmlFor="sign-in-email">
+                                Your Email
+                              </FieldLabel>
+                              <Input
+                                aria-invalid={field.errors !== null}
+                                autoCapitalize="none"
+                                autoComplete="email"
+                                autoCorrect="off"
+                                disabled={form.isSubmitting}
+                                id="sign-in-email"
+                                placeholder="you@example.com"
+                                {...field.props}
                               />
-                            )}
-                          </Field>
+                              {field.errors && (
+                                <FieldError
+                                  errors={field.errors.map((message) => ({
+                                    message,
+                                  }))}
+                                />
+                              )}
+                            </Field>
+                            <Button
+                              disabled={
+                                field.errors !== null || form.isSubmitting
+                              }
+                              type="submit"
+                            >
+                              {form.isSubmitting && <Spinner />}
+                              Continue with Email
+                            </Button>
+                          </>
                         )}
                       </FormischField>
-                      <Button
-                        disabled={!form.isValid || form.isSubmitting}
-                        type="submit"
-                      >
-                        {form.isSubmitting && <Spinner />}
-                        Continue with Email
-                      </Button>
                     </FieldGroup>
                   </FieldSet>
                 </FieldGroup>

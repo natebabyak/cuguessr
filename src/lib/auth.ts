@@ -114,7 +114,7 @@ export const auth = betterAuth({
                     target="_blank"
                     style="display: inline-flex; text-decoration: none; color: #0a0a0a; font-size: 24px; font-weight: 600; letter-spacing: -0.01em; margin-bottom: 40px;"
                   >
-                    <span style="color: #b91c1c;">cu</span>Guessr
+                    <span style="color: #e7000b;">cu</span>Guessr
                   </a>
                   <p style="margin: 0 0 20px 0; font-size: 14px; line-height: 1.5; color: #0a0a0a;">
                     Click below to sign in.
@@ -122,7 +122,7 @@ export const auth = betterAuth({
                   <a
                     href="${url}"
                     target="_blank"
-                    style="display: block; width: 100%; box-sizing: border-box; background-color: #b91c1c; color: #fef2f2; font-size: 14px; font-weight: 500; text-align: center; text-decoration: none; height: 44px; line-height: 44px; border-radius: 10px; border: 1px solid transparent; margin-bottom: 28px;"
+                    style="display: block; width: 100%; box-sizing: border-box; background-color: #e7000b; color: #fef2f2; font-size: 14px; font-weight: 500; text-align: center; text-decoration: none; height: 44px; line-height: 44px; border-radius: 10px; border: 1px solid transparent; margin-bottom: 28px;"
                   >
                     Sign in
                   </a>
