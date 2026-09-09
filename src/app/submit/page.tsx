@@ -3,6 +3,7 @@
 import {
   Form,
   Field as FormischField,
+  reset,
   type SubmitHandler,
   setInput,
   useForm,
@@ -11,7 +12,7 @@ import exifr from "exifr";
 import { ArrowLeftIcon, ImageIcon, MapPinIcon, SendIcon } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Marker } from "react-map-gl/maplibre";
 import { AppMap } from "@/components/app-map";
 import { GoToMarkerButton } from "@/components/go-to-marker-button";
@@ -45,13 +46,29 @@ export default function Page() {
   const form = useForm({
     schema: PhotoSchema,
   });
+  const photoInputRef = useRef<HTMLInputElement>(null);
 
   const handleSubmit: SubmitHandler<typeof PhotoSchema> = async (output) => {
-    toast.promise(createPhoto(output), {
+    const submission = createPhoto(output);
+
+    toast.promise(submission, {
       loading: "Submitting...",
       success: "Photo submitted successfully!",
       error: "Failed to submit photo.",
     });
+
+    try {
+      await submission;
+      reset(form);
+      setThumbnailUrl(null);
+      setMarker(null);
+
+      if (photoInputRef.current) {
+        photoInputRef.current.value = "";
+      }
+    } catch {
+      // The toast already reports the submission error.
+    }
   };
 
   const handlePhotoChange = async (
@@ -232,6 +249,7 @@ export default function Page() {
                               alt="Thumbnail"
                               height={100}
                               width={100}
+                              className="h-auto w-25"
                             />
                           ) : (
                             <ImageIcon />
@@ -251,6 +269,7 @@ export default function Page() {
                         className="sr-only"
                         type="file"
                         {...field.props}
+                        ref={photoInputRef}
                         onChange={(event) =>
                           handlePhotoChange(event, field.props.onChange)
                         }

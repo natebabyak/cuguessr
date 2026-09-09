@@ -2,4 +2,4 @@ export const DEFAULT_LATITUDE = 45.3866786;
 export const DEFAULT_LONGITUDE = -75.697256;
 export const DEFAULT_ZOOM = 15;
 
-export const MIN_DATE = "2026-08-29";
+export const MIN_DATE = "2026-09-09";
