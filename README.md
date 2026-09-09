@@ -6,22 +6,26 @@
 
 1. [About](#about)
    1. [Screenshots](#screenshots)
-   2. [Technologies Used](#technologies-used)
+   2. [Infrastructure](#infrastructure)
 2. [Getting Started](#getting-started)
    1. [Prerequisites](#prerequisites)
-   2. [Installation](#installation)
-3. [Roadmap](#roadmap)
-4. [Contributing](#contributing)
-5. [License](#license)
-6. [Acknowledgements](#acknowledgements)
+   2. [Development](#development)
+   3. [Production](#production)
+3. [License](#license)
+4. [Acknowledgements](#acknowledgements)
 
 ## About
 
-**This app is not affiliated with Carleton University in any way.**
+> [!NOTE]
+> This app is not affiliated with Carleton University in any way.
 
 cuGuessr is a GeoGuessr-style game set entirely on Carleton's campus. Play the [daily challenge](https://cuguessr.com) and share your score with friends, or just see how well you actually know your school.
 
 All photos are submitted by the community. Think you've got a good spot? [Submit it here](https://cuguessr.com/submit).
+
+<div align="end">
+  <a href="#top">Back to Top</a>
+</div>
 
 ### Screenshots
 
@@ -31,12 +35,14 @@ All photos are submitted by the community. Think you've got a good spot? [Submit
   <img alt="Submit Screenshot" src="/public/submit.png" width="30%" />
 </div>
 
-### Technologies Used
+### Infrastructure
 
-- bun
-- MapTiler
-- Next.js
-- Supabase
+- [Cloudflare R2](https://www.cloudflare.com/products/r2/)
+- [Cloudflare Workers](https://www.cloudflare.com/products/workers/)
+- [MapLibre GL JS](https://maplibre.org/projects/gl-js/)
+- [Neon](https://neon.com)
+- [PMTiles](https://github.com/protomaps/PMTiles)
+- [Tanstack Start](https://tanstack.com/start/latest)
 
 <div align="end">
   <a href="#top">Back to Top</a>
@@ -44,66 +50,83 @@ All photos are submitted by the community. Think you've got a good spot? [Submit
 
 ## Getting Started
 
-### Prerequisites
+### For Users
 
-- bun
+Head on over to [cuguessr.com](https://cuguessr.com) to get started.
 
-### Installation
+### For Developers
 
-#### 1. Clone the repository
+#### Prerequisites
+
+- Docker
+- pnpm
+
+#### Development
+
+##### 1. Clone repository
 
 ```bash
 git clone https://github.com/natebabyak/cuguessr.git
-```
-
-```bash
 cd cuguessr
 ```
 
-#### 2. Install the dependencies
+##### 2. Install dependencies
 
 ```bash
-bun install
+pnpm install
 ```
 
-#### 3. Configure the environment variables
+##### 3. Configure environment variables
 
 ```bash
-touch .env.local
+pnpm dlx auth@latest generate --output src/lib/db/auth-schema.ts --yes
 ```
 
-```bash
-# MapTiler
-NEXT_PUBLIC_MAPTILER_API_KEY=your_maptiler_api_key
+### Tiles
 
-# Supabase
-NEXT_PUBLIC_SUPABASE_URL=your_supabase_url
-NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY=your_supabase_publishable_key
+#### 1. Pull the PMTiles CLI Docker image
+
+```bash
+docker pull protomaps/go-pmtiles
+```
+
+#### 2. Extract the PMTiles file
+
+```bash
+docker run --rm \
+  -v "$(pwd):/data" \
+  protomaps/go-pmtiles \
+  extract \
+  https://build.protomaps.com/20260827.pmtiles \
+  /data/cu.pmtiles \
+  --bbox=-75.747256,45.3366786,-75.647256,45.4366786
+```
+
+#### 3. Configure Cloudflare R2 CORS
+
+```json
+[
+  {
+    "AllowedOrigins": ["http://localhost:3000"],
+    "AllowedMethods": ["GET", "HEAD"],
+    "AllowedHeaders": ["range", "if-match"],
+    "ExposeHeaders": ["etag"],
+    "MaxAgeSeconds": 3000
+  }
+]
+```
+
+#### 6. Start the local database
+
+```bash
+docker compose up -d
 ```
 
 #### 4. Run the development server
 
 ```bash
-bun dev
+pnpm dev
 ```
-
-<div align="end">
-  <a href="#top">Back to Top</a>
-</div>
-
-## Roadmap
-
-See [issues](https://github.com/natebabyak/cuguessr/issues).
-
-<div align="end">
-  <a href="#top">Back to Top</a>
-</div>
-
-## Contributing
-
-This project isn't open source yet, but I'd love to hear from you. Whether it's a bug, a feature idea, or just a suggestion, feel free to open an issue or drop me an email at [nate.babyak@outlook.com](mailto:nate.babyak@outlook.com).
-
-Another great way to help is by submitting photos of the Carleton campus [here](https://cuguessr.com/submit). More images means a better experience for everyone!
 
 <div align="end">
   <a href="#top">Back to Top</a>
