@@ -5,7 +5,7 @@ export default function Page() {
   return (
     <div className="flex flex-col">
       <Header />
-      <main className="typeset mx-auto max-w-md">
+      <main className="typeset mx-auto max-w-md py-8">
         <h1>Privacy Policy</h1>
         <p>Last updated: September 7, 2026</p>
         <p>

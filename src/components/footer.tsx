@@ -27,6 +27,10 @@ const linkGroups: {
         label: "Daily",
       },
       {
+        href: "/sign-in",
+        label: "Sign In",
+      },
+      {
         href: "/submit",
         label: "Submit",
       },
@@ -62,7 +66,7 @@ const linkGroups: {
       },
       {
         href: "/privacy",
-        label: "Privacy",
+        label: "Privacy Policy",
       },
     ],
   },

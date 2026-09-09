@@ -13,17 +13,17 @@ export async function sendEmail({
   from,
   to,
   subject,
-  html,
+  text,
 }: {
   from: string;
   to: string;
   subject: string;
-  html: string;
+  text: string;
 }) {
   await transporter.sendMail({
     from,
     to,
     subject,
-    html,
+    text,
   });
 }
