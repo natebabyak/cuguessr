@@ -1,6 +1,7 @@
 "use client";
 
 import { ArrowLeftIcon, Share2Icon } from "lucide-react";
+import { motion } from "motion/react";
 import Link from "next/link";
 import CountUp from "@/components/CountUp";
 import { Button, buttonVariants } from "@/components/ui/button";
@@ -32,7 +33,9 @@ export function Results({
   }[];
 }) {
   const gameNumber = getGameNumber(date);
-  const totalPoints = roundResults.reduce((acc, { points }) => acc + points, 0);
+  const totalPoints = roundResults
+    .reduce((acc, { points }) => acc + points, 0)
+    .toLocaleString();
   const emojis = roundResults.map(({ points }) => getEmoji(points)).join(" ");
 
   async function handleShareResults() {
@@ -70,13 +73,15 @@ export function Results({
         Guessr #{gameNumber}
       </h1>
       <p className="text-lg text-muted-foreground">{date}</p>
-
-      <p className="font-medium text-3xl">
-        <CountUp from={0} to={totalPoints} separator="," /> points
-      </p>
+      <p className="font-medium text-3xl">{totalPoints} points</p>
       <ul className="flex w-full max-w-xs flex-col gap-2">
         {roundResults.map((r, index) => (
-          <li key={r.roundId}>
+          <motion.li
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: (index + 1) * 0.1 }}
+            key={r.roundId}
+          >
             <Item variant="outline" size="xs">
               <ItemContent>
                 <Progress max={5000} value={r.points}>
@@ -96,7 +101,7 @@ export function Results({
                 </Progress>
               </ItemContent>
             </Item>
-          </li>
+          </motion.li>
         ))}
       </ul>
       <div className="grid w-full max-w-sm gap-4">

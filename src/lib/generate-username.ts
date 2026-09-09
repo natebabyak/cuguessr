@@ -8,7 +8,7 @@ import {
 const config: Config = {
   dictionaries: [adjectives, nouns],
   separator: " ",
-  style: "capital",
+  style: "titleCase",
 };
 
 export function generateUsername(): string {
