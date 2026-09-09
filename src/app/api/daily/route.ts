@@ -2,7 +2,7 @@ import { sql } from "drizzle-orm";
 import { db } from "@/lib/db";
 import { game, round } from "@/lib/db/schema";
 
-export async function POST(request: Request) {
+export async function GET(request: Request) {
   if (
     request.headers.get("authorization") !== `Bearer ${process.env.CRON_SECRET}`
   ) {
