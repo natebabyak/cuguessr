@@ -1,12 +1,8 @@
 "use client";
 
-import {
-  ArrowLeftIcon,
-  PodiumIcon,
-  Share2Icon,
-  UserPlusIcon,
-} from "lucide-react";
+import { ArrowLeftIcon, Share2Icon } from "lucide-react";
 import Link from "next/link";
+import CountUp from "@/components/CountUp";
 import { Button, buttonVariants } from "@/components/ui/button";
 import { Item, ItemContent } from "@/components/ui/item";
 import {
@@ -16,18 +12,6 @@ import {
 } from "@/components/ui/progress";
 import { toast } from "@/components/ui/toast";
 import { getGameNumber } from "@/lib/game";
-import type { UserStats } from "@/lib/stats";
-
-interface ResultsProps {
-  date: string;
-  roundResults: {
-    roundId: number;
-    distance: number;
-    points: number;
-  }[];
-  isAnonymous: boolean;
-  stats: UserStats | null;
-}
 
 function getEmoji(points: number) {
   if (points >= 3750) return "🟩";
@@ -39,13 +23,16 @@ function getEmoji(points: number) {
 export function Results({
   date,
   roundResults,
-  isAnonymous,
-  stats,
-}: ResultsProps) {
+}: {
+  date: string;
+  roundResults: {
+    roundId: number;
+    distance: number;
+    points: number;
+  }[];
+}) {
   const gameNumber = getGameNumber(date);
-  const totalPoints = roundResults
-    .reduce((acc, { points }) => acc + points, 0)
-    .toLocaleString();
+  const totalPoints = roundResults.reduce((acc, { points }) => acc + points, 0);
   const emojis = roundResults.map(({ points }) => getEmoji(points)).join(" ");
 
   async function handleShareResults() {
@@ -83,18 +70,10 @@ export function Results({
         Guessr #{gameNumber}
       </h1>
       <p className="text-lg text-muted-foreground">{date}</p>
-      <p className="font-medium text-3xl">{totalPoints} points</p>
-      {!isAnonymous && stats ? (
-        <p className="text-muted-foreground text-sm">
-          {stats.currentStreak}-day streak · {stats.gamesPlayed}{" "}
-          {stats.gamesPlayed === 1 ? "game" : "games"} played
-        </p>
-      ) : null}
-      {isAnonymous ? (
-        <p className="max-w-sm text-center text-muted-foreground text-sm">
-          Create an account to appear on the leaderboard and keep your streak.
-        </p>
-      ) : null}
+
+      <p className="font-medium text-3xl">
+        <CountUp from={0} to={totalPoints} separator="," /> points
+      </p>
       <ul className="flex w-full max-w-xs flex-col gap-2">
         {roundResults.map((r, index) => (
           <li key={r.roundId}>
@@ -121,26 +100,7 @@ export function Results({
         ))}
       </ul>
       <div className="grid w-full max-w-sm gap-4">
-        <Link
-          href={`/leaderboard/${date}`}
-          className={buttonVariants({ size: "lg" })}
-        >
-          <PodiumIcon />
-          View Leaderboard
-        </Link>
-        {isAnonymous ? (
-          <Link
-            href="/sign-in"
-            className={buttonVariants({
-              size: "lg",
-              variant: "outline",
-            })}
-          >
-            <UserPlusIcon />
-            Create an account
-          </Link>
-        ) : null}
-        <Button onClick={handleShareResults} size="lg" variant="outline">
+        <Button onClick={handleShareResults} size="lg">
           <Share2Icon />
           Share Results
         </Button>
@@ -148,7 +108,7 @@ export function Results({
           href="/"
           className={buttonVariants({
             size: "lg",
-            variant: "outline",
+            variant: "ghost",
           })}
         >
           <ArrowLeftIcon />

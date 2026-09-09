@@ -119,7 +119,7 @@ export function Footer() {
             <span className="sr-only">Toggle theme</span>
           </Button>
           <p className="text-muted-foreground text-sm">
-            &copy; 2025-2026 Nate Babyak. All rights reserved.
+            &copy; 2025-2026 Nate Babyak
           </p>
         </div>
       </div>

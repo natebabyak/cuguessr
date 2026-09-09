@@ -270,7 +270,7 @@ export default function Page() {
           >
             <ArrowLeftIcon />
           </Link>
-          <div className="right-0 bottom-8 flex flex-col items-end">
+          <div className="right-0 bottom-8 flex flex-col items-end gap-4">
             <ButtonGroup orientation="vertical" className="ml-auto">
               <RecenterButton />
               <GoToMarkerButton marker={marker} />

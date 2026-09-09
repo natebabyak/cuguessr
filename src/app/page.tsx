@@ -67,7 +67,7 @@ export default async function Page() {
         <Header />
         <div className="relative flex-1 overflow-hidden">
           <DriftWall items={items} className="-z-50 lg:translate-x-110" />
-          <div className="absolute inset-0 -z-40 bg-radial from-25% from-background to-75% to-transparent"></div>
+          <div className="absolute inset-0 -z-40 bg-radial from-25% from-background to-75% to-transparent lg:hidden"></div>
           <div className="absolute inset-0 mx-auto max-w-5xl px-4">
             <main className="absolute top-1/2 left-1/2 flex w-full max-w-lg -translate-x-1/2 -translate-y-1/2 flex-col items-center justify-center gap-8 lg:left-0 lg:translate-x-0 lg:items-start">
               <h1 className="flex flex-col text-balance text-center font-medium text-5xl tracking-tighter lg:text-start">
