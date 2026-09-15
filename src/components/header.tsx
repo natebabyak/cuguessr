@@ -16,7 +16,7 @@ export function Header() {
   const { data: session } = authClient.useSession();
 
   return (
-    <header className="sticky top-0 bg-background p-4">
+    <header className="sticky top-0 z-50 bg-background p-4">
       <div className="mx-auto flex max-w-5xl items-center justify-between">
         <Link href="/" className="flex font-semibold text-2xl">
           <span className="text-primary">cu</span>
