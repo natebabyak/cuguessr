@@ -19,6 +19,7 @@
     "@icons-pack/react-simple-icons": "^13.15.1",
     "@neondatabase/serverless": "^1.1.0",
     "@protomaps/basemaps": "^5.7.2",
+    "@vercel/analytics": "^2.0.1",
     "@vercel/speed-insights": "^2.0.0",
     "better-auth": "^1.7.2",
     "class-variance-authority": "^0.7.1",
