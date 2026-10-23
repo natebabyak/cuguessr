@@ -1,10 +1,9 @@
+import { Link } from "@tanstack/react-router";
 import { ArrowLeftIcon, Share2Icon } from "lucide-react";
 import { motion } from "motion/react";
 
-import CountUp from "#/components/CountUp";
 import { Button, buttonVariants } from "#/components/ui/button";
 import { Item, ItemContent } from "#/components/ui/item";
-import { Progress, ProgressLabel, ProgressValue } from "#/components/ui/progress";
 import { toast } from "#/components/ui/toast";
 
 function getEmoji(points: number) {
@@ -30,7 +29,7 @@ export function Results({
 
   async function handleShareResults() {
     const shareText = [
-      `cuGuessr #${gameNumber}`,
+      `cuGuessr #placeholder`,
       date,
       "",
       `${totalPoints} points`,
@@ -73,23 +72,7 @@ export function Results({
             key={r.roundId}
           >
             <Item variant="outline" size="xs">
-              <ItemContent>
-                <Progress max={5000} value={r.points}>
-                  <ProgressLabel>Round {index + 1}</ProgressLabel>
-                  <ProgressValue
-                    render={
-                      <p>
-                        {r.distance.toLocaleString("en-CA", {
-                          style: "unit",
-                          unit: "meter",
-                          maximumFractionDigits: 0,
-                        })}{" "}
-                        &bull; {r.points.toLocaleString("en-CA")} pts.
-                      </p>
-                    }
-                  />
-                </Progress>
-              </ItemContent>
+              <ItemContent></ItemContent>
             </Item>
           </motion.li>
         ))}
@@ -100,7 +83,7 @@ export function Results({
           Share Results
         </Button>
         <Link
-          href="/"
+          to="/"
           className={buttonVariants({
             size: "lg",
             variant: "ghost",

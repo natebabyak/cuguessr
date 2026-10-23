@@ -1,14 +1,35 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { Play, Upload } from "lucide-react";
 
+import CircularCarousel from "#/components/CircularCarousel";
+import { Footer } from "#/components/footer";
+import { Header } from "#/components/header";
 import { buttonVariants } from "#/components/ui/button";
+import { getHomePhotosFn } from "#/lib/photos.functions";
 
-export const Route = createFileRoute("/")({ component: App });
+export const Route = createFileRoute("/")({
+  loader: async () => {
+    const photos = await getHomePhotosFn();
 
-function App() {
+    return { photos };
+  },
+  component: RouteComponent,
+});
+
+function RouteComponent() {
+  const { photos } = Route.useLoaderData();
+
+  const items = photos.map(({ objectKey }) => ({
+    src: `${import.meta.env.VITE_CDN_URL}/cdn-cgi/image/width=220,quality=75,format=auto,fit=scale-down/photos/${objectKey}`,
+  }));
+
   return (
     <div className="flex flex-col">
+      <Header />
       <main>
+        <div className="h-[500px] w-full">
+          <CircularCarousel items={items} preset="cylinder" intro="rise" />
+        </div>
         <section>
           <h1>cuGuessr</h1>
           <p>Put your knowledge of the Carleton campus to the test</p>
@@ -24,7 +45,7 @@ function App() {
           </div>
         </section>
       </main>
-      <footer></footer>
+      <Footer />
     </div>
   );
 }

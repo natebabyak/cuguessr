@@ -1,9 +1,15 @@
 import { createServerFn } from "@tanstack/react-start";
 
-import { getPhotos } from "./photos.server";
+import { getGamePhotos, getHomePhotos } from "./photos.server";
 
-export const getPhotosFn = createServerFn({
+export const getGamePhotosFn = createServerFn({
   method: "GET",
 }).handler(async () => {
-  return await getPhotos();
+  return await getGamePhotos();
+});
+
+export const getHomePhotosFn = createServerFn({
+  method: "GET",
+}).handler(async () => {
+  return await getHomePhotos();
 });

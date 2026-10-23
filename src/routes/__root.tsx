@@ -1,3 +1,5 @@
+import "maplibre-gl/dist/maplibre-gl.css";
+import "photoswipe/dist/photoswipe.css";
 import type { QueryClient } from "@tanstack/react-query";
 import { HeadContent, Outlet, Scripts, createRootRouteWithContext } from "@tanstack/react-router";
 

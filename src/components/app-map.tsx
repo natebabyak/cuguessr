@@ -1,4 +1,3 @@
-import "maplibre-gl/dist/maplibre-gl.css";
 import { layers, namedFlavor } from "@protomaps/basemaps";
 import { setWorkerUrl } from "maplibre-gl";
 import * as maplibregl from "maplibre-gl";

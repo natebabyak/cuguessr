@@ -1,11 +1,13 @@
+import { SiDiscord, SiGithub } from "@icons-pack/react-simple-icons";
 import { useForm } from "@tanstack/react-form";
 import { createFileRoute, redirect } from "@tanstack/react-router";
 import { useState } from "react";
 import z from "zod";
 
+import { Footer } from "#/components/footer";
 import { Header } from "#/components/header";
 import { Button } from "#/components/ui/button";
-import { Field, FieldGroup, FieldLabel } from "#/components/ui/field";
+import { Field, FieldGroup, FieldLabel, FieldSeparator } from "#/components/ui/field";
 import { Input } from "#/components/ui/input";
 import { authClient } from "#/lib/auth-client";
 import { getSession } from "#/lib/auth.functions";
@@ -14,7 +16,7 @@ export const Route = createFileRoute("/sign-in")({
   beforeLoad: async () => {
     const session = await getSession();
 
-    if (session) {
+    if (!session?.user.isAnonymous) {
       throw redirect({ to: "/" });
     }
   },
@@ -96,31 +98,51 @@ function SignIn() {
 
   return (
     <>
-      <Header />
-      <main>
-        <form id="email-form">
-          <FieldGroup>
-            <FieldGroup>
-              <Field>
-                <Button>Continue with Discord</Button>
-                <Button>Continue with GitHub</Button>
-              </Field>
-            </FieldGroup>
-            <emailForm.Field
-              name="email"
-              children={(field) => {
-                const isInvalid = field.state.meta.isTouched && !field.state.meta.isValid;
-                return (
-                  <Field data-invalid={isInvalid}>
-                    <FieldLabel>Email</FieldLabel>
-                    <Input />
+      <div className="flex min-h-screen flex-col">
+        <Header />
+        <main className="flex-1">
+          {step === "email" ? (
+            <form id="email-form">
+              <FieldGroup className="mx-auto w-full max-w-md">
+                <FieldGroup>
+                  <Field>
+                    <Button>
+                      <SiDiscord />
+                      Continue with Discord
+                    </Button>
+                    <Button>
+                      <SiGithub />
+                      Continue with GitHub
+                    </Button>
                   </Field>
-                );
-              }}
-            />
-          </FieldGroup>
-        </form>
-      </main>
+                </FieldGroup>
+                <FieldSeparator>or</FieldSeparator>
+                <emailForm.Field
+                  name="email"
+                  children={(field) => {
+                    const isInvalid = field.state.meta.isTouched && !field.state.meta.isValid;
+                    return (
+                      <Field data-invalid={isInvalid}>
+                        <FieldLabel>Email</FieldLabel>
+                        <Input placeholder="you@example.com" />
+                      </Field>
+                    );
+                  }}
+                />
+                <Button type="submit" form="email-form">
+                  Continue with email
+                </Button>
+              </FieldGroup>
+            </form>
+          ) : step === "token" ? (
+            <form id="token-form"></form>
+          ) : (
+            <form id="otp-form"></form>
+          )}
+        </main>
+      </div>
+
+      <Footer />
     </>
   );
 }

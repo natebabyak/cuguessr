@@ -9,7 +9,7 @@ export const getRoundResultsFn = createServerFn({
   .validator(
     z.object({
       gameId: z.int(),
-      userId: z.uuidv4(),
+      userId: z.string(),
     }),
   )
   .handler(async ({ data }) => {
