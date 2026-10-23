@@ -1,43 +1,22 @@
 import { drizzleAdapter } from "@better-auth/drizzle-adapter/relations-v2";
-import { betterAuth } from "better-auth/minimal";
-import { nextCookies } from "better-auth/next-js";
-import { anonymous, emailOTP } from "better-auth/plugins";
-import { and, eq, notInArray } from "drizzle-orm";
-import { db } from "@/lib/db";
-import { photo, report, roundResult } from "@/lib/db/schema";
-import { sendEmail } from "@/lib/email";
-import * as authSchema from "./db/auth-schema";
-import * as schema from "./db/schema";
-import { generateUsername } from "./generate-username";
+import { betterAuth } from "better-auth";
+import { anonymous } from "better-auth/plugins/anonymous";
+import { emailOTP } from "better-auth/plugins/email-otp";
+import { tanstackStartCookies } from "better-auth/tanstack-start";
+
+import * as authSchema from "#/db/auth-schema";
+import { db } from "#/db/index";
+import * as schema from "#/db/schema";
+import { sendEmail } from "#/lib/email";
 
 export const auth = betterAuth({
   database: drizzleAdapter(db, {
     provider: "pg",
     schema: { ...schema, ...authSchema },
   }),
-  databaseHooks: {
-    user: {
-      create: {
-        before: async (user) => {
-          if (!user.name) {
-            return {
-              data: {
-                ...user,
-                name: generateUsername(),
-              },
-            };
-          }
-        },
-      },
-    },
-  },
-  user: {
-    additionalFields: {
-      isAdmin: {
-        type: "boolean",
-        input: false,
-      },
-    },
+
+  emailAndPassword: {
+    enabled: true,
   },
   socialProviders: {
     discord: {
@@ -59,57 +38,30 @@ export const auth = betterAuth({
           return;
         }
 
-        const existingResults = await db
-          .select({ roundId: roundResult.roundId })
-          .from(roundResult)
-          .where(eq(roundResult.userId, newUserId));
-
-        const existingRoundIds = existingResults.map(
-          (result) => result.roundId,
-        );
-
-        await db
-          .update(roundResult)
-          .set({ userId: newUserId })
-          .where(
-            existingRoundIds.length > 0
-              ? and(
-                  eq(roundResult.userId, anonymousUserId),
-                  notInArray(roundResult.roundId, existingRoundIds),
-                )
-              : eq(roundResult.userId, anonymousUserId),
-          );
-
-        await db
-          .update(report)
-          .set({ userId: newUserId })
-          .where(eq(report.userId, anonymousUserId));
-
-        await db
-          .update(photo)
-          .set({ userId: newUserId })
-          .where(eq(photo.userId, anonymousUserId));
+        await db.transaction(async (tx) => {
+          const existingRoundResults = await tx.query.r;
+        });
       },
     }),
     emailOTP({
       async sendVerificationOTP({ email, otp, type }) {
         if (type === "sign-in") {
           await sendEmail({
-            from: '"cuGuessr Auth" <noreply@cuguessr.com>',
+            from: '"cuGuessr Authentication" <noreply@cuguessr.com>',
             to: email,
             subject: "Sign in OTP for cuGuessr",
             text: `Your one-time password is: ${otp}.`,
           });
         } else if (type === "email-verification") {
           await sendEmail({
-            from: '"cuGuessr Auth" <noreply@cuguessr.com>',
+            from: '"cuGuessr Authentication" <noreply@cuguessr.com>',
             to: email,
             subject: "Email verification OTP for cuGuessr",
             text: `Your one-time password is: ${otp}.`,
           });
         } else {
           await sendEmail({
-            from: '"cuGuessr Auth" <noreply@cuguessr.com>',
+            from: '"cuGuessr Authentication" <noreply@cuguessr.com>',
             to: email,
             subject: "Password reset OTP for cuGuessr",
             text: `Your one-time password is: ${otp}.`,
@@ -117,7 +69,7 @@ export const auth = betterAuth({
         }
       },
     }),
-    nextCookies(),
+    tanstackStartCookies(),
   ],
   advanced: {
     database: {

@@ -9,5 +9,5 @@ export default function imageLoader({
 }) {
   const params = [`width=${width}`, `quality=${quality ?? 75}`, "format=auto"];
 
-  return `${process.env.NEXT_PUBLIC_CDN_URL}/cdn-cgi/image/${params.join(",")}/${src}`;
+  return `${import.meta.env.VITE_CDN_URL}/cdn-cgi/image/${params.join(",")}/${src}`;
 }

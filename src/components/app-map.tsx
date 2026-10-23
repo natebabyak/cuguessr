@@ -1,23 +1,23 @@
-"use client";
-
+import "maplibre-gl/dist/maplibre-gl.css";
 import { layers, namedFlavor } from "@protomaps/basemaps";
+import { setWorkerUrl } from "maplibre-gl";
 import * as maplibregl from "maplibre-gl";
-import { useTheme } from "next-themes";
+import workerUrl from "maplibre-gl/dist/maplibre-gl-worker.mjs?worker&url";
 import { Protocol } from "pmtiles";
-import { useEffect, useMemo } from "react";
-import {
-  Map as MapLibreMap,
-  type MapProps,
-  type MapRef,
-} from "react-map-gl/maplibre";
+import { useEffect, useMemo, type Ref } from "react";
+import { Map, type MapProps, type MapRef } from "react-map-gl/maplibre";
 
-maplibregl.setWorkerUrl("/maplibre/maplibre-gl-worker.mjs");
+import { useTheme } from "./theme-provider";
+
+setWorkerUrl(workerUrl);
 
 export function AppMap({
   children,
   ref,
   ...props
-}: React.PropsWithChildren<MapProps> & { ref?: React.Ref<MapRef> }) {
+}: React.PropsWithChildren<MapProps> & {
+  ref?: Ref<MapRef>;
+}) {
   const { theme } = useTheme();
 
   useEffect(() => {
@@ -31,34 +31,32 @@ export function AppMap({
   const mapStyle = useMemo(() => {
     return {
       version: 8 as const,
-      glyphs:
-        "https://protomaps.github.io/basemaps-assets/fonts/{fontstack}/{range}.pbf",
+      glyphs: "https://protomaps.github.io/basemaps-assets/fonts/{fontstack}/{range}.pbf",
       sprite: `https://protomaps.github.io/basemaps-assets/sprites/v4/${theme === "dark" ? "dark" : "light"}`,
       sources: {
         protomaps: {
           type: "vector" as const,
-          url: `pmtiles://${process.env.NEXT_PUBLIC_CDN_URL}/tiles/cu.pmtiles`,
+          url: `pmtiles://${import.meta.env.VITE_CDN_URL}/tiles/cu.pmtiles`,
         },
       },
-      layers: layers(
-        "protomaps",
-        namedFlavor(theme === "dark" ? "dark" : "light"),
-        {
-          lang: "en",
-        },
-      ),
+      layers: layers("protomaps", namedFlavor(theme === "dark" ? "dark" : "light"), {
+        lang: "en",
+      }),
     };
   }, [theme]);
 
   return (
-    <MapLibreMap
-      ref={ref}
+    <Map
       mapLib={maplibregl}
       mapStyle={mapStyle}
-      style={{ height: "100dvh", width: "100dvw" }}
+      ref={ref}
+      style={{
+        height: "100dvh",
+        width: "100dvw",
+      }}
       {...props}
     >
       {children}
-    </MapLibreMap>
+    </Map>
   );
 }
