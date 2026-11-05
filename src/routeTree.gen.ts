@@ -10,8 +10,8 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as LoginRouteImport } from './routes/login'
 import { Route as PrivacyRouteImport } from './routes/privacy'
-import { Route as SignInRouteImport } from './routes/sign-in'
 import { Route as SubmitRouteImport } from './routes/submit'
 import { Route as ApiDailyRouteImport } from './routes/api.daily'
 import { Route as DailyIndexRouteImport } from './routes/daily.index'
@@ -23,14 +23,14 @@ const IndexRoute = IndexRouteImport.update({
   path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
+const LoginRoute = LoginRouteImport.update({
+  id: '/login',
+  path: '/login',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const PrivacyRoute = PrivacyRouteImport.update({
   id: '/privacy',
   path: '/privacy',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const SignInRoute = SignInRouteImport.update({
-  id: '/sign-in',
-  path: '/sign-in',
   getParentRoute: () => rootRouteImport,
 } as any)
 const SubmitRoute = SubmitRouteImport.update({
@@ -61,8 +61,8 @@ const ApiAuthSplatRoute = ApiAuthSplatRouteImport.update({
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/login': typeof LoginRoute
   '/privacy': typeof PrivacyRoute
-  '/sign-in': typeof SignInRoute
   '/submit': typeof SubmitRoute
   '/api/daily': typeof ApiDailyRoute
   '/daily/$date': typeof DailyDateRoute
@@ -71,8 +71,8 @@ export interface FileRoutesByFullPath {
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/login': typeof LoginRoute
   '/privacy': typeof PrivacyRoute
-  '/sign-in': typeof SignInRoute
   '/submit': typeof SubmitRoute
   '/api/daily': typeof ApiDailyRoute
   '/daily/$date': typeof DailyDateRoute
@@ -82,8 +82,8 @@ export interface FileRoutesByTo {
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
+  '/login': typeof LoginRoute
   '/privacy': typeof PrivacyRoute
-  '/sign-in': typeof SignInRoute
   '/submit': typeof SubmitRoute
   '/api/daily': typeof ApiDailyRoute
   '/daily/$date': typeof DailyDateRoute
@@ -94,8 +94,8 @@ export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
   fullPaths:
     | '/'
+    | '/login'
     | '/privacy'
-    | '/sign-in'
     | '/submit'
     | '/api/daily'
     | '/daily/$date'
@@ -104,8 +104,8 @@ export interface FileRouteTypes {
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
+    | '/login'
     | '/privacy'
-    | '/sign-in'
     | '/submit'
     | '/api/daily'
     | '/daily/$date'
@@ -114,8 +114,8 @@ export interface FileRouteTypes {
   id:
     | '__root__'
     | '/'
+    | '/login'
     | '/privacy'
-    | '/sign-in'
     | '/submit'
     | '/api/daily'
     | '/daily/$date'
@@ -125,8 +125,8 @@ export interface FileRouteTypes {
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
+  LoginRoute: typeof LoginRoute
   PrivacyRoute: typeof PrivacyRoute
-  SignInRoute: typeof SignInRoute
   SubmitRoute: typeof SubmitRoute
   ApiDailyRoute: typeof ApiDailyRoute
   DailyDateRoute: typeof DailyDateRoute
@@ -143,18 +143,18 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/login': {
+      id: '/login'
+      path: '/login'
+      fullPath: '/login'
+      preLoaderRoute: typeof LoginRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/privacy': {
       id: '/privacy'
       path: '/privacy'
       fullPath: '/privacy'
       preLoaderRoute: typeof PrivacyRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/sign-in': {
-      id: '/sign-in'
-      path: '/sign-in'
-      fullPath: '/sign-in'
-      preLoaderRoute: typeof SignInRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/submit': {
@@ -197,8 +197,8 @@ declare module '@tanstack/react-router' {
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
+  LoginRoute: LoginRoute,
   PrivacyRoute: PrivacyRoute,
-  SignInRoute: SignInRoute,
   SubmitRoute: SubmitRoute,
   ApiDailyRoute: ApiDailyRoute,
   DailyDateRoute: DailyDateRoute,

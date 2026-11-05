@@ -15,8 +15,8 @@ export function Header() {
         {session && !session.user.isAnonymous ? (
           <Button>Signed in as {session.user.name}</Button>
         ) : (
-          <Link to="/sign-in" className={buttonVariants({ variant: "outline" })}>
-            Sign in
+          <Link to="/login" className={buttonVariants({ variant: "outline" })}>
+            Login
           </Link>
         )}
       </div>

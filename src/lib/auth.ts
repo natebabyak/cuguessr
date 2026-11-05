@@ -27,6 +27,10 @@ export const auth = betterAuth({
       clientId: process.env.GITHUB_CLIENT_ID as string,
       clientSecret: process.env.GITHUB_CLIENT_SECRET as string,
     },
+    reddit: {
+      clientId: process.env.REDDIT_CLIENT_ID as string,
+      clientSecret: process.env.REDDIT_CLIENT_SECRET as string,
+    },
   },
   plugins: [
     anonymous({
@@ -49,7 +53,7 @@ export const auth = betterAuth({
           await sendEmail({
             from: '"cuGuessr Authentication" <noreply@cuguessr.com>',
             to: email,
-            subject: "Sign in OTP for cuGuessr",
+            subject: "Login code for cuGuessr",
             text: `Your one-time password is: ${otp}.`,
           });
         } else if (type === "email-verification") {
