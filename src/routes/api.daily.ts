@@ -1,7 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
 
 import { createGameFn } from "#/lib/game.functions";
-import { getPhotosFn } from "#/lib/photos.functions";
+import { getGamePhotosFn } from "#/lib/photos.functions";
 import { createRoundsFn } from "#/lib/rounds.functions";
 
 export const Route = createFileRoute("/api/daily")({
@@ -22,7 +22,7 @@ export const Route = createFileRoute("/api/daily")({
           },
         });
 
-        const photos = await getPhotosFn();
+        const photos = await getGamePhotosFn();
         const photoIds = photos.map((photo) => photo.id);
 
         await createRoundsFn({

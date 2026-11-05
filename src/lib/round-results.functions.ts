@@ -1,7 +1,9 @@
 import { createServerFn } from "@tanstack/react-start";
 import z from "zod";
 
-import { getRoundResults } from "./round-results.server";
+import { getSession } from "./auth.functions";
+import { guessSchema } from "./guess-schema";
+import { getRoundResults, submitGuess } from "./round-results.server";
 
 export const getRoundResultsFn = createServerFn({
   method: "GET",
@@ -9,10 +11,20 @@ export const getRoundResultsFn = createServerFn({
   .validator(
     z.object({
       gameId: z.int(),
-      userId: z.string(),
     }),
   )
   .handler(async ({ data }) => {
-    const { gameId, userId } = data;
-    return await getRoundResults(gameId, userId);
+    const session = await getSession();
+    if (!session) return [];
+
+    return getRoundResults(data.gameId, session.user.id);
+  });
+
+export const submitGuessFn = createServerFn({ method: "POST" })
+  .validator(guessSchema)
+  .handler(async ({ data }) => {
+    const session = await getSession();
+    if (!session) throw new Error("Unauthorized");
+
+    return submitGuess(data, session.user.id);
   });

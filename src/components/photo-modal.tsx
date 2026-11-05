@@ -12,15 +12,23 @@ export function PhotoModal({
   objectKey,
   height,
   width,
+  open,
+  onOpenChange,
+  triggerClassName = "absolute bottom-12 left-4",
 }: {
   objectKey: string;
   height: number;
   width: number;
+  open?: boolean;
+  onOpenChange?: (open: boolean) => void;
+  triggerClassName?: string;
 }) {
   return (
     <ResponsiveModal
+      open={open}
+      onOpenChange={onOpenChange}
       trigger={
-        <Button size="lg" className="absolute bottom-12 left-4">
+        <Button size="lg" className={triggerClassName}>
           <ImageIcon />
           View Photo
         </Button>

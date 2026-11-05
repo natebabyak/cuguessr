@@ -7,6 +7,7 @@ import { tanstackStartCookies } from "better-auth/tanstack-start";
 import * as authSchema from "#/db/auth-schema";
 import { db } from "#/db/index";
 import * as schema from "#/db/schema";
+import { linkAnonymousAccount } from "#/lib/account-linking.server";
 import { sendEmail } from "#/lib/email";
 
 export const auth = betterAuth({
@@ -35,16 +36,7 @@ export const auth = betterAuth({
   plugins: [
     anonymous({
       onLinkAccount: async ({ anonymousUser, newUser }) => {
-        const anonymousUserId = anonymousUser.user.id;
-        const newUserId = newUser.user.id;
-
-        if (anonymousUserId === newUserId) {
-          return;
-        }
-
-        await db.transaction(async (tx) => {
-          const existingRoundResults = await tx.query.r;
-        });
+        await linkAnonymousAccount(anonymousUser.user.id, newUser.user.id);
       },
     }),
     emailOTP({

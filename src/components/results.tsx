@@ -5,6 +5,7 @@ import { motion } from "motion/react";
 import { Button, buttonVariants } from "#/components/ui/button";
 import { Item, ItemContent } from "#/components/ui/item";
 import { toast } from "#/components/ui/toast";
+import { getGameNumber } from "#/lib/game";
 
 function getEmoji(points: number) {
   if (points >= 3750) return "🟩";
@@ -24,12 +25,13 @@ export function Results({
     points: number;
   }[];
 }) {
+  const gameNumber = getGameNumber(date);
   const totalPoints = roundResults.reduce((acc, { points }) => acc + points, 0).toLocaleString();
   const emojis = roundResults.map(({ points }) => getEmoji(points)).join(" ");
 
   async function handleShareResults() {
     const shareText = [
-      `cuGuessr #placeholder`,
+      `cuGuessr #${gameNumber}`,
       date,
       "",
       `${totalPoints} points`,
@@ -41,7 +43,7 @@ export function Results({
     if (navigator.share) {
       try {
         await navigator.share({
-          title: `cuGuessr #$plaeholder (${date})`,
+          title: `cuGuessr #${gameNumber} (${date})`,
           text: shareText,
         });
       } catch {}
@@ -59,7 +61,7 @@ export function Results({
     <div className="flex min-h-svh flex-col items-center justify-center gap-4 p-4">
       <h1 className="text-center text-5xl font-semibold">
         <span className="text-primary">cu</span>
-        Guessr #1
+        Guessr #{gameNumber}
       </h1>
       <p className="text-muted-foreground text-lg">{date}</p>
       <p className="text-3xl font-medium">{totalPoints} points</p>
@@ -72,7 +74,20 @@ export function Results({
             key={r.roundId}
           >
             <Item variant="outline" size="xs">
-              <ItemContent></ItemContent>
+              <ItemContent>
+                <label htmlFor={`round-${r.roundId}`} className="text-sm font-medium">
+                  Round {index + 1}
+                </label>
+                <p className="text-muted-foreground text-sm">
+                  {Math.round(r.distance).toLocaleString()} m · {r.points.toLocaleString()} pts.
+                </p>
+                <progress
+                  id={`round-${r.roundId}`}
+                  max={5000}
+                  value={r.points}
+                  className="accent-primary h-2 w-full"
+                />
+              </ItemContent>
             </Item>
           </motion.li>
         ))}

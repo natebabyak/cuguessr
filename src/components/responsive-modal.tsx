@@ -27,6 +27,8 @@ type ResponsiveModalProps = React.PropsWithChildren<{
   title: string;
   description: string;
   close: React.ReactElement;
+  open?: boolean;
+  onOpenChange?: (open: boolean) => void;
 }>;
 
 export function ResponsiveModal({
@@ -35,10 +37,17 @@ export function ResponsiveModal({
   description,
   close,
   children,
+  open: controlledOpen,
+  onOpenChange,
 }: ResponsiveModalProps) {
   const isMobile = useIsMobile();
 
-  const [open, setOpen] = useState(false);
+  const [internalOpen, setInternalOpen] = useState(false);
+  const open = controlledOpen ?? internalOpen;
+  const setOpen = (value: boolean) => {
+    setInternalOpen(value);
+    onOpenChange?.(value);
+  };
 
   if (isMobile) {
     return (
