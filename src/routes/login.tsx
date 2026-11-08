@@ -26,10 +26,18 @@ export const Route = createFileRoute("/login")({
     const session = await getSession();
 
     if (session && !session.user.isAnonymous) {
-      throw redirect({ to: "/" });
+      throw redirect({
+        to: "/",
+      });
     }
   },
-  head: () => ({ meta: [{ title: "Login | cuGuessr" }] }),
+  head: () => ({
+    meta: [
+      {
+        title: "Login | cuGuessr",
+      },
+    ],
+  }),
   component: Login,
 });
 
