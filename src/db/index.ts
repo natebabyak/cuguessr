@@ -1,14 +1,15 @@
-import { neon } from "@neondatabase/serverless";
-import { drizzle } from "drizzle-orm/neon-http";
+import "dotenv/config";
+import { drizzle } from "drizzle-orm/node-postgres";
+import { Pool } from "pg";
 
 import { authRelations } from "./auth-schema";
 import { relations } from "./schema";
 
-const client = neon(process.env.DATABASE_URL!);
+const pool = new Pool({
+  connectionString: process.env.DATABASE_URL,
+});
+
 export const db = drizzle({
-  client,
-  relations: {
-    ...relations,
-    ...authRelations,
-  },
+  client: pool,
+  relations: { ...relations, ...authRelations },
 });

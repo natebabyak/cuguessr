@@ -3,28 +3,16 @@
   "projectName": "cuguessr",
   "mode": "file-router",
   "typescript": true,
-  "packageManager": "npm",
-  "includeExamples": true,
+  "packageManager": "bun",
+  "includeExamples": false,
   "tailwind": true,
   "projectPreset": "default",
   "routerOnly": false,
-  "addOnOptions": {
-    "drizzle": {
-      "database": "postgresql"
-    }
-  },
+  "addOnOptions": {},
   "git": false,
   "install": true,
   "intent": true,
   "version": 1,
   "framework": "react",
-  "chosenAddOns": [
-    "vercel",
-    "drizzle",
-    "shadcn",
-    "neon",
-    "tanstack-query",
-    "better-auth",
-    "form"
-  ]
+  "chosenAddOns": ["vercel"]
 }

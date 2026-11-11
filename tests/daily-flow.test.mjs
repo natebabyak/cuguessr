@@ -19,7 +19,7 @@ integration("account linking and daily play in PostgreSQL", () => {
   let submitGuess;
   let getRoundResults;
   let submitReport;
-  let linkAnonymousAccount;
+  let onLinkAccount;
 
   beforeAll(async () => {
     containerId = execFileSync(
@@ -67,9 +67,10 @@ integration("account linking and daily play in PostgreSQL", () => {
     process.env.BETTER_AUTH_URL = "http://localhost:3000";
     process.env.BETTER_AUTH_SECRET = "isolated-test-secret-with-at-least-thirty-two-characters";
     ({ auth } = await import("../src/lib/auth"));
+    onLinkAccount = auth.options.plugins.find((plugin) => plugin.id === "anonymous").options
+      .onLinkAccount;
     ({ submitGuess, getRoundResults } = await import("../src/lib/round-results.server"));
     ({ submitReport } = await import("../src/lib/reports.server"));
-    ({ linkAnonymousAccount } = await import("../src/lib/account-linking.server"));
   }, 30000);
 
   afterAll(async () => {
@@ -258,7 +259,7 @@ integration("account linking and daily play in PostgreSQL", () => {
       { roundId: rounds[0].id, latitude: photos[0].latitude, longitude: photos[0].longitude },
       guest.user.id,
     );
-    await linkAnonymousAccount(guest.user.id, guest.user.id);
+    await onLinkAccount({ anonymousUser: { user: guest.user }, newUser: { user: guest.user } });
     expect(await getRoundResults(game.id, guest.user.id)).toHaveLength(1);
   });
 });

@@ -3,21 +3,43 @@ import { betterAuth } from "better-auth";
 import { anonymous } from "better-auth/plugins/anonymous";
 import { emailOTP } from "better-auth/plugins/email-otp";
 import { tanstackStartCookies } from "better-auth/tanstack-start";
+import { and, eq, notInArray } from "drizzle-orm";
 
 import * as authSchema from "#/db/auth-schema";
 import { db } from "#/db/index";
 import * as schema from "#/db/schema";
-import { linkAnonymousAccount } from "#/lib/account-linking.server";
 import { sendEmail } from "#/lib/email";
+
+import { generateUsername } from "./generate-username";
 
 export const auth = betterAuth({
   database: drizzleAdapter(db, {
     provider: "pg",
     schema: { ...schema, ...authSchema },
   }),
-
-  emailAndPassword: {
-    enabled: true,
+  databaseHooks: {
+    user: {
+      create: {
+        before: async (user) => {
+          if (!user.name) {
+            return {
+              data: {
+                ...user,
+                name: generateUsername(),
+              },
+            };
+          }
+        },
+      },
+    },
+  },
+  user: {
+    additionalFields: {
+      isAdmin: {
+        type: "boolean",
+        input: false,
+      },
+    },
   },
   socialProviders: {
     discord: {
@@ -36,7 +58,41 @@ export const auth = betterAuth({
   plugins: [
     anonymous({
       onLinkAccount: async ({ anonymousUser, newUser }) => {
-        await linkAnonymousAccount(anonymousUser.user.id, newUser.user.id);
+        const anonymousUserId = anonymousUser.user.id;
+        const newUserId = newUser.user.id;
+
+        if (anonymousUserId === newUserId) {
+          return;
+        }
+
+        const existingResults = await db
+          .select({ roundId: schema.roundResult.roundId })
+          .from(schema.roundResult)
+          .where(eq(schema.roundResult.userId, newUserId));
+
+        const existingRoundIds = existingResults.map((result) => result.roundId);
+
+        await db
+          .update(schema.roundResult)
+          .set({ userId: newUserId })
+          .where(
+            existingRoundIds.length > 0
+              ? and(
+                  eq(schema.roundResult.userId, anonymousUserId),
+                  notInArray(schema.roundResult.roundId, existingRoundIds),
+                )
+              : eq(schema.roundResult.userId, anonymousUserId),
+          );
+
+        await db
+          .update(schema.report)
+          .set({ userId: newUserId })
+          .where(eq(schema.report.userId, anonymousUserId));
+
+        await db
+          .update(schema.photo)
+          .set({ userId: newUserId })
+          .where(eq(schema.photo.userId, anonymousUserId));
       },
     }),
     emailOTP({
