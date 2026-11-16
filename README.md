@@ -5,9 +5,14 @@ Welcome to your new TanStack Start app!
 To run this application:
 
 ```bash
-npm install
-npm run dev
+bun install
+bun run db:start
+bun run db:push
+bun run dev
 ```
+
+Configure `.env` using `.env.example` before pushing the database schema. The
+database runs independently of the app; stop it with `docker compose down`.
 
 # Building For Production
 
