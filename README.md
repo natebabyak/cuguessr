@@ -11,8 +11,10 @@ bun run db:push
 bun run dev
 ```
 
-Configure `.env` using `.env.example` before pushing the database schema. The
-database runs independently of the app; stop it with `docker compose down`.
+Configure `.env` using `.env.example` before pushing the database schema. Local
+development uses Docker Postgres through
+`DATABASE_URL=postgres://user:password@localhost:5432/db`. The database runs
+independently of the app; stop it with `docker compose down`.
 
 # Building For Production
 
@@ -56,15 +58,6 @@ Add components using the latest version of [Shadcn](https://ui.shadcn.com/).
 ```bash
 pnpm dlx shadcn@latest add button
 ```
-
-## Setting up Neon
-
-When running the `dev` command, `vite-plugin-neon-new` will identify there is not a database setup. It will then create and seed a claimable database.
-
-It is the same process as [Neon Launchpad](https://neon.new).
-
-> [!IMPORTANT]  
-> Claimable databases expire in 72 hours.
 
 ## Setting up Better Auth
 
