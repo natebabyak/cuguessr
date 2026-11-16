@@ -1,6 +1,6 @@
 import { describe, expect, test } from "bun:test";
 
-import { getGameNumber, isAvailableGameDate } from "../src/lib/game";
+import { getGameNumber, getTorontoDate, isAvailableGameDate } from "../src/lib/game";
 import { guessSchema } from "../src/lib/guess-schema";
 import { reportSchema } from "../src/lib/report-schema";
 import { calculateDistance, calculatePoints } from "../src/lib/scoring";
@@ -39,6 +39,13 @@ describe("daily game rules from main", () => {
     expect(isAvailableGameDate("2026-09-08", now)).toBe(false);
     expect(isAvailableGameDate("2026-02-30", now)).toBe(false);
     expect(isAvailableGameDate("not-a-date", now)).toBe(false);
+  });
+
+  test("formats Toronto calendar dates across midnight and daylight saving changes", () => {
+    expect(getTorontoDate(new Date("2026-09-10T03:59:59Z"))).toBe("2026-09-09");
+    expect(getTorontoDate(new Date("2026-09-10T04:00:00Z"))).toBe("2026-09-10");
+    expect(getTorontoDate(new Date("2026-11-05T04:59:59Z"))).toBe("2026-11-04");
+    expect(getTorontoDate(new Date("2026-11-05T05:00:00Z"))).toBe("2026-11-05");
   });
 
   test("validates guesses and report descriptions on the server boundary", () => {

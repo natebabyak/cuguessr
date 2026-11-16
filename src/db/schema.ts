@@ -1,5 +1,6 @@
 import { defineRelations } from "drizzle-orm";
 import {
+  boolean,
   date,
   doublePrecision,
   index,
@@ -22,6 +23,26 @@ export const game = pgTable("game", {
   id: serial("id").primaryKey(),
   date: date("date", { mode: "string" }).notNull().unique(),
 });
+
+export const gameResult = pgTable(
+  "game_result",
+  {
+    gameId: integer("game_id")
+      .notNull()
+      .references(() => game.id, { onDelete: "cascade" }),
+    userId: text("user_id")
+      .notNull()
+      .references(() => user.id, { onDelete: "cascade" }),
+    points: integer("points").notNull(),
+    onTime: boolean("on_time").notNull(),
+    completedAt: timestamp("completed_at", { withTimezone: true }).notNull().defaultNow(),
+  },
+  (t) => [
+    primaryKey({ columns: [t.gameId, t.userId] }),
+    index("game_result_leaderboard_idx").on(t.gameId, t.points),
+    index("game_result_user_idx").on(t.userId, t.onTime),
+  ],
+);
 
 export const photo = pgTable(
   "photo",
@@ -110,6 +131,7 @@ export const roundResult = pgTable(
 export const relations = defineRelations(
   {
     game,
+    gameResult,
     photo,
     report,
     round,
@@ -119,6 +141,17 @@ export const relations = defineRelations(
   (r) => ({
     game: {
       rounds: r.many.round(),
+      results: r.many.gameResult(),
+    },
+    gameResult: {
+      game: r.one.game({
+        from: r.gameResult.gameId,
+        to: r.game.id,
+      }),
+      submittedBy: r.one.user({
+        from: r.gameResult.userId,
+        to: r.user.id,
+      }),
     },
     photo: {
       reports: r.many.report(),
@@ -163,6 +196,7 @@ export const relations = defineRelations(
       photos: r.many.photo(),
       reports: r.many.report(),
       roundResults: r.many.roundResult(),
+      gameResults: r.many.gameResult(),
     },
   }),
 );

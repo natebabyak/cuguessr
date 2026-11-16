@@ -1,5 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
 
+import { getTorontoDate } from "#/lib/game";
 import { createGameFn } from "#/lib/game.functions";
 import { getGamePhotosFn } from "#/lib/photos.functions";
 import { createRoundsFn } from "#/lib/rounds.functions";
@@ -12,9 +13,7 @@ export const Route = createFileRoute("/api/daily")({
           return new Response("Unauthorized");
         }
 
-        const date = Intl.DateTimeFormat("en-CA", {
-          timeZone: "America/Toronto",
-        }).format(new Date());
+        const date = getTorontoDate();
 
         const gameId = await createGameFn({
           data: {

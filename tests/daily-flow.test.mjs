@@ -1,8 +1,21 @@
-import { afterAll, beforeAll, beforeEach, describe, expect, mock, test } from "bun:test";
+import {
+  afterAll,
+  afterEach,
+  beforeAll,
+  beforeEach,
+  describe,
+  expect,
+  mock,
+  setSystemTime,
+  test,
+} from "bun:test";
 import { execFileSync } from "node:child_process";
+import { readFileSync } from "node:fs";
 
+import { betterAuth } from "better-auth";
 import { eq } from "drizzle-orm";
 import { drizzle } from "drizzle-orm/node-postgres";
+import { migrate } from "drizzle-orm/node-postgres/migrator";
 import { Pool } from "pg";
 
 import * as authSchema from "../src/db/auth-schema";
@@ -18,6 +31,7 @@ integration("account linking and daily play in PostgreSQL", () => {
   let auth;
   let submitGuess;
   let getRoundResults;
+  let getDailyLeaderboard;
   let submitReport;
   let onLinkAccount;
 
@@ -60,16 +74,21 @@ integration("account linking and daily play in PostgreSQL", () => {
     }
     db = drizzle({ client: pool, relations: { ...schema.relations, ...authSchema.authRelations } });
     const { pushSchema } = await import("drizzle-kit/api-postgres");
-    const migration = await pushSchema({ ...schema, ...authSchema }, db);
-    await migration.apply();
+    // Better Auth owns its schema; product migrations start at the NAT-326 baseline.
+    const authMigration = await pushSchema(authSchema, db);
+    await authMigration.apply();
+    await migrate(db, { migrationsFolder: "./drizzle" });
 
     mock.module("../src/db/index", () => ({ db }));
     process.env.BETTER_AUTH_URL = "http://localhost:3000";
     process.env.BETTER_AUTH_SECRET = "isolated-test-secret-with-at-least-thirty-two-characters";
-    ({ auth } = await import("../src/lib/auth"));
+    const { auth: appAuth } = await import("../src/lib/auth");
+    // Exercise the real linking hook without delivering OTP emails from tests.
+    auth = betterAuth({ ...appAuth.options, emailAndPassword: { enabled: true } });
     onLinkAccount = auth.options.plugins.find((plugin) => plugin.id === "anonymous").options
       .onLinkAccount;
     ({ submitGuess, getRoundResults } = await import("../src/lib/round-results.server"));
+    ({ getDailyLeaderboard } = await import("../src/lib/game-results.server"));
     ({ submitReport } = await import("../src/lib/reports.server"));
   }, 30000);
 
@@ -79,9 +98,13 @@ integration("account linking and daily play in PostgreSQL", () => {
     if (containerId) execFileSync("docker", ["rm", "--force", containerId], { stdio: "ignore" });
   });
 
+  afterEach(() => {
+    setSystemTime();
+  });
+
   beforeEach(async () => {
     await pool.query(
-      'TRUNCATE "user", game, photo, report, round, round_result RESTART IDENTITY CASCADE',
+      'TRUNCATE "user", game, photo, report, round, round_result, game_result RESTART IDENTITY CASCADE',
     );
   });
 
@@ -112,7 +135,7 @@ integration("account linking and daily play in PostgreSQL", () => {
       .insert(schema.photo)
       .values(
         Array.from({ length: 5 }, (_, index) => ({
-          objectKey: `photo-${index}`,
+          objectKey: `photo-${game.id}-${index}`,
           userId: ownerId,
           height: 600,
           width: 800,
@@ -127,6 +150,20 @@ integration("account linking and daily play in PostgreSQL", () => {
       .values(photos.map((photo, index) => ({ gameId: game.id, photoId: photo.id, index })))
       .returning();
     return { game, rounds, photos };
+  }
+
+  function perfectGuess(round, photo) {
+    return { roundId: round.id, latitude: photo.latitude, longitude: photo.longitude };
+  }
+
+  async function completeGame(userId, { rounds, photos }) {
+    for (const [index, round] of rounds.entries()) {
+      await submitGuess(perfectGuess(round, photos[index]), userId);
+    }
+  }
+
+  function savedGuess(roundId, userId, points, createdAt) {
+    return { roundId, userId, points, createdAt, latitude: 45, longitude: -75, distance: 20 };
   }
 
   const credentials = {
@@ -182,14 +219,16 @@ integration("account linking and daily play in PostgreSQL", () => {
 
   test("transfers all activity to a newly registered account with no existing scores", async () => {
     const guest = await authenticate("sign-in/anonymous");
-    const { game, rounds, photos } = await seedGame(guest.user.id);
-    await submitGuess(
-      { roundId: rounds[0].id, latitude: photos[0].latitude, longitude: photos[0].longitude },
-      guest.user.id,
-    );
+    const fixture = await seedGame(guest.user.id);
+    const { game } = fixture;
+    await completeGame(guest.user.id, fixture);
+    const [original] = await db.select().from(schema.gameResult);
     const account = await authenticate("sign-up/email", credentials, guest.cookie);
-    expect(await getRoundResults(game.id, account.user.id)).toHaveLength(1);
+    expect(await getRoundResults(game.id, account.user.id)).toHaveLength(5);
     expect(await getRoundResults(game.id, guest.user.id)).toHaveLength(0);
+    expect(await db.select().from(schema.gameResult)).toEqual([
+      { ...original, userId: account.user.id },
+    ]);
   });
 
   test("saves five scored guesses, resumes progress, and preserves the original result on retry", async () => {
@@ -206,7 +245,15 @@ integration("account linking and daily play in PostgreSQL", () => {
       expect(result.distance).toBe(0);
       expect(result.photo).toEqual({ latitude: guess.latitude, longitude: guess.longitude });
       expect(await getRoundResults(game.id, guest.user.id)).toHaveLength(index + 1);
+      expect(await db.select().from(schema.gameResult)).toHaveLength(index === 4 ? 1 : 0);
     }
+    const [completed] = await db.select().from(schema.gameResult);
+    expect(completed).toMatchObject({
+      gameId: game.id,
+      userId: guest.user.id,
+      points: 25000,
+      onTime: false,
+    });
     const retry = await submitGuess(
       { roundId: rounds[0].id, latitude: 0, longitude: 0 },
       guest.user.id,
@@ -222,6 +269,290 @@ integration("account linking and daily play in PostgreSQL", () => {
     });
     expect(saved.reduce((total, result) => total + result.points, 0)).toBe(25000);
     expect(await getRoundResults(game.id, "another-user")).toHaveLength(0);
+    expect(await db.select().from(schema.gameResult)).toEqual([completed]);
+    expect(await getDailyLeaderboard(game.id)).toEqual([]);
+  });
+
+  test.each([
+    ["2026-11-04", "2026-11-05T04:59:59Z", true],
+    ["2026-11-04", "2026-11-05T05:00:00Z", false],
+    ["2026-09-09", "2026-09-10T03:59:59Z", true],
+    ["2026-09-09", "2026-09-10T04:00:00Z", false],
+  ])("finishing %s at %s records Toronto onTime=%s", async (date, finish, onTime) => {
+    const guest = await authenticate("sign-in/anonymous");
+    const fixture = await seedGame(guest.user.id, date);
+    setSystemTime(new Date(Date.parse(finish) - 1000));
+    for (let index = 0; index < 4; index++) {
+      await submitGuess(perfectGuess(fixture.rounds[index], fixture.photos[index]), guest.user.id);
+    }
+    setSystemTime(new Date(finish));
+    await submitGuess(perfectGuess(fixture.rounds[4], fixture.photos[4]), guest.user.id);
+
+    const [completed] = await db.select().from(schema.gameResult);
+    expect(completed).toEqual({
+      gameId: fixture.game.id,
+      userId: guest.user.id,
+      points: 25000,
+      onTime,
+      completedAt: new Date(finish),
+    });
+    setSystemTime(new Date(Date.parse(finish) + 86400000));
+    await submitGuess({ roundId: fixture.rounds[4].id, latitude: 0, longitude: 0 }, guest.user.id);
+    expect(await db.select().from(schema.gameResult)).toEqual([completed]);
+  });
+
+  test("concurrent final rounds and retries create exactly one completed game", async () => {
+    const guest = await authenticate("sign-in/anonymous");
+    const fixture = await seedGame(guest.user.id);
+    for (let index = 0; index < 3; index++) {
+      await submitGuess(perfectGuess(fixture.rounds[index], fixture.photos[index]), guest.user.id);
+    }
+    await Promise.all([
+      submitGuess(perfectGuess(fixture.rounds[3], fixture.photos[3]), guest.user.id),
+      submitGuess(perfectGuess(fixture.rounds[4], fixture.photos[4]), guest.user.id),
+      submitGuess(perfectGuess(fixture.rounds[4], fixture.photos[4]), guest.user.id),
+    ]);
+    expect(await getRoundResults(fixture.game.id, guest.user.id)).toHaveLength(5);
+    expect(await db.select().from(schema.gameResult)).toMatchObject([
+      { gameId: fixture.game.id, userId: guest.user.id, points: 25000 },
+    ]);
+  });
+
+  test("failure to save game_result rolls back the fifth round_result", async () => {
+    const guest = await authenticate("sign-in/anonymous");
+    const fixture = await seedGame(guest.user.id);
+    for (let index = 0; index < 4; index++) {
+      await submitGuess(perfectGuess(fixture.rounds[index], fixture.photos[index]), guest.user.id);
+    }
+    await pool.query(
+      "ALTER TABLE game_result ADD CONSTRAINT test_reject_completion CHECK (points < 25000)",
+    );
+    try {
+      await expect(
+        submitGuess(perfectGuess(fixture.rounds[4], fixture.photos[4]), guest.user.id),
+      ).rejects.toThrow();
+      expect(await getRoundResults(fixture.game.id, guest.user.id)).toHaveLength(4);
+      expect(await db.select().from(schema.gameResult)).toHaveLength(0);
+    } finally {
+      await pool.query("ALTER TABLE game_result DROP CONSTRAINT test_reject_completion");
+    }
+    await submitGuess(perfectGuess(fixture.rounds[4], fixture.photos[4]), guest.user.id);
+    expect(await db.select().from(schema.gameResult)).toHaveLength(1);
+  });
+
+  test("merges partial games using retained scores and ignores a discarded late overlap", async () => {
+    const account = await authenticate("sign-up/email", credentials);
+    const guest = await authenticate("sign-in/anonymous");
+    const { game, rounds } = await seedGame(guest.user.id, "2026-11-04");
+    const onTime = new Date("2026-11-05T04:59:59Z");
+    const late = new Date("2026-11-05T05:00:00Z");
+    await db
+      .insert(schema.roundResult)
+      .values([
+        savedGuess(rounds[0].id, account.user.id, 1000, onTime),
+        savedGuess(rounds[1].id, account.user.id, 2000, onTime),
+        savedGuess(rounds[0].id, guest.user.id, 5000, late),
+        ...rounds
+          .slice(2)
+          .map((round, index) => savedGuess(round.id, guest.user.id, (index + 3) * 1000, onTime)),
+      ]);
+    expect(await db.select().from(schema.gameResult)).toHaveLength(0);
+    await authenticate(
+      "sign-in/email",
+      { email: credentials.email, password: credentials.password },
+      guest.cookie,
+    );
+    expect(await getRoundResults(game.id, account.user.id)).toHaveLength(5);
+    expect(await db.select().from(schema.gameResult)).toEqual([
+      {
+        gameId: game.id,
+        userId: account.user.id,
+        points: 15000,
+        onTime: true,
+        completedAt: onTime,
+      },
+    ]);
+  });
+
+  test("recomputes a complete guest game when an account's retained overlap was late", async () => {
+    const account = await authenticate("sign-up/email", credentials);
+    const guest = await authenticate("sign-in/anonymous");
+    const fixture = await seedGame(guest.user.id, "2026-11-04");
+    setSystemTime(new Date("2026-11-05T04:59:59Z"));
+    await completeGame(guest.user.id, fixture);
+    expect((await db.select().from(schema.gameResult))[0].onTime).toBe(true);
+    setSystemTime();
+    const late = new Date("2026-11-05T05:00:00Z");
+    await db
+      .insert(schema.roundResult)
+      .values(savedGuess(fixture.rounds[0].id, account.user.id, 1000, late));
+    await authenticate(
+      "sign-in/email",
+      { email: credentials.email, password: credentials.password },
+      guest.cookie,
+    );
+    expect(await db.select().from(schema.gameResult)).toEqual([
+      {
+        gameId: fixture.game.id,
+        userId: account.user.id,
+        points: 21000,
+        onTime: false,
+        completedAt: late,
+      },
+    ]);
+    expect(await getDailyLeaderboard(fixture.game.id)).toEqual([]);
+  });
+
+  test("preserves an already completed signed-in game when both accounts finished it", async () => {
+    const account = await authenticate("sign-up/email", credentials);
+    const guest = await authenticate("sign-in/anonymous");
+    const fixture = await seedGame(guest.user.id, "2026-11-04");
+    setSystemTime(new Date("2026-11-05T04:59:59Z"));
+    await completeGame(account.user.id, fixture);
+    const [original] = await db.select().from(schema.gameResult);
+    setSystemTime(new Date("2026-11-05T05:00:00Z"));
+    for (const round of fixture.rounds) {
+      await submitGuess({ roundId: round.id, latitude: 0, longitude: 0 }, guest.user.id);
+    }
+    expect(await db.select().from(schema.gameResult)).toHaveLength(2);
+    setSystemTime();
+    await authenticate(
+      "sign-in/email",
+      { email: credentials.email, password: credentials.password },
+      guest.cookie,
+    );
+    expect(await db.select().from(schema.gameResult)).toEqual([original]);
+  });
+
+  test("rolls back account activity transfers if completion recomputation fails", async () => {
+    const account = await authenticate("sign-up/email", credentials);
+    const guest = await authenticate("sign-in/anonymous");
+    const { game, rounds, photos } = await seedGame(guest.user.id);
+    await db
+      .insert(schema.roundResult)
+      .values(
+        rounds.map((round, index) =>
+          savedGuess(round.id, index < 2 ? account.user.id : guest.user.id, 5000, new Date()),
+        ),
+      );
+    await submitReport(photos[0].id, "Photo is unclear", guest.user.id);
+    const original = await db.select().from(schema.roundResult);
+    await pool.query(
+      "ALTER TABLE game_result ADD CONSTRAINT test_reject_merge CHECK (points < 25000)",
+    );
+    try {
+      await expect(
+        onLinkAccount({
+          anonymousUser: { user: guest.user },
+          newUser: { user: account.user },
+        }),
+      ).rejects.toThrow();
+      expect(await db.select().from(schema.roundResult)).toEqual(original);
+      expect(
+        (await db.select().from(schema.photo)).every((photo) => photo.userId === guest.user.id),
+      ).toBe(true);
+      expect((await db.select().from(schema.report))[0].userId).toBe(guest.user.id);
+      expect(await getDailyLeaderboard(game.id)).toEqual([]);
+    } finally {
+      await pool.query("ALTER TABLE game_result DROP CONSTRAINT test_reject_merge");
+    }
+  });
+
+  test("daily leaderboards read completed on-time game totals in descending order", async () => {
+    const players = await Promise.all(
+      Array.from({ length: 3 }, () => authenticate("sign-in/anonymous")),
+    );
+    const { game } = await seedGame(players[0].user.id);
+    const { game: otherGame } = await seedGame(players[0].user.id, "2026-09-10");
+    await db.insert(schema.gameResult).values([
+      { gameId: game.id, userId: players[0].user.id, points: 10000, onTime: true },
+      { gameId: game.id, userId: players[1].user.id, points: 20000, onTime: true },
+      { gameId: game.id, userId: players[2].user.id, points: 25000, onTime: false },
+      { gameId: otherGame.id, userId: players[0].user.id, points: 25000, onTime: true },
+    ]);
+    // No round_result rows: this query must use the stored totals, not aggregate live guesses.
+    expect(await db.select().from(schema.roundResult)).toHaveLength(0);
+    expect(
+      (await getDailyLeaderboard(game.id)).map(({ userId, points }) => ({ userId, points })),
+    ).toEqual([
+      { userId: players[1].user.id, points: 20000 },
+      { userId: players[0].user.id, points: 10000 },
+    ]);
+  });
+
+  test("migration backfills only complete games with Toronto midnight and DST boundaries", async () => {
+    const players = await Promise.all(
+      Array.from({ length: 3 }, () => authenticate("sign-in/anonymous")),
+    );
+    const fixtures = [
+      await seedGame(players[0].user.id, "2026-09-09"),
+      await seedGame(players[0].user.id, "2026-11-04"),
+    ];
+    const finishes = [
+      ["2026-09-10T03:59:59Z", "2026-09-10T04:00:00Z"],
+      ["2026-11-05T04:59:59Z", "2026-11-05T05:00:00Z"],
+    ];
+    for (const [gameIndex, { rounds }] of fixtures.entries()) {
+      for (const [playerIndex, { user }] of players.entries()) {
+        const finish = new Date(finishes[gameIndex][Math.min(playerIndex, 1)]);
+        await db
+          .insert(schema.roundResult)
+          .values(
+            rounds
+              .slice(0, playerIndex === 2 ? 4 : 5)
+              .map((round, index) =>
+                savedGuess(
+                  round.id,
+                  user.id,
+                  5000,
+                  new Date(finish.getTime() - (4 - index) * 1000),
+                ),
+              ),
+          );
+      }
+    }
+    const migrationSql = readFileSync(
+      new URL("../drizzle/20261116221252_game_result/migration.sql", import.meta.url),
+      "utf8",
+    );
+    const client = await pool.connect();
+    try {
+      await client.query("BEGIN");
+      await client.query("DROP TABLE game_result");
+      await client.query("SET LOCAL TIME ZONE 'Asia/Tokyo'");
+      await client.query(migrationSql);
+      const { rows } = await client.query(
+        "SELECT * FROM game_result ORDER BY game_id, on_time DESC",
+      );
+      expect(rows).toEqual(
+        fixtures.flatMap(({ game }, index) => [
+          {
+            game_id: game.id,
+            user_id: players[0].user.id,
+            points: 25000,
+            on_time: true,
+            completed_at: new Date(finishes[index][0]),
+          },
+          {
+            game_id: game.id,
+            user_id: players[1].user.id,
+            points: 25000,
+            on_time: false,
+            completed_at: new Date(finishes[index][1]),
+          },
+        ]),
+      );
+      // The backfill itself is safe to retry.
+      await client.query(migrationSql.slice(migrationSql.indexOf('INSERT INTO "game_result"')));
+      expect((await client.query("SELECT * FROM game_result")).rows).toHaveLength(4);
+      await client.query('DELETE FROM "user" WHERE id = $1', [players[0].user.id]);
+      expect((await client.query("SELECT * FROM game_result")).rows).toHaveLength(2);
+      await client.query("DELETE FROM game WHERE id = $1", [fixtures[0].game.id]);
+      expect((await client.query("SELECT * FROM game_result")).rows).toHaveLength(1);
+    } finally {
+      await client.query("ROLLBACK");
+      client.release();
+    }
   });
 
   test("concurrent submissions save one result and return the same score", async () => {

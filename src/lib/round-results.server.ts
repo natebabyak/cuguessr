@@ -1,7 +1,11 @@
+import { eq } from "drizzle-orm";
+
+import { user } from "#/db/auth-schema";
 import { db } from "#/db/index";
-import { roundResult } from "#/db/schema";
+import { gameResult, roundResult } from "#/db/schema";
 
 import { isAvailableGameDate } from "./game";
+import { getCompletedGameResults } from "./game-results.server";
 import type { Guess } from "./guess-schema";
 import { calculateDistance, calculatePoints } from "./scoring";
 
@@ -50,38 +54,53 @@ export async function getRoundResults(gameId: number, userId: string) {
 }
 
 export async function submitGuess(guess: Guess, userId: string) {
-  const round = await db.query.round.findFirst({
-    where: { id: guess.roundId },
-    with: { photo: true, game: true },
+  return db.transaction(async (tx) => {
+    // Serialize this player's guesses and account merges so concurrent final rounds
+    // cannot each miss the other's uncommitted result and leave the game unfinished.
+    await tx.select({ id: user.id }).from(user).where(eq(user.id, userId)).for("update");
+
+    const round = await tx.query.round.findFirst({
+      where: { id: guess.roundId },
+      with: { photo: true, game: true },
+    });
+    const createdAt = new Date();
+
+    if (!round?.photo || !round.game || !isAvailableGameDate(round.game.date, createdAt)) {
+      throw new Error("Round not found");
+    }
+
+    const distance = calculateDistance({ a: round.photo, b: guess });
+    const points = calculatePoints(distance);
+
+    // A retry must return the original score, rather than changing it or adding a duplicate.
+    const [inserted] = await tx
+      .insert(roundResult)
+      .values({ ...guess, userId, distance, points, createdAt })
+      .onConflictDoNothing({ target: [roundResult.roundId, roundResult.userId] })
+      .returning();
+    const result =
+      inserted ??
+      (await tx.query.roundResult.findFirst({
+        where: { roundId: guess.roundId, userId },
+      }));
+
+    if (!result) throw new Error("Could not save guess");
+
+    const completed = await getCompletedGameResults(tx, userId, [round.game.id]);
+    if (completed.length > 0) {
+      await tx
+        .insert(gameResult)
+        .values(completed)
+        .onConflictDoNothing({ target: [gameResult.gameId, gameResult.userId] });
+    }
+
+    return {
+      roundId: result.roundId,
+      distance: result.distance,
+      points: result.points,
+      latitude: result.latitude,
+      longitude: result.longitude,
+      photo: { latitude: round.photo.latitude, longitude: round.photo.longitude },
+    };
   });
-
-  if (!round?.photo || !round.game || !isAvailableGameDate(round.game.date)) {
-    throw new Error("Round not found");
-  }
-
-  const distance = calculateDistance({ a: round.photo, b: guess });
-  const points = calculatePoints(distance);
-
-  // A retry must return the original score, rather than changing it or adding a duplicate.
-  const [inserted] = await db
-    .insert(roundResult)
-    .values({ ...guess, userId, distance, points })
-    .onConflictDoNothing({ target: [roundResult.roundId, roundResult.userId] })
-    .returning();
-  const result =
-    inserted ??
-    (await db.query.roundResult.findFirst({
-      where: { roundId: guess.roundId, userId },
-    }));
-
-  if (!result) throw new Error("Could not save guess");
-
-  return {
-    roundId: result.roundId,
-    distance: result.distance,
-    points: result.points,
-    latitude: result.latitude,
-    longitude: result.longitude,
-    photo: { latitude: round.photo.latitude, longitude: round.photo.longitude },
-  };
 }

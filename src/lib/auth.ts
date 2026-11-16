@@ -3,13 +3,14 @@ import { betterAuth } from "better-auth";
 import { anonymous } from "better-auth/plugins/anonymous";
 import { emailOTP } from "better-auth/plugins/email-otp";
 import { tanstackStartCookies } from "better-auth/tanstack-start";
-import { and, eq, notInArray } from "drizzle-orm";
+import { and, eq, inArray, notInArray, sql } from "drizzle-orm";
 
 import * as authSchema from "#/db/auth-schema";
 import { db } from "#/db/index";
 import * as schema from "#/db/schema";
 import { sendEmail } from "#/lib/email";
 
+import { getCompletedGameResults } from "./game-results.server";
 import { generateUsername } from "./generate-username";
 
 export const auth = betterAuth({
@@ -65,34 +66,71 @@ export const auth = betterAuth({
           return;
         }
 
-        const existingResults = await db
-          .select({ roundId: schema.roundResult.roundId })
-          .from(schema.roundResult)
-          .where(eq(schema.roundResult.userId, newUserId));
+        await db.transaction(async (tx) => {
+          // Use the same locks as submitGuess, in a stable order for two-account merges.
+          await tx
+            .select({ id: authSchema.user.id })
+            .from(authSchema.user)
+            .where(inArray(authSchema.user.id, [anonymousUserId, newUserId]))
+            .orderBy(authSchema.user.id)
+            .for("update");
 
-        const existingRoundIds = existingResults.map((result) => result.roundId);
+          const affectedGames = await tx
+            .selectDistinct({ gameId: schema.round.gameId })
+            .from(schema.roundResult)
+            .innerJoin(schema.round, eq(schema.roundResult.roundId, schema.round.id))
+            .where(eq(schema.roundResult.userId, anonymousUserId));
+          const existingResults = await tx
+            .select({ roundId: schema.roundResult.roundId })
+            .from(schema.roundResult)
+            .where(eq(schema.roundResult.userId, newUserId));
 
-        await db
-          .update(schema.roundResult)
-          .set({ userId: newUserId })
-          .where(
-            existingRoundIds.length > 0
-              ? and(
-                  eq(schema.roundResult.userId, anonymousUserId),
-                  notInArray(schema.roundResult.roundId, existingRoundIds),
-                )
-              : eq(schema.roundResult.userId, anonymousUserId),
+          const existingRoundIds = existingResults.map((result) => result.roundId);
+
+          await tx
+            .update(schema.roundResult)
+            .set({ userId: newUserId })
+            .where(
+              existingRoundIds.length > 0
+                ? and(
+                    eq(schema.roundResult.userId, anonymousUserId),
+                    notInArray(schema.roundResult.roundId, existingRoundIds),
+                  )
+                : eq(schema.roundResult.userId, anonymousUserId),
+            );
+
+          const completed = await getCompletedGameResults(
+            tx,
+            newUserId,
+            affectedGames.map(({ gameId }) => gameId),
           );
+          if (completed.length > 0) {
+            // Both accounts may have played this game: derive totals and finish time
+            // from the retained round results, including the signed-in user's overlaps.
+            await tx
+              .insert(schema.gameResult)
+              .values(completed)
+              .onConflictDoUpdate({
+                target: [schema.gameResult.gameId, schema.gameResult.userId],
+                set: {
+                  points: sql`excluded.points`,
+                  onTime: sql`excluded.on_time`,
+                  completedAt: sql`excluded.completed_at`,
+                },
+              });
+          }
+          await tx.delete(schema.gameResult).where(eq(schema.gameResult.userId, anonymousUserId));
 
-        await db
-          .update(schema.report)
-          .set({ userId: newUserId })
-          .where(eq(schema.report.userId, anonymousUserId));
+          await tx
+            .update(schema.report)
+            .set({ userId: newUserId })
+            .where(eq(schema.report.userId, anonymousUserId));
 
-        await db
-          .update(schema.photo)
-          .set({ userId: newUserId })
-          .where(eq(schema.photo.userId, anonymousUserId));
+          await tx
+            .update(schema.photo)
+            .set({ userId: newUserId })
+            .where(eq(schema.photo.userId, anonymousUserId));
+        });
       },
     }),
     emailOTP({

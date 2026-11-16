@@ -1,0 +1,325 @@
+{
+  "type": "diff",
+  "version": "9",
+  "dialect": "postgres",
+  "id": "a86dbbec-f7bb-4b4d-9d83-3ad5e1e0fd93",
+  "prevIds": [
+    "681ab75a-d4cb-49ff-adbb-c28969ea085f"
+  ],
+  "footprints": [
+    {
+      "statementType": "create_table",
+      "statementTarget": [
+        "table",
+        "public",
+        "game_result"
+      ],
+      "writes": [
+        "s|tbl|public.game_result",
+        "n|tbl|public.game_result",
+        "e|tbl|public.game_result",
+        "n|rel|public.game_result",
+        "n|type|public.game_result",
+        "n|rel|public.game_result_pkey"
+      ],
+      "reads": [
+        "n|sch|public"
+      ]
+    },
+    {
+      "statementType": "create_index",
+      "statementTarget": [
+        "index",
+        "public",
+        "game_result",
+        "game_result_leaderboard_idx"
+      ],
+      "writes": [
+        "s|idx|public.game_result_leaderboard_idx",
+        "n|idx|public.game_result_leaderboard_idx",
+        "e|idx|public.game_result_leaderboard_idx",
+        "n|rel|public.game_result_leaderboard_idx"
+      ],
+      "reads": [
+        "n|tbl|public.game_result",
+        "n|sch|public",
+        "n|col|public.game_result.game_id",
+        "n|col|public.game_result.points"
+      ]
+    },
+    {
+      "statementType": "create_index",
+      "statementTarget": [
+        "index",
+        "public",
+        "game_result",
+        "game_result_user_idx"
+      ],
+      "writes": [
+        "s|idx|public.game_result_user_idx",
+        "n|idx|public.game_result_user_idx",
+        "e|idx|public.game_result_user_idx",
+        "n|rel|public.game_result_user_idx"
+      ],
+      "reads": [
+        "n|tbl|public.game_result",
+        "n|sch|public",
+        "n|col|public.game_result.user_id",
+        "n|col|public.game_result.on_time"
+      ]
+    },
+    {
+      "statementType": "create_fk",
+      "statementTarget": [
+        "table",
+        "public",
+        "game_result"
+      ],
+      "writes": [
+        "s|fk|public.game_result.game_result_game_id_game_id_fkey",
+        "n|fk|public.game_result.game_result_game_id_game_id_fkey",
+        "e|fk|public.game_result.game_result_game_id_game_id_fkey",
+        "n|con|public.game_result.game_result_game_id_game_id_fkey"
+      ],
+      "reads": [
+        "n|tbl|public.game_result",
+        "n|sch|public",
+        "n|tbl|public.game",
+        "n|sch|public",
+        "n|col|public.game_result.game_id",
+        "n|col|public.game.id",
+        "e|uniqueness|public.game.id"
+      ]
+    },
+    {
+      "statementType": "create_fk",
+      "statementTarget": [
+        "table",
+        "public",
+        "game_result"
+      ],
+      "writes": [
+        "s|fk|public.game_result.game_result_user_id_user_id_fkey",
+        "n|fk|public.game_result.game_result_user_id_user_id_fkey",
+        "e|fk|public.game_result.game_result_user_id_user_id_fkey",
+        "n|con|public.game_result.game_result_user_id_user_id_fkey"
+      ],
+      "reads": [
+        "n|tbl|public.game_result",
+        "n|sch|public",
+        "n|tbl|public.user",
+        "n|sch|public",
+        "n|col|public.game_result.user_id",
+        "n|col|public.user.id",
+        "e|uniqueness|public.user.id"
+      ]
+    }
+  ],
+  "deltas": [
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "name": "game_result",
+        "isRlsEnabled": false,
+        "entityType": "tables"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "game_result",
+        "name": "game_id",
+        "type": "integer",
+        "typeSchema": null,
+        "notNull": true,
+        "dimensions": 0,
+        "default": null,
+        "generated": null,
+        "identity": null,
+        "entityType": "columns"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "game_result",
+        "name": "user_id",
+        "type": "text",
+        "typeSchema": null,
+        "notNull": true,
+        "dimensions": 0,
+        "default": null,
+        "generated": null,
+        "identity": null,
+        "entityType": "columns"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "game_result",
+        "name": "points",
+        "type": "integer",
+        "typeSchema": null,
+        "notNull": true,
+        "dimensions": 0,
+        "default": null,
+        "generated": null,
+        "identity": null,
+        "entityType": "columns"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "game_result",
+        "name": "on_time",
+        "type": "boolean",
+        "typeSchema": null,
+        "notNull": true,
+        "dimensions": 0,
+        "default": null,
+        "generated": null,
+        "identity": null,
+        "entityType": "columns"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "game_result",
+        "name": "completed_at",
+        "type": "timestamp with time zone",
+        "typeSchema": null,
+        "notNull": true,
+        "dimensions": 0,
+        "default": "now()",
+        "generated": null,
+        "identity": null,
+        "entityType": "columns"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "game_result",
+        "name": "game_result_leaderboard_idx",
+        "nameExplicit": true,
+        "columns": [
+          {
+            "value": "game_id",
+            "isExpression": false,
+            "asc": true,
+            "nullsFirst": false,
+            "opclass": null
+          },
+          {
+            "value": "points",
+            "isExpression": false,
+            "asc": true,
+            "nullsFirst": false,
+            "opclass": null
+          }
+        ],
+        "isUnique": false,
+        "where": null,
+        "with": "",
+        "method": "btree",
+        "concurrently": false,
+        "entityType": "indexes"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "game_result",
+        "name": "game_result_user_idx",
+        "nameExplicit": true,
+        "columns": [
+          {
+            "value": "user_id",
+            "isExpression": false,
+            "asc": true,
+            "nullsFirst": false,
+            "opclass": null
+          },
+          {
+            "value": "on_time",
+            "isExpression": false,
+            "asc": true,
+            "nullsFirst": false,
+            "opclass": null
+          }
+        ],
+        "isUnique": false,
+        "where": null,
+        "with": "",
+        "method": "btree",
+        "concurrently": false,
+        "entityType": "indexes"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "game_result",
+        "name": "game_result_game_id_game_id_fkey",
+        "nameExplicit": false,
+        "columns": [
+          "game_id"
+        ],
+        "schemaTo": "public",
+        "tableTo": "game",
+        "columnsTo": [
+          "id"
+        ],
+        "onUpdate": "NO ACTION",
+        "onDelete": "CASCADE",
+        "entityType": "fks"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "game_result",
+        "name": "game_result_user_id_user_id_fkey",
+        "nameExplicit": false,
+        "columns": [
+          "user_id"
+        ],
+        "schemaTo": "public",
+        "tableTo": "user",
+        "columnsTo": [
+          "id"
+        ],
+        "onUpdate": "NO ACTION",
+        "onDelete": "CASCADE",
+        "entityType": "fks"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "game_result",
+        "name": "game_result_pkey",
+        "columns": [
+          "game_id",
+          "user_id"
+        ],
+        "nameExplicit": false,
+        "entityType": "pks"
+      }
+    }
+  ]
+}

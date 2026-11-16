@@ -16,6 +16,12 @@ development uses Docker Postgres through
 `DATABASE_URL=postgres://user:password@localhost:5432/db`. The database runs
 independently of the app; stop it with `docker compose down`.
 
+Run `bun test` for game rule tests. Run `bun run test:integration` for PostgreSQL
+coverage of daily completion, leaderboard reads, account linking, and migration
+backfill. The integration suite needs Docker and a local `postgres:18-alpine`
+image (`docker pull postgres:18-alpine`); it creates and removes a disposable
+database without using `DATABASE_URL`.
+
 # Building For Production
 
 To build this application for production:
