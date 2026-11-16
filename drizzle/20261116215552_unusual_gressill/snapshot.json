@@ -1,0 +1,1184 @@
+{
+  "type": "base",
+  "version": "9",
+  "dialect": "postgres",
+  "id": "681ab75a-d4cb-49ff-adbb-c28969ea085f",
+  "prevIds": [
+    "00000000-0000-0000-0000-000000000000"
+  ],
+  "footprints": [
+    {
+      "statementType": "create_enum",
+      "statementTarget": [
+        "enum",
+        "public",
+        "submission_status"
+      ],
+      "writes": [
+        "s|enum|public.submission_status",
+        "n|enum|public.submission_status",
+        "e|enum|public.submission_status",
+        "n|type|public.submission_status"
+      ],
+      "reads": [
+        "n|sch|public"
+      ]
+    },
+    {
+      "statementType": "create_table",
+      "statementTarget": [
+        "table",
+        "public",
+        "game"
+      ],
+      "writes": [
+        "s|tbl|public.game",
+        "n|tbl|public.game",
+        "e|tbl|public.game",
+        "n|rel|public.game",
+        "n|type|public.game",
+        "n|rel|public.game_pkey",
+        "n|rel|public.game_date_key"
+      ],
+      "reads": [
+        "n|sch|public"
+      ]
+    },
+    {
+      "statementType": "create_table",
+      "statementTarget": [
+        "table",
+        "public",
+        "photo"
+      ],
+      "writes": [
+        "s|tbl|public.photo",
+        "n|tbl|public.photo",
+        "e|tbl|public.photo",
+        "n|rel|public.photo",
+        "n|type|public.photo",
+        "n|rel|public.photo_pkey",
+        "n|rel|public.photo_object_key_key"
+      ],
+      "reads": [
+        "n|sch|public",
+        "n|enum|public.submission_status"
+      ]
+    },
+    {
+      "statementType": "create_table",
+      "statementTarget": [
+        "table",
+        "public",
+        "report"
+      ],
+      "writes": [
+        "s|tbl|public.report",
+        "n|tbl|public.report",
+        "e|tbl|public.report",
+        "n|rel|public.report",
+        "n|type|public.report",
+        "n|rel|public.report_pkey"
+      ],
+      "reads": [
+        "n|sch|public",
+        "n|enum|public.submission_status"
+      ]
+    },
+    {
+      "statementType": "create_table",
+      "statementTarget": [
+        "table",
+        "public",
+        "round"
+      ],
+      "writes": [
+        "s|tbl|public.round",
+        "n|tbl|public.round",
+        "e|tbl|public.round",
+        "n|rel|public.round",
+        "n|type|public.round",
+        "n|rel|public.round_pkey",
+        "n|rel|public.round_game_id_index_unique",
+        "n|rel|public.round_game_id_photo_id_unique"
+      ],
+      "reads": [
+        "n|sch|public"
+      ]
+    },
+    {
+      "statementType": "create_table",
+      "statementTarget": [
+        "table",
+        "public",
+        "round_result"
+      ],
+      "writes": [
+        "s|tbl|public.round_result",
+        "n|tbl|public.round_result",
+        "e|tbl|public.round_result",
+        "n|rel|public.round_result",
+        "n|type|public.round_result",
+        "n|rel|public.round_result_pkey"
+      ],
+      "reads": [
+        "n|sch|public"
+      ]
+    },
+    {
+      "statementType": "create_index",
+      "statementTarget": [
+        "index",
+        "public",
+        "photo",
+        "photo_user_id_idx"
+      ],
+      "writes": [
+        "s|idx|public.photo_user_id_idx",
+        "n|idx|public.photo_user_id_idx",
+        "e|idx|public.photo_user_id_idx",
+        "n|rel|public.photo_user_id_idx"
+      ],
+      "reads": [
+        "n|tbl|public.photo",
+        "n|sch|public",
+        "n|col|public.photo.user_id"
+      ]
+    },
+    {
+      "statementType": "create_index",
+      "statementTarget": [
+        "index",
+        "public",
+        "photo",
+        "photo_status_idx"
+      ],
+      "writes": [
+        "s|idx|public.photo_status_idx",
+        "n|idx|public.photo_status_idx",
+        "e|idx|public.photo_status_idx",
+        "n|rel|public.photo_status_idx"
+      ],
+      "reads": [
+        "n|tbl|public.photo",
+        "n|sch|public",
+        "n|col|public.photo.status"
+      ]
+    },
+    {
+      "statementType": "create_index",
+      "statementTarget": [
+        "index",
+        "public",
+        "report",
+        "report_photo_id_idx"
+      ],
+      "writes": [
+        "s|idx|public.report_photo_id_idx",
+        "n|idx|public.report_photo_id_idx",
+        "e|idx|public.report_photo_id_idx",
+        "n|rel|public.report_photo_id_idx"
+      ],
+      "reads": [
+        "n|tbl|public.report",
+        "n|sch|public",
+        "n|col|public.report.photo_id"
+      ]
+    },
+    {
+      "statementType": "create_index",
+      "statementTarget": [
+        "index",
+        "public",
+        "report",
+        "report_user_id_idx"
+      ],
+      "writes": [
+        "s|idx|public.report_user_id_idx",
+        "n|idx|public.report_user_id_idx",
+        "e|idx|public.report_user_id_idx",
+        "n|rel|public.report_user_id_idx"
+      ],
+      "reads": [
+        "n|tbl|public.report",
+        "n|sch|public",
+        "n|col|public.report.user_id"
+      ]
+    },
+    {
+      "statementType": "create_index",
+      "statementTarget": [
+        "index",
+        "public",
+        "report",
+        "report_status_idx"
+      ],
+      "writes": [
+        "s|idx|public.report_status_idx",
+        "n|idx|public.report_status_idx",
+        "e|idx|public.report_status_idx",
+        "n|rel|public.report_status_idx"
+      ],
+      "reads": [
+        "n|tbl|public.report",
+        "n|sch|public",
+        "n|col|public.report.status"
+      ]
+    },
+    {
+      "statementType": "create_index",
+      "statementTarget": [
+        "index",
+        "public",
+        "round_result",
+        "round_result_user_id_idx"
+      ],
+      "writes": [
+        "s|idx|public.round_result_user_id_idx",
+        "n|idx|public.round_result_user_id_idx",
+        "e|idx|public.round_result_user_id_idx",
+        "n|rel|public.round_result_user_id_idx"
+      ],
+      "reads": [
+        "n|tbl|public.round_result",
+        "n|sch|public",
+        "n|col|public.round_result.user_id"
+      ]
+    },
+    {
+      "statementType": "create_fk",
+      "statementTarget": [
+        "table",
+        "public",
+        "photo"
+      ],
+      "writes": [
+        "s|fk|public.photo.photo_user_id_user_id_fkey",
+        "n|fk|public.photo.photo_user_id_user_id_fkey",
+        "e|fk|public.photo.photo_user_id_user_id_fkey",
+        "n|con|public.photo.photo_user_id_user_id_fkey"
+      ],
+      "reads": [
+        "n|tbl|public.photo",
+        "n|sch|public",
+        "n|tbl|public.user",
+        "n|sch|public",
+        "n|col|public.photo.user_id",
+        "n|col|public.user.id",
+        "e|uniqueness|public.user.id"
+      ]
+    },
+    {
+      "statementType": "create_fk",
+      "statementTarget": [
+        "table",
+        "public",
+        "report"
+      ],
+      "writes": [
+        "s|fk|public.report.report_photo_id_photo_id_fkey",
+        "n|fk|public.report.report_photo_id_photo_id_fkey",
+        "e|fk|public.report.report_photo_id_photo_id_fkey",
+        "n|con|public.report.report_photo_id_photo_id_fkey"
+      ],
+      "reads": [
+        "n|tbl|public.report",
+        "n|sch|public",
+        "n|tbl|public.photo",
+        "n|sch|public",
+        "n|col|public.report.photo_id",
+        "n|col|public.photo.id",
+        "e|uniqueness|public.photo.id"
+      ]
+    },
+    {
+      "statementType": "create_fk",
+      "statementTarget": [
+        "table",
+        "public",
+        "report"
+      ],
+      "writes": [
+        "s|fk|public.report.report_user_id_user_id_fkey",
+        "n|fk|public.report.report_user_id_user_id_fkey",
+        "e|fk|public.report.report_user_id_user_id_fkey",
+        "n|con|public.report.report_user_id_user_id_fkey"
+      ],
+      "reads": [
+        "n|tbl|public.report",
+        "n|sch|public",
+        "n|tbl|public.user",
+        "n|sch|public",
+        "n|col|public.report.user_id",
+        "n|col|public.user.id",
+        "e|uniqueness|public.user.id"
+      ]
+    },
+    {
+      "statementType": "create_fk",
+      "statementTarget": [
+        "table",
+        "public",
+        "round"
+      ],
+      "writes": [
+        "s|fk|public.round.round_game_id_game_id_fkey",
+        "n|fk|public.round.round_game_id_game_id_fkey",
+        "e|fk|public.round.round_game_id_game_id_fkey",
+        "n|con|public.round.round_game_id_game_id_fkey"
+      ],
+      "reads": [
+        "n|tbl|public.round",
+        "n|sch|public",
+        "n|tbl|public.game",
+        "n|sch|public",
+        "n|col|public.round.game_id",
+        "n|col|public.game.id",
+        "e|uniqueness|public.game.id"
+      ]
+    },
+    {
+      "statementType": "create_fk",
+      "statementTarget": [
+        "table",
+        "public",
+        "round"
+      ],
+      "writes": [
+        "s|fk|public.round.round_photo_id_photo_id_fkey",
+        "n|fk|public.round.round_photo_id_photo_id_fkey",
+        "e|fk|public.round.round_photo_id_photo_id_fkey",
+        "n|con|public.round.round_photo_id_photo_id_fkey"
+      ],
+      "reads": [
+        "n|tbl|public.round",
+        "n|sch|public",
+        "n|tbl|public.photo",
+        "n|sch|public",
+        "n|col|public.round.photo_id",
+        "n|col|public.photo.id",
+        "e|uniqueness|public.photo.id"
+      ]
+    },
+    {
+      "statementType": "create_fk",
+      "statementTarget": [
+        "table",
+        "public",
+        "round_result"
+      ],
+      "writes": [
+        "s|fk|public.round_result.round_result_round_id_round_id_fkey",
+        "n|fk|public.round_result.round_result_round_id_round_id_fkey",
+        "e|fk|public.round_result.round_result_round_id_round_id_fkey",
+        "n|con|public.round_result.round_result_round_id_round_id_fkey"
+      ],
+      "reads": [
+        "n|tbl|public.round_result",
+        "n|sch|public",
+        "n|tbl|public.round",
+        "n|sch|public",
+        "n|col|public.round_result.round_id",
+        "n|col|public.round.id",
+        "e|uniqueness|public.round.id"
+      ]
+    },
+    {
+      "statementType": "create_fk",
+      "statementTarget": [
+        "table",
+        "public",
+        "round_result"
+      ],
+      "writes": [
+        "s|fk|public.round_result.round_result_user_id_user_id_fkey",
+        "n|fk|public.round_result.round_result_user_id_user_id_fkey",
+        "e|fk|public.round_result.round_result_user_id_user_id_fkey",
+        "n|con|public.round_result.round_result_user_id_user_id_fkey"
+      ],
+      "reads": [
+        "n|tbl|public.round_result",
+        "n|sch|public",
+        "n|tbl|public.user",
+        "n|sch|public",
+        "n|col|public.round_result.user_id",
+        "n|col|public.user.id",
+        "e|uniqueness|public.user.id"
+      ]
+    }
+  ],
+  "ddl": [
+    {
+      "schema": "public",
+      "name": "game",
+      "isRlsEnabled": false,
+      "entityType": "tables"
+    },
+    {
+      "schema": "public",
+      "name": "photo",
+      "isRlsEnabled": false,
+      "entityType": "tables"
+    },
+    {
+      "schema": "public",
+      "name": "report",
+      "isRlsEnabled": false,
+      "entityType": "tables"
+    },
+    {
+      "schema": "public",
+      "name": "round",
+      "isRlsEnabled": false,
+      "entityType": "tables"
+    },
+    {
+      "schema": "public",
+      "name": "round_result",
+      "isRlsEnabled": false,
+      "entityType": "tables"
+    },
+    {
+      "schema": "public",
+      "name": "submission_status",
+      "values": [
+        "pending",
+        "approved",
+        "rejected"
+      ],
+      "entityType": "enums"
+    },
+    {
+      "schema": "public",
+      "table": "game",
+      "name": "id",
+      "type": "serial",
+      "typeSchema": null,
+      "notNull": true,
+      "dimensions": 0,
+      "default": null,
+      "generated": null,
+      "identity": null,
+      "entityType": "columns"
+    },
+    {
+      "schema": "public",
+      "table": "game",
+      "name": "date",
+      "type": "date",
+      "typeSchema": null,
+      "notNull": true,
+      "dimensions": 0,
+      "default": null,
+      "generated": null,
+      "identity": null,
+      "entityType": "columns"
+    },
+    {
+      "schema": "public",
+      "table": "photo",
+      "name": "id",
+      "type": "serial",
+      "typeSchema": null,
+      "notNull": true,
+      "dimensions": 0,
+      "default": null,
+      "generated": null,
+      "identity": null,
+      "entityType": "columns"
+    },
+    {
+      "schema": "public",
+      "table": "photo",
+      "name": "user_id",
+      "type": "text",
+      "typeSchema": null,
+      "notNull": false,
+      "dimensions": 0,
+      "default": null,
+      "generated": null,
+      "identity": null,
+      "entityType": "columns"
+    },
+    {
+      "schema": "public",
+      "table": "photo",
+      "name": "object_key",
+      "type": "text",
+      "typeSchema": null,
+      "notNull": true,
+      "dimensions": 0,
+      "default": null,
+      "generated": null,
+      "identity": null,
+      "entityType": "columns"
+    },
+    {
+      "schema": "public",
+      "table": "photo",
+      "name": "height",
+      "type": "integer",
+      "typeSchema": null,
+      "notNull": true,
+      "dimensions": 0,
+      "default": null,
+      "generated": null,
+      "identity": null,
+      "entityType": "columns"
+    },
+    {
+      "schema": "public",
+      "table": "photo",
+      "name": "width",
+      "type": "integer",
+      "typeSchema": null,
+      "notNull": true,
+      "dimensions": 0,
+      "default": null,
+      "generated": null,
+      "identity": null,
+      "entityType": "columns"
+    },
+    {
+      "schema": "public",
+      "table": "photo",
+      "name": "latitude",
+      "type": "double precision",
+      "typeSchema": null,
+      "notNull": true,
+      "dimensions": 0,
+      "default": null,
+      "generated": null,
+      "identity": null,
+      "entityType": "columns"
+    },
+    {
+      "schema": "public",
+      "table": "photo",
+      "name": "longitude",
+      "type": "double precision",
+      "typeSchema": null,
+      "notNull": true,
+      "dimensions": 0,
+      "default": null,
+      "generated": null,
+      "identity": null,
+      "entityType": "columns"
+    },
+    {
+      "schema": "public",
+      "table": "photo",
+      "name": "status",
+      "type": "submission_status",
+      "typeSchema": "public",
+      "notNull": true,
+      "dimensions": 0,
+      "default": "'pending'",
+      "generated": null,
+      "identity": null,
+      "entityType": "columns"
+    },
+    {
+      "schema": "public",
+      "table": "photo",
+      "name": "created_at",
+      "type": "timestamp with time zone",
+      "typeSchema": null,
+      "notNull": true,
+      "dimensions": 0,
+      "default": "now()",
+      "generated": null,
+      "identity": null,
+      "entityType": "columns"
+    },
+    {
+      "schema": "public",
+      "table": "photo",
+      "name": "updated_at",
+      "type": "timestamp with time zone",
+      "typeSchema": null,
+      "notNull": true,
+      "dimensions": 0,
+      "default": "now()",
+      "generated": null,
+      "identity": null,
+      "entityType": "columns"
+    },
+    {
+      "schema": "public",
+      "table": "report",
+      "name": "id",
+      "type": "serial",
+      "typeSchema": null,
+      "notNull": true,
+      "dimensions": 0,
+      "default": null,
+      "generated": null,
+      "identity": null,
+      "entityType": "columns"
+    },
+    {
+      "schema": "public",
+      "table": "report",
+      "name": "photo_id",
+      "type": "integer",
+      "typeSchema": null,
+      "notNull": true,
+      "dimensions": 0,
+      "default": null,
+      "generated": null,
+      "identity": null,
+      "entityType": "columns"
+    },
+    {
+      "schema": "public",
+      "table": "report",
+      "name": "user_id",
+      "type": "text",
+      "typeSchema": null,
+      "notNull": false,
+      "dimensions": 0,
+      "default": null,
+      "generated": null,
+      "identity": null,
+      "entityType": "columns"
+    },
+    {
+      "schema": "public",
+      "table": "report",
+      "name": "description",
+      "type": "text",
+      "typeSchema": null,
+      "notNull": true,
+      "dimensions": 0,
+      "default": null,
+      "generated": null,
+      "identity": null,
+      "entityType": "columns"
+    },
+    {
+      "schema": "public",
+      "table": "report",
+      "name": "status",
+      "type": "submission_status",
+      "typeSchema": "public",
+      "notNull": true,
+      "dimensions": 0,
+      "default": "'pending'",
+      "generated": null,
+      "identity": null,
+      "entityType": "columns"
+    },
+    {
+      "schema": "public",
+      "table": "report",
+      "name": "created_at",
+      "type": "timestamp with time zone",
+      "typeSchema": null,
+      "notNull": true,
+      "dimensions": 0,
+      "default": "now()",
+      "generated": null,
+      "identity": null,
+      "entityType": "columns"
+    },
+    {
+      "schema": "public",
+      "table": "report",
+      "name": "updated_at",
+      "type": "timestamp with time zone",
+      "typeSchema": null,
+      "notNull": true,
+      "dimensions": 0,
+      "default": "now()",
+      "generated": null,
+      "identity": null,
+      "entityType": "columns"
+    },
+    {
+      "schema": "public",
+      "table": "round",
+      "name": "id",
+      "type": "serial",
+      "typeSchema": null,
+      "notNull": true,
+      "dimensions": 0,
+      "default": null,
+      "generated": null,
+      "identity": null,
+      "entityType": "columns"
+    },
+    {
+      "schema": "public",
+      "table": "round",
+      "name": "game_id",
+      "type": "integer",
+      "typeSchema": null,
+      "notNull": true,
+      "dimensions": 0,
+      "default": null,
+      "generated": null,
+      "identity": null,
+      "entityType": "columns"
+    },
+    {
+      "schema": "public",
+      "table": "round",
+      "name": "photo_id",
+      "type": "integer",
+      "typeSchema": null,
+      "notNull": true,
+      "dimensions": 0,
+      "default": null,
+      "generated": null,
+      "identity": null,
+      "entityType": "columns"
+    },
+    {
+      "schema": "public",
+      "table": "round",
+      "name": "index",
+      "type": "smallint",
+      "typeSchema": null,
+      "notNull": true,
+      "dimensions": 0,
+      "default": null,
+      "generated": null,
+      "identity": null,
+      "entityType": "columns"
+    },
+    {
+      "schema": "public",
+      "table": "round_result",
+      "name": "round_id",
+      "type": "integer",
+      "typeSchema": null,
+      "notNull": true,
+      "dimensions": 0,
+      "default": null,
+      "generated": null,
+      "identity": null,
+      "entityType": "columns"
+    },
+    {
+      "schema": "public",
+      "table": "round_result",
+      "name": "user_id",
+      "type": "text",
+      "typeSchema": null,
+      "notNull": true,
+      "dimensions": 0,
+      "default": null,
+      "generated": null,
+      "identity": null,
+      "entityType": "columns"
+    },
+    {
+      "schema": "public",
+      "table": "round_result",
+      "name": "latitude",
+      "type": "double precision",
+      "typeSchema": null,
+      "notNull": true,
+      "dimensions": 0,
+      "default": null,
+      "generated": null,
+      "identity": null,
+      "entityType": "columns"
+    },
+    {
+      "schema": "public",
+      "table": "round_result",
+      "name": "longitude",
+      "type": "double precision",
+      "typeSchema": null,
+      "notNull": true,
+      "dimensions": 0,
+      "default": null,
+      "generated": null,
+      "identity": null,
+      "entityType": "columns"
+    },
+    {
+      "schema": "public",
+      "table": "round_result",
+      "name": "distance",
+      "type": "double precision",
+      "typeSchema": null,
+      "notNull": true,
+      "dimensions": 0,
+      "default": null,
+      "generated": null,
+      "identity": null,
+      "entityType": "columns"
+    },
+    {
+      "schema": "public",
+      "table": "round_result",
+      "name": "points",
+      "type": "smallint",
+      "typeSchema": null,
+      "notNull": true,
+      "dimensions": 0,
+      "default": null,
+      "generated": null,
+      "identity": null,
+      "entityType": "columns"
+    },
+    {
+      "schema": "public",
+      "table": "round_result",
+      "name": "created_at",
+      "type": "timestamp with time zone",
+      "typeSchema": null,
+      "notNull": true,
+      "dimensions": 0,
+      "default": "now()",
+      "generated": null,
+      "identity": null,
+      "entityType": "columns"
+    },
+    {
+      "schema": "public",
+      "table": "photo",
+      "name": "photo_user_id_idx",
+      "nameExplicit": true,
+      "columns": [
+        {
+          "value": "user_id",
+          "isExpression": false,
+          "asc": true,
+          "nullsFirst": false,
+          "opclass": null
+        }
+      ],
+      "isUnique": false,
+      "where": null,
+      "with": "",
+      "method": "btree",
+      "concurrently": false,
+      "entityType": "indexes"
+    },
+    {
+      "schema": "public",
+      "table": "photo",
+      "name": "photo_status_idx",
+      "nameExplicit": true,
+      "columns": [
+        {
+          "value": "status",
+          "isExpression": false,
+          "asc": true,
+          "nullsFirst": false,
+          "opclass": null
+        }
+      ],
+      "isUnique": false,
+      "where": null,
+      "with": "",
+      "method": "btree",
+      "concurrently": false,
+      "entityType": "indexes"
+    },
+    {
+      "schema": "public",
+      "table": "report",
+      "name": "report_photo_id_idx",
+      "nameExplicit": true,
+      "columns": [
+        {
+          "value": "photo_id",
+          "isExpression": false,
+          "asc": true,
+          "nullsFirst": false,
+          "opclass": null
+        }
+      ],
+      "isUnique": false,
+      "where": null,
+      "with": "",
+      "method": "btree",
+      "concurrently": false,
+      "entityType": "indexes"
+    },
+    {
+      "schema": "public",
+      "table": "report",
+      "name": "report_user_id_idx",
+      "nameExplicit": true,
+      "columns": [
+        {
+          "value": "user_id",
+          "isExpression": false,
+          "asc": true,
+          "nullsFirst": false,
+          "opclass": null
+        }
+      ],
+      "isUnique": false,
+      "where": null,
+      "with": "",
+      "method": "btree",
+      "concurrently": false,
+      "entityType": "indexes"
+    },
+    {
+      "schema": "public",
+      "table": "report",
+      "name": "report_status_idx",
+      "nameExplicit": true,
+      "columns": [
+        {
+          "value": "status",
+          "isExpression": false,
+          "asc": true,
+          "nullsFirst": false,
+          "opclass": null
+        }
+      ],
+      "isUnique": false,
+      "where": null,
+      "with": "",
+      "method": "btree",
+      "concurrently": false,
+      "entityType": "indexes"
+    },
+    {
+      "schema": "public",
+      "table": "round_result",
+      "name": "round_result_user_id_idx",
+      "nameExplicit": true,
+      "columns": [
+        {
+          "value": "user_id",
+          "isExpression": false,
+          "asc": true,
+          "nullsFirst": false,
+          "opclass": null
+        }
+      ],
+      "isUnique": false,
+      "where": null,
+      "with": "",
+      "method": "btree",
+      "concurrently": false,
+      "entityType": "indexes"
+    },
+    {
+      "schema": "public",
+      "table": "photo",
+      "name": "photo_user_id_user_id_fkey",
+      "nameExplicit": false,
+      "columns": [
+        "user_id"
+      ],
+      "schemaTo": "public",
+      "tableTo": "user",
+      "columnsTo": [
+        "id"
+      ],
+      "onUpdate": "NO ACTION",
+      "onDelete": "SET NULL",
+      "entityType": "fks"
+    },
+    {
+      "schema": "public",
+      "table": "report",
+      "name": "report_photo_id_photo_id_fkey",
+      "nameExplicit": false,
+      "columns": [
+        "photo_id"
+      ],
+      "schemaTo": "public",
+      "tableTo": "photo",
+      "columnsTo": [
+        "id"
+      ],
+      "onUpdate": "NO ACTION",
+      "onDelete": "CASCADE",
+      "entityType": "fks"
+    },
+    {
+      "schema": "public",
+      "table": "report",
+      "name": "report_user_id_user_id_fkey",
+      "nameExplicit": false,
+      "columns": [
+        "user_id"
+      ],
+      "schemaTo": "public",
+      "tableTo": "user",
+      "columnsTo": [
+        "id"
+      ],
+      "onUpdate": "NO ACTION",
+      "onDelete": "SET NULL",
+      "entityType": "fks"
+    },
+    {
+      "schema": "public",
+      "table": "round",
+      "name": "round_game_id_game_id_fkey",
+      "nameExplicit": false,
+      "columns": [
+        "game_id"
+      ],
+      "schemaTo": "public",
+      "tableTo": "game",
+      "columnsTo": [
+        "id"
+      ],
+      "onUpdate": "NO ACTION",
+      "onDelete": "CASCADE",
+      "entityType": "fks"
+    },
+    {
+      "schema": "public",
+      "table": "round",
+      "name": "round_photo_id_photo_id_fkey",
+      "nameExplicit": false,
+      "columns": [
+        "photo_id"
+      ],
+      "schemaTo": "public",
+      "tableTo": "photo",
+      "columnsTo": [
+        "id"
+      ],
+      "onUpdate": "NO ACTION",
+      "onDelete": "CASCADE",
+      "entityType": "fks"
+    },
+    {
+      "schema": "public",
+      "table": "round_result",
+      "name": "round_result_round_id_round_id_fkey",
+      "nameExplicit": false,
+      "columns": [
+        "round_id"
+      ],
+      "schemaTo": "public",
+      "tableTo": "round",
+      "columnsTo": [
+        "id"
+      ],
+      "onUpdate": "NO ACTION",
+      "onDelete": "CASCADE",
+      "entityType": "fks"
+    },
+    {
+      "schema": "public",
+      "table": "round_result",
+      "name": "round_result_user_id_user_id_fkey",
+      "nameExplicit": false,
+      "columns": [
+        "user_id"
+      ],
+      "schemaTo": "public",
+      "tableTo": "user",
+      "columnsTo": [
+        "id"
+      ],
+      "onUpdate": "NO ACTION",
+      "onDelete": "CASCADE",
+      "entityType": "fks"
+    },
+    {
+      "schema": "public",
+      "table": "round_result",
+      "name": "round_result_pkey",
+      "columns": [
+        "round_id",
+        "user_id"
+      ],
+      "nameExplicit": false,
+      "entityType": "pks"
+    },
+    {
+      "schema": "public",
+      "table": "game",
+      "name": "game_pkey",
+      "columns": [
+        "id"
+      ],
+      "nameExplicit": false,
+      "entityType": "pks"
+    },
+    {
+      "schema": "public",
+      "table": "photo",
+      "name": "photo_pkey",
+      "columns": [
+        "id"
+      ],
+      "nameExplicit": false,
+      "entityType": "pks"
+    },
+    {
+      "schema": "public",
+      "table": "report",
+      "name": "report_pkey",
+      "columns": [
+        "id"
+      ],
+      "nameExplicit": false,
+      "entityType": "pks"
+    },
+    {
+      "schema": "public",
+      "table": "round",
+      "name": "round_pkey",
+      "columns": [
+        "id"
+      ],
+      "nameExplicit": false,
+      "entityType": "pks"
+    },
+    {
+      "schema": "public",
+      "table": "round",
+      "name": "round_game_id_index_unique",
+      "nameExplicit": true,
+      "columns": [
+        "game_id",
+        "index"
+      ],
+      "nullsNotDistinct": false,
+      "entityType": "uniques"
+    },
+    {
+      "schema": "public",
+      "table": "round",
+      "name": "round_game_id_photo_id_unique",
+      "nameExplicit": true,
+      "columns": [
+        "game_id",
+        "photo_id"
+      ],
+      "nullsNotDistinct": false,
+      "entityType": "uniques"
+    },
+    {
+      "schema": "public",
+      "table": "game",
+      "name": "game_date_key",
+      "nameExplicit": false,
+      "columns": [
+        "date"
+      ],
+      "nullsNotDistinct": false,
+      "entityType": "uniques"
+    },
+    {
+      "schema": "public",
+      "table": "photo",
+      "name": "photo_object_key_key",
+      "nameExplicit": false,
+      "columns": [
+        "object_key"
+      ],
+      "nullsNotDistinct": false,
+      "entityType": "uniques"
+    }
+  ]
+}
