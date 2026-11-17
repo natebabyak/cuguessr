@@ -32,6 +32,7 @@ integration("account linking and daily play in PostgreSQL", () => {
   let submitGuess;
   let getRoundResults;
   let getDailyLeaderboard;
+  let getUserStreaks;
   let submitReport;
   let onLinkAccount;
 
@@ -88,7 +89,7 @@ integration("account linking and daily play in PostgreSQL", () => {
     onLinkAccount = auth.options.plugins.find((plugin) => plugin.id === "anonymous").options
       .onLinkAccount;
     ({ submitGuess, getRoundResults } = await import("../src/lib/round-results.server"));
-    ({ getDailyLeaderboard } = await import("../src/lib/game-results.server"));
+    ({ getDailyLeaderboard, getUserStreaks } = await import("../src/lib/game-results.server"));
     ({ submitReport } = await import("../src/lib/reports.server"));
   }, 30000);
 
@@ -160,6 +161,23 @@ integration("account linking and daily play in PostgreSQL", () => {
     for (const [index, round] of rounds.entries()) {
       await submitGuess(perfectGuess(round, photos[index]), userId);
     }
+  }
+
+  async function seedCompletions(userId, dates, onTime = true) {
+    const games = await db
+      .insert(schema.game)
+      .values(dates.map((date) => ({ date })))
+      .returning();
+    await db.insert(schema.gameResult).values(
+      games.map((game) => ({
+        gameId: game.id,
+        userId,
+        points: 0,
+        onTime,
+        completedAt: new Date(`${game.date}T17:00:00Z`),
+      })),
+    );
+    return games;
   }
 
   function savedGuess(roundId, userId, points, createdAt) {
@@ -357,6 +375,9 @@ integration("account linking and daily play in PostgreSQL", () => {
           .map((round, index) => savedGuess(round.id, guest.user.id, (index + 3) * 1000, onTime)),
       ]);
     expect(await db.select().from(schema.gameResult)).toHaveLength(0);
+    const now = new Date("2026-11-05T17:00:00Z");
+    expect((await getUserStreaks(account.user.id, now)).currentStreak).toBe(0);
+    expect((await getUserStreaks(guest.user.id, now)).currentStreak).toBe(0);
     await authenticate(
       "sign-in/email",
       { email: credentials.email, password: credentials.password },
@@ -372,6 +393,12 @@ integration("account linking and daily play in PostgreSQL", () => {
         completedAt: onTime,
       },
     ]);
+    expect(await getUserStreaks(account.user.id, now)).toEqual({
+      currentStreak: 1,
+      bestStreak: 1,
+      lastCompletedDate: "2026-11-04",
+    });
+    expect((await getUserStreaks(guest.user.id, now)).currentStreak).toBe(0);
   });
 
   test("recomputes a complete guest game when an account's retained overlap was late", async () => {
@@ -381,6 +408,8 @@ integration("account linking and daily play in PostgreSQL", () => {
     setSystemTime(new Date("2026-11-05T04:59:59Z"));
     await completeGame(guest.user.id, fixture);
     expect((await db.select().from(schema.gameResult))[0].onTime).toBe(true);
+    const now = new Date("2026-11-05T17:00:00Z");
+    expect((await getUserStreaks(guest.user.id, now)).currentStreak).toBe(1);
     setSystemTime();
     const late = new Date("2026-11-05T05:00:00Z");
     await db
@@ -401,6 +430,53 @@ integration("account linking and daily play in PostgreSQL", () => {
       },
     ]);
     expect(await getDailyLeaderboard(fixture.game.id)).toEqual([]);
+    expect(await getUserStreaks(account.user.id, now)).toEqual({
+      currentStreak: 0,
+      bestStreak: 0,
+      lastCompletedDate: null,
+    });
+    expect((await getUserStreaks(guest.user.id, now)).currentStreak).toBe(0);
+  });
+
+  test("derives one streak from linked accounts, counting overlapping dates once", async () => {
+    const account = await authenticate("sign-up/email", credentials);
+    const guest = await authenticate("sign-in/anonymous");
+    const dates = ["2026-11-02", "2026-11-03", "2026-11-04", "2026-11-05", "2026-11-06"];
+    for (const [index, date] of dates.entries()) {
+      const fixture = await seedGame(guest.user.id, date);
+      setSystemTime(new Date(`${date}T17:00:00Z`));
+      if (index <= 2) await completeGame(account.user.id, fixture);
+      if (index >= 2) await completeGame(guest.user.id, fixture);
+    }
+    setSystemTime();
+    const now = new Date("2026-11-06T17:00:00Z");
+    expect(await getUserStreaks(account.user.id, now)).toEqual({
+      currentStreak: 0,
+      bestStreak: 3,
+      lastCompletedDate: "2026-11-04",
+    });
+    expect(await getUserStreaks(guest.user.id, now)).toEqual({
+      currentStreak: 3,
+      bestStreak: 3,
+      lastCompletedDate: "2026-11-06",
+    });
+
+    await authenticate(
+      "sign-in/email",
+      { email: credentials.email, password: credentials.password },
+      guest.cookie,
+    );
+
+    expect(await getUserStreaks(account.user.id, now)).toEqual({
+      currentStreak: 5,
+      bestStreak: 5,
+      lastCompletedDate: "2026-11-06",
+    });
+    expect(await getUserStreaks(guest.user.id, now)).toEqual({
+      currentStreak: 0,
+      bestStreak: 0,
+      lastCompletedDate: null,
+    });
   });
 
   test("preserves an already completed signed-in game when both accounts finished it", async () => {
@@ -478,6 +554,91 @@ integration("account linking and daily play in PostgreSQL", () => {
       { userId: players[1].user.id, points: 20000 },
       { userId: players[0].user.id, points: 10000 },
     ]);
+  });
+
+  test("streaks are empty without on-time completions", async () => {
+    const guest = await authenticate("sign-in/anonymous");
+    const now = new Date("2026-11-16T17:00:00Z");
+    const empty = { currentStreak: 0, bestStreak: 0, lastCompletedDate: null };
+    expect(await getUserStreaks(guest.user.id, now)).toEqual(empty);
+    await seedCompletions(guest.user.id, ["2026-11-15", "2026-11-16"], false);
+    expect(await getUserStreaks(guest.user.id, now)).toEqual(empty);
+  });
+
+  test("streaks use game-date islands and exclude late, future, and other users' rows", async () => {
+    const guest = await authenticate("sign-in/anonymous");
+    const other = await authenticate("sign-in/anonymous");
+    const now = new Date("2026-11-16T17:00:00Z");
+    await seedCompletions(guest.user.id, [
+      "2026-11-16",
+      "2026-11-04",
+      "2026-11-12",
+      "2026-11-03",
+      "2026-11-15",
+      "2026-11-02",
+      "2026-11-13",
+      "2026-11-05",
+    ]);
+    const [late] = await seedCompletions(guest.user.id, ["2026-11-14"], false);
+    await seedCompletions(guest.user.id, ["2026-11-17", "2026-11-18"]);
+    await db.insert(schema.gameResult).values({
+      gameId: late.id,
+      userId: other.user.id,
+      points: 25000,
+      onTime: true,
+      completedAt: new Date("2026-11-14T17:00:00Z"),
+    });
+    expect(await db.select().from(schema.roundResult)).toHaveLength(0);
+    expect(await getUserStreaks(guest.user.id, now)).toEqual({
+      currentStreak: 2,
+      bestStreak: 4,
+      lastCompletedDate: "2026-11-16",
+    });
+    expect(await getUserStreaks(other.user.id, now)).toEqual({
+      currentStreak: 0,
+      bestStreak: 1,
+      lastCompletedDate: "2026-11-14",
+    });
+  });
+
+  test.each([
+    [["2026-09-09", "2026-09-10"], "2026-09-12T03:59:59Z", "2026-09-12T04:00:00Z"],
+    [["2026-11-03", "2026-11-04"], "2026-11-06T04:59:59Z", "2026-11-06T05:00:00Z"],
+    [["2026-10-30", "2026-10-31"], "2026-11-02T04:59:59Z", "2026-11-02T05:00:00Z"],
+    [["2027-03-12", "2027-03-13"], "2027-03-15T03:59:59Z", "2027-03-15T04:00:00Z"],
+  ])(
+    "streak ending on %s expires at Toronto midnight %s / %s without writes",
+    async (dates, before, after) => {
+      const guest = await authenticate("sign-in/anonymous");
+      await seedCompletions(guest.user.id, dates);
+      setSystemTime(new Date(before));
+      expect(await getUserStreaks(guest.user.id)).toEqual({
+        currentStreak: 2,
+        bestStreak: 2,
+        lastCompletedDate: dates.at(-1),
+      });
+      setSystemTime(new Date(after));
+      expect(await getUserStreaks(guest.user.id)).toEqual({
+        currentStreak: 0,
+        bestStreak: 2,
+        lastCompletedDate: dates.at(-1),
+      });
+    },
+  );
+
+  test.each([
+    ["2026-10-31", "2026-11-01", "2026-11-02"],
+    ["2027-03-13", "2027-03-14", "2027-03-15"],
+    ["2026-12-30", "2026-12-31", "2027-01-01"],
+    ["2028-02-28", "2028-02-29", "2028-03-01"],
+  ])("counts consecutive calendar dates across %s / %s / %s", async (...dates) => {
+    const guest = await authenticate("sign-in/anonymous");
+    await seedCompletions(guest.user.id, dates);
+    expect(await getUserStreaks(guest.user.id, new Date(`${dates.at(-1)}T17:00:00Z`))).toEqual({
+      currentStreak: 3,
+      bestStreak: 3,
+      lastCompletedDate: dates.at(-1),
+    });
   });
 
   test("migration backfills only complete games with Toronto midnight and DST boundaries", async () => {

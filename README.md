@@ -17,7 +17,7 @@ development uses Docker Postgres through
 independently of the app; stop it with `docker compose down`.
 
 Run `bun test` for game rule tests. Run `bun run test:integration` for PostgreSQL
-coverage of daily completion, leaderboard reads, account linking, and migration
+coverage of daily completion, leaderboard and streak reads, account linking, and migration
 backfill. The integration suite needs Docker and a local `postgres:18-alpine`
 image (`docker pull postgres:18-alpine`); it creates and removes a disposable
 database without using `DATABASE_URL`.
