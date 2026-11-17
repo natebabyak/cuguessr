@@ -2,16 +2,15 @@ import { Check, ImageIcon } from "lucide-react";
 import { Gallery, Item } from "react-photoswipe-gallery";
 
 import { Button } from "#/components/ui/button";
+import { photoDimensions, photoUrl } from "#/lib/photo-url";
 
 import { ResponsiveModal } from "./responsive-modal";
-
-const cdn = (key: string, width: number) =>
-  `${import.meta.env.VITE_CDN_URL}/cdn-cgi/image/width=${width},quality=75,format=auto,fit=scale-down/photos/${key}`;
 
 export function PhotoModal({
   objectKey,
   height,
   width,
+  rotation = 0,
   open,
   onOpenChange,
   triggerClassName = "absolute bottom-12 left-4",
@@ -19,10 +18,12 @@ export function PhotoModal({
   objectKey: string;
   height: number;
   width: number;
+  rotation?: number;
   open?: boolean;
   onOpenChange?: (open: boolean) => void;
   triggerClassName?: string;
 }) {
+  const dimensions = photoDimensions(width, height, rotation);
   return (
     <ResponsiveModal
       open={open}
@@ -44,10 +45,10 @@ export function PhotoModal({
     >
       <Gallery>
         <Item
-          original={cdn(objectKey, Math.min(width, 2560))}
-          thumbnail={cdn(objectKey, 600)}
-          width={width}
-          height={height}
+          original={photoUrl(objectKey, Math.min(dimensions.width, 2560), rotation)}
+          thumbnail={photoUrl(objectKey, 600, rotation)}
+          width={dimensions.width}
+          height={dimensions.height}
         >
           {({ ref, open }) => (
             <button
@@ -57,10 +58,10 @@ export function PhotoModal({
             >
               <img
                 ref={ref}
-                src={cdn(objectKey, 600)}
-                srcSet={`${cdn(objectKey, 600)} 1x, ${cdn(objectKey, 1200)} 2x`}
-                width={width}
-                height={height}
+                src={photoUrl(objectKey, 600, rotation)}
+                srcSet={`${photoUrl(objectKey, 600, rotation)} 1x, ${photoUrl(objectKey, 1200, rotation)} 2x`}
+                width={dimensions.width}
+                height={dimensions.height}
                 alt="round location"
                 className="h-auto w-full object-cover"
               />

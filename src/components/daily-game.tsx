@@ -43,7 +43,7 @@ type Game = {
   date: string;
   rounds: {
     id: number;
-    photo: { id: number; objectKey: string; height: number; width: number };
+    photo: { id: number; objectKey: string; height: number; width: number; rotation: number };
   }[];
 };
 

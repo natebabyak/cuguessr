@@ -7,6 +7,7 @@ import { Footer } from "#/components/footer";
 import { Header } from "#/components/header";
 import InfiniteSpiral from "#/components/InfiniteSpiral";
 import { buttonVariants } from "#/components/ui/button";
+import { photoUrl } from "#/lib/photo-url";
 import { getHomePhotosFn } from "#/lib/photos.functions";
 
 export const Route = createFileRoute("/")({
@@ -21,8 +22,8 @@ export const Route = createFileRoute("/")({
 function RouteComponent() {
   const { photos } = Route.useLoaderData();
 
-  const items = photos.map(({ objectKey }) => ({
-    src: `${import.meta.env.VITE_CDN_URL}/cdn-cgi/image/width=200,quality=75,format=auto,fit=scale-down/photos/${objectKey}`,
+  const items = photos.map(({ objectKey, rotation }) => ({
+    src: photoUrl(objectKey, 200, rotation),
     alt: objectKey,
   }));
 

@@ -1,0 +1,289 @@
+{
+  "type": "diff",
+  "version": "9",
+  "dialect": "postgres",
+  "id": "f28731f2-6a8c-4aed-b8f9-a4dc1fcf48dc",
+  "prevIds": [
+    "a86dbbec-f7bb-4b4d-9d83-3ad5e1e0fd93"
+  ],
+  "footprints": [
+    {
+      "statementType": "add_column",
+      "statementTarget": [
+        "column",
+        "public",
+        "photo",
+        "rotation"
+      ],
+      "writes": [
+        "s|col|public.photo.rotation",
+        "n|col|public.photo.rotation",
+        "e|col|public.photo.rotation"
+      ],
+      "reads": [
+        "n|tbl|public.photo",
+        "n|sch|public"
+      ]
+    },
+    {
+      "statementType": "add_column",
+      "statementTarget": [
+        "column",
+        "public",
+        "photo",
+        "revision"
+      ],
+      "writes": [
+        "s|col|public.photo.revision",
+        "n|col|public.photo.revision",
+        "e|col|public.photo.revision"
+      ],
+      "reads": [
+        "n|tbl|public.photo",
+        "n|sch|public"
+      ]
+    },
+    {
+      "statementType": "add_column",
+      "statementTarget": [
+        "column",
+        "public",
+        "report",
+        "response"
+      ],
+      "writes": [
+        "s|col|public.report.response",
+        "n|col|public.report.response",
+        "e|col|public.report.response"
+      ],
+      "reads": [
+        "n|tbl|public.report",
+        "n|sch|public"
+      ]
+    },
+    {
+      "statementType": "add_column",
+      "statementTarget": [
+        "column",
+        "public",
+        "report",
+        "resolved_by"
+      ],
+      "writes": [
+        "s|col|public.report.resolved_by",
+        "n|col|public.report.resolved_by",
+        "e|col|public.report.resolved_by"
+      ],
+      "reads": [
+        "n|tbl|public.report",
+        "n|sch|public"
+      ]
+    },
+    {
+      "statementType": "add_column",
+      "statementTarget": [
+        "column",
+        "public",
+        "report",
+        "resolved_at"
+      ],
+      "writes": [
+        "s|col|public.report.resolved_at",
+        "n|col|public.report.resolved_at",
+        "e|col|public.report.resolved_at"
+      ],
+      "reads": [
+        "n|tbl|public.report",
+        "n|sch|public"
+      ]
+    },
+    {
+      "statementType": "add_column",
+      "statementTarget": [
+        "column",
+        "public",
+        "report",
+        "revision"
+      ],
+      "writes": [
+        "s|col|public.report.revision",
+        "n|col|public.report.revision",
+        "e|col|public.report.revision"
+      ],
+      "reads": [
+        "n|tbl|public.report",
+        "n|sch|public"
+      ]
+    },
+    {
+      "statementType": "create_fk",
+      "statementTarget": [
+        "table",
+        "public",
+        "report"
+      ],
+      "writes": [
+        "s|fk|public.report.report_resolved_by_user_id_fkey",
+        "n|fk|public.report.report_resolved_by_user_id_fkey",
+        "e|fk|public.report.report_resolved_by_user_id_fkey",
+        "n|con|public.report.report_resolved_by_user_id_fkey"
+      ],
+      "reads": [
+        "n|tbl|public.report",
+        "n|sch|public",
+        "n|tbl|public.user",
+        "n|sch|public",
+        "n|col|public.report.resolved_by",
+        "n|col|public.user.id",
+        "e|uniqueness|public.user.id"
+      ]
+    },
+    {
+      "statementType": "add_check",
+      "statementTarget": [
+        "table",
+        "public",
+        "photo"
+      ],
+      "writes": [
+        "s|ck|public.photo.photo_rotation_check",
+        "n|ck|public.photo.photo_rotation_check",
+        "e|ck|public.photo.photo_rotation_check",
+        "n|con|public.photo.photo_rotation_check"
+      ],
+      "reads": [
+        "n|tbl|public.photo",
+        "n|sch|public",
+        "n|col|public.photo.rotation"
+      ]
+    }
+  ],
+  "deltas": [
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "photo",
+        "name": "rotation",
+        "type": "smallint",
+        "typeSchema": null,
+        "notNull": true,
+        "dimensions": 0,
+        "default": "0",
+        "generated": null,
+        "identity": null,
+        "entityType": "columns"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "photo",
+        "name": "revision",
+        "type": "integer",
+        "typeSchema": null,
+        "notNull": true,
+        "dimensions": 0,
+        "default": "0",
+        "generated": null,
+        "identity": null,
+        "entityType": "columns"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "report",
+        "name": "response",
+        "type": "text",
+        "typeSchema": null,
+        "notNull": false,
+        "dimensions": 0,
+        "default": null,
+        "generated": null,
+        "identity": null,
+        "entityType": "columns"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "report",
+        "name": "resolved_by",
+        "type": "text",
+        "typeSchema": null,
+        "notNull": false,
+        "dimensions": 0,
+        "default": null,
+        "generated": null,
+        "identity": null,
+        "entityType": "columns"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "report",
+        "name": "resolved_at",
+        "type": "timestamp with time zone",
+        "typeSchema": null,
+        "notNull": false,
+        "dimensions": 0,
+        "default": null,
+        "generated": null,
+        "identity": null,
+        "entityType": "columns"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "report",
+        "name": "revision",
+        "type": "integer",
+        "typeSchema": null,
+        "notNull": true,
+        "dimensions": 0,
+        "default": "0",
+        "generated": null,
+        "identity": null,
+        "entityType": "columns"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "report",
+        "name": "report_resolved_by_user_id_fkey",
+        "nameExplicit": false,
+        "columns": [
+          "resolved_by"
+        ],
+        "schemaTo": "public",
+        "tableTo": "user",
+        "columnsTo": [
+          "id"
+        ],
+        "onUpdate": "NO ACTION",
+        "onDelete": "SET NULL",
+        "entityType": "fks"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "photo",
+        "name": "photo_rotation_check",
+        "value": "\"rotation\" in (0, 90, 180, 270)",
+        "entityType": "checks"
+      }
+    }
+  ]
+}

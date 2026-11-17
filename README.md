@@ -102,6 +102,21 @@ npx -y @better-auth/cli migrate
 
 This project uses [TanStack Router](https://tanstack.com/router) with file-based routing. Routes are managed as files in `src/routes`.
 
+### Admin scope (NAT-327)
+
+`/admin` is the moderation workspace for users with Better Auth `isAdmin` set.
+Admins can approve, reject, or reopen photos, rotate them in 90° increments,
+and review reports with an internal response and a pending, upheld, or dismissed
+resolution. Responses stay internal; no email or reporter notification is sent.
+Photo decisions and report resolutions are separate actions. Rejected or pending
+photos are excluded from future games and the homepage; existing rounds remain
+intact. Saved rotation is applied to admin previews, homepage images, and games.
+
+The header shows the admin link only to signed-in admins. Every admin read and
+mutation checks the current database role. Queues are paginated and updates
+reject stale revisions so one moderator cannot silently overwrite another.
+Apply the admin moderation migration before running this version of the app.
+
 ### Adding A Route
 
 To add a new route to your application just add a new file in the `./src/routes` directory.

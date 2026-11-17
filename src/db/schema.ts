@@ -1,6 +1,7 @@
-import { defineRelations } from "drizzle-orm";
+import { defineRelations, sql } from "drizzle-orm";
 import {
   boolean,
+  check,
   date,
   doublePrecision,
   index,
@@ -55,13 +56,19 @@ export const photo = pgTable(
     latitude: doublePrecision("latitude").notNull(),
     longitude: doublePrecision("longitude").notNull(),
     status: submissionStatus("status").notNull().default("pending"),
+    rotation: smallint("rotation").notNull().default(0),
+    revision: integer("revision").notNull().default(0),
     createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
     updatedAt: timestamp("updated_at", { withTimezone: true })
       .notNull()
       .defaultNow()
       .$onUpdate(() => new Date()),
   },
-  (t) => [index("photo_user_id_idx").on(t.userId), index("photo_status_idx").on(t.status)],
+  (t) => [
+    index("photo_user_id_idx").on(t.userId),
+    index("photo_status_idx").on(t.status),
+    check("photo_rotation_check", sql`${t.rotation} in (0, 90, 180, 270)`),
+  ],
 );
 
 export const report = pgTable(
@@ -76,6 +83,10 @@ export const report = pgTable(
     }),
     description: text("description").notNull(),
     status: submissionStatus("status").notNull().default("pending"),
+    response: text("response"),
+    resolvedBy: text("resolved_by").references(() => user.id, { onDelete: "set null" }),
+    resolvedAt: timestamp("resolved_at", { withTimezone: true }),
+    revision: integer("revision").notNull().default(0),
     createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
     updatedAt: timestamp("updated_at", { withTimezone: true })
       .notNull()

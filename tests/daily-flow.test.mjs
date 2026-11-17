@@ -35,6 +35,9 @@ integration("account linking and daily play in PostgreSQL", () => {
   let getUserStreaks;
   let submitReport;
   let onLinkAccount;
+  let admin;
+  let getHomePhotos;
+  let getGame;
 
   beforeAll(async () => {
     containerId = execFileSync(
@@ -91,6 +94,9 @@ integration("account linking and daily play in PostgreSQL", () => {
     ({ submitGuess, getRoundResults } = await import("../src/lib/round-results.server"));
     ({ getDailyLeaderboard, getUserStreaks } = await import("../src/lib/game-results.server"));
     ({ submitReport } = await import("../src/lib/reports.server"));
+    admin = await import("../src/lib/admin.server");
+    ({ getHomePhotos } = await import("../src/lib/photos.server"));
+    ({ getGame } = await import("../src/lib/game.server"));
   }, 30000);
 
   afterAll(async () => {
@@ -189,6 +195,206 @@ integration("account linking and daily play in PostgreSQL", () => {
     email: "player@example.com",
     password: "test-password-12345",
   };
+
+  async function seedModerator(id = "moderator", values = {}) {
+    const [actor] = await db
+      .insert(authSchema.user)
+      .values({
+        id,
+        name: id,
+        email: `${id}@example.com`,
+        isAdmin: true,
+        isAnonymous: false,
+        ...values,
+      })
+      .returning();
+    return actor;
+  }
+
+  test("admin reads and every mutation reject missing, ordinary, anonymous, and revoked admins", async () => {
+    const actor = await seedModerator();
+    const fixture = await seedGame(actor.id);
+    await submitReport(fixture.photos[0].id, "Photo is sideways", actor.id);
+    const [report] = await db.select().from(schema.report);
+    await seedModerator("ordinary", { isAdmin: false });
+    await seedModerator("anonymous", { isAnonymous: true });
+    await seedModerator("revoked");
+    await db
+      .update(authSchema.user)
+      .set({ isAdmin: false })
+      .where(eq(authSchema.user.id, "revoked"));
+    const photosBefore = await db.select().from(schema.photo);
+    const reportsBefore = await db.select().from(schema.report);
+    for (const userId of [undefined, "missing", "ordinary", "anonymous", "revoked"]) {
+      await expect(
+        admin.getAdminQueue(userId, { tab: "photos", status: "pending", page: 1 }),
+      ).rejects.toThrow();
+      await expect(
+        admin.moderatePhoto(userId, {
+          photoId: fixture.photos[0].id,
+          revision: 0,
+          status: "rejected",
+        }),
+      ).rejects.toThrow();
+      await expect(
+        admin.rotatePhoto(userId, {
+          photoId: fixture.photos[0].id,
+          revision: 0,
+          direction: "right",
+        }),
+      ).rejects.toThrow();
+      await expect(
+        admin.respondToReport(userId, {
+          reportId: report.id,
+          revision: 0,
+          status: "approved",
+          response: "Checked.",
+        }),
+      ).rejects.toThrow();
+    }
+    expect(await db.select().from(schema.photo)).toEqual(photosBefore);
+    expect(await db.select().from(schema.report)).toEqual(reportsBefore);
+  });
+
+  test("photo moderation changes selection, preserves rounds, and prevents stale overwrites", async () => {
+    const actor = await seedModerator();
+    const fixture = await seedGame(actor.id);
+    const target = fixture.photos[0];
+    await admin.moderatePhoto(actor.id, { photoId: target.id, revision: 0, status: "rejected" });
+    expect((await getHomePhotos()).map((photo) => photo.objectKey)).not.toContain(target.objectKey);
+    expect((await getGame(fixture.game.date)).rounds.map((round) => round.photo.id)).toContain(
+      target.id,
+    );
+    await expect(
+      admin.moderatePhoto(actor.id, { photoId: target.id, revision: 0, status: "approved" }),
+    ).rejects.toThrow("changed");
+    await admin.moderatePhoto(actor.id, { photoId: target.id, revision: 1, status: "pending" });
+    expect((await getHomePhotos()).map((photo) => photo.objectKey)).not.toContain(target.objectKey);
+    await admin.moderatePhoto(actor.id, { photoId: target.id, revision: 2, status: "approved" });
+    expect((await getHomePhotos()).map((photo) => photo.objectKey)).toContain(target.objectKey);
+    await expect(
+      admin.moderatePhoto(actor.id, { photoId: 99999, revision: 0, status: "approved" }),
+    ).rejects.toThrow("removed");
+  });
+
+  test("rotation wraps both directions, reaches public photo reads, and rejects stale edits", async () => {
+    const actor = await seedModerator();
+    const fixture = await seedGame(actor.id);
+    const target = fixture.photos[0];
+    for (let revision = 0; revision < 4; revision++) {
+      await admin.rotatePhoto(actor.id, { photoId: target.id, revision, direction: "right" });
+      const [saved] = await db.select().from(schema.photo).where(eq(schema.photo.id, target.id));
+      expect(saved.rotation).toBe(((revision + 1) * 90) % 360);
+      expect(saved.width).toBe(target.width);
+      expect(saved.height).toBe(target.height);
+    }
+    await admin.rotatePhoto(actor.id, { photoId: target.id, revision: 4, direction: "left" });
+    await expect(
+      admin.rotatePhoto(actor.id, { photoId: target.id, revision: 4, direction: "left" }),
+    ).rejects.toThrow("changed");
+    expect(
+      (await getHomePhotos()).find((photo) => photo.objectKey === target.objectKey).rotation,
+    ).toBe(270);
+    expect((await getGame(fixture.game.date)).rounds[0].photo.rotation).toBe(270);
+    await expect(
+      db.update(schema.photo).set({ rotation: 45 }).where(eq(schema.photo.id, target.id)).execute(),
+    ).rejects.toThrow();
+  });
+
+  test("report responses persist privately with a resolver and may be reopened independently of photo status", async () => {
+    const actor = await seedModerator();
+    const fixture = await seedGame(actor.id);
+    await submitReport(fixture.photos[0].id, "Photo is sideways", actor.id);
+    const [report] = await db.select().from(schema.report);
+    const data = {
+      reportId: report.id,
+      revision: 0,
+      status: "approved",
+      response: "Rotated the photo.",
+    };
+    await admin.respondToReport(actor.id, data);
+    const [saved] = await db.select().from(schema.report);
+    expect(saved).toMatchObject({
+      response: data.response,
+      status: "approved",
+      resolvedBy: actor.id,
+      revision: 1,
+    });
+    expect(saved.resolvedAt).toBeInstanceOf(Date);
+    expect((await db.select().from(schema.photo))[0].status).toBe("approved");
+    expect((await getGame(fixture.game.date)).rounds[0].photo).not.toHaveProperty("reports");
+    await expect(admin.respondToReport(actor.id, data)).rejects.toThrow("changed");
+    await admin.respondToReport(actor.id, {
+      ...data,
+      revision: 1,
+      status: "pending",
+      response: "Needs another look.",
+    });
+    expect((await db.select().from(schema.report))[0]).toMatchObject({
+      status: "pending",
+      resolvedAt: null,
+      resolvedBy: null,
+      revision: 2,
+    });
+    await admin.respondToReport(actor.id, {
+      ...data,
+      revision: 2,
+      status: "rejected",
+      response: "No issue found.",
+    });
+    const queue = await admin.getAdminQueue(actor.id, {
+      tab: "reports",
+      status: "rejected",
+      page: 1,
+    });
+    expect(queue.reports[0]).toMatchObject({
+      id: report.id,
+      response: "No issue found.",
+      submittedBy: { name: actor.name },
+      photo: { id: fixture.photos[0].id },
+    });
+  });
+
+  test("moderation queues filter statuses, paginate stably, and support deleted submitters", async () => {
+    const actor = await seedModerator();
+    const fixture = await seedGame(actor.id);
+    await db.insert(schema.photo).values(
+      Array.from({ length: 14 }, (_, index) => ({
+        objectKey: `pending-${index}`,
+        width: 800,
+        height: 600,
+        latitude: 45,
+        longitude: -75,
+      })),
+    );
+    const first = await admin.getAdminQueue(actor.id, {
+      tab: "photos",
+      status: "pending",
+      page: 1,
+    });
+    const last = await admin.getAdminQueue(actor.id, {
+      tab: "photos",
+      status: "pending",
+      page: 999,
+    });
+    expect(first.total).toBe(14);
+    expect(first.photos).toHaveLength(12);
+    expect(last.page).toBe(2);
+    expect(last.photos).toHaveLength(2);
+    expect(new Set([...first.photos, ...last.photos].map((photo) => photo.id)).size).toBe(14);
+    expect(first.photos[0].submittedBy).toBeNull();
+    expect(first.counts.photos).toContainEqual({ status: "approved", count: 5 });
+    expect(first.reports).toEqual([]);
+    await submitReport(fixture.photos[0].id, "Check this location", actor.id);
+    const reports = await admin.getAdminQueue(actor.id, {
+      tab: "reports",
+      status: "pending",
+      page: 1,
+    });
+    expect(reports.reports).toHaveLength(1);
+    expect(reports.photos).toEqual([]);
+    expect(reports.counts.reports).toEqual([{ status: "pending", count: 1 }]);
+  });
 
   test("keeps account scores on overlap and transfers guest scores, photos, and reports through real sign-in", async () => {
     const account = await authenticate("sign-up/email", credentials);

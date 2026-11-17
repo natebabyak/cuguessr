@@ -19,6 +19,7 @@ export async function getHomePhotos() {
   return await db.query.photo.findMany({
     columns: {
       objectKey: true,
+      rotation: true,
     },
     where: {
       status: "approved",

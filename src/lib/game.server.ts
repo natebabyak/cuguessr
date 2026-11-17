@@ -18,6 +18,7 @@ export async function getGame(date: string) {
               objectKey: true,
               height: true,
               width: true,
+              rotation: true,
             },
           },
         },
