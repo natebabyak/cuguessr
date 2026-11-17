@@ -1,266 +1,148 @@
-Welcome to your new TanStack Start app!
+# cuGuessr
 
-# Getting Started
+cuGuessr is the daily Carleton University campus photo guessing game. Players
+locate campus photos on a map, earn points for accurate guesses, and compare daily
+scores. The app supports past daily games, streaks, community photo submissions,
+and admin moderation.
 
-To run this application:
+The app uses TanStack Start and Router, React, Tailwind CSS, Better Auth, and
+Drizzle ORM with PostgreSQL through `pg`. Photo uploads use Cloudflare R2; images
+are served through the configured CDN.
+
+## Local development
+
+Development work targets `feat/tanstack-start-migration`, the source of truth for
+the TanStack app. Base feature branches on it; `main` is the deployed legacy app
+until the production cutover.
+
+Install [Bun](https://bun.sh/) and Docker with Compose, and start Docker before
+starting the database. Use Bun for dependencies and scripts; the lockfile is
+`bun.lock`.
 
 ```bash
 bun install
+cp .env.example .env
+```
+
+Configure `.env` before continuing:
+
+- Keep `DATABASE_URL=postgres://user:password@localhost:5432/db` for the local
+  Docker database.
+- Set `BETTER_AUTH_SECRET` to a random secret and keep `BETTER_AUTH_URL` aligned
+  with the app's local URL (`http://localhost:3000` in `.env.example`).
+- Configure the OAuth, SMTP, and R2 credentials for the features you need. The
+  variable names are listed in `.env.example`.
+
+Start PostgreSQL, push the development schema, and start the app:
+
+```bash
 bun run db:start
 bun run db:push
 bun run dev
 ```
 
-Configure `.env` using `.env.example` before pushing the database schema. Local
-development uses Docker Postgres through
-`DATABASE_URL=postgres://user:password@localhost:5432/db`. The database runs
-independently of the app; stop it with `docker compose down`.
+Open the URL printed by Vite. If its port differs from `BETTER_AUTH_URL`, update
+that variable to match.
 
-Run `bun test` for game rule tests. Run `bun run test:integration` for PostgreSQL
-coverage of daily completion, leaderboard and streak reads, account linking, and migration
-backfill. The integration suite needs Docker and a local `postgres:18-alpine`
-image (`docker pull postgres:18-alpine`); it creates and removes a disposable
-database without using `DATABASE_URL`.
-
-# Building For Production
-
-To build this application for production:
+The database runs independently of the app. After stopping the dev server, stop
+PostgreSQL with:
 
 ```bash
-npm run build
+docker compose down
 ```
 
-## Styling
+Compose retains local data in its `pgdata` volume. A fresh database has no campus
+photos or daily games; schema setup does not seed content.
 
-This project uses [Tailwind CSS](https://tailwindcss.com/) for styling.
+## Environment and services
 
-### Removing Tailwind CSS
+[`.env.example`](.env.example) lists the app's configuration:
 
-If you prefer not to use Tailwind CSS:
+| Variables                                                                                                                            | Purpose                                                                  |
+| ------------------------------------------------------------------------------------------------------------------------------------ | ------------------------------------------------------------------------ |
+| `DATABASE_URL`                                                                                                                       | PostgreSQL connection: local Docker for development, Neon in production. |
+| `BETTER_AUTH_SECRET`, `BETTER_AUTH_URL`                                                                                              | Session security and the app's base URL.                                 |
+| `DISCORD_CLIENT_ID`, `DISCORD_CLIENT_SECRET`, `GITHUB_CLIENT_ID`, `GITHUB_CLIENT_SECRET`, `REDDIT_CLIENT_ID`, `REDDIT_CLIENT_SECRET` | Social sign-in credentials.                                              |
+| `SMTP_HOST`, `SMTP_PORT`, `SMTP_USERNAME`, `SMTP_PASSWORD`                                                                           | Email one-time password delivery.                                        |
+| `R2_ACCOUNT_ID`, `R2_ACCESS_KEY_ID`, `R2_SECRET_ACCESS_KEY`                                                                          | Cloudflare R2 photo uploads.                                             |
+| `VITE_CDN_URL`                                                                                                                       | Public base URL for photo delivery.                                      |
+| `CRON_SECRET`                                                                                                                        | Bearer token checked by `/api/daily`.                                    |
 
-1. Remove the demo pages in `src/routes/demo/`
-2. Replace the Tailwind import in `src/styles.css` with your own styles
-3. Remove `tailwindcss()` from the plugins array in `vite.config.ts`
-4. Remove `@tailwindcss/vite` and `tailwindcss` from `package.json`
+Better Auth already uses the Drizzle adapter and the shared database export in
+`src/db/index.ts`. Its configuration is in `src/lib/auth.ts`, with auth tables in
+`src/db/auth-schema.ts` and game tables in `src/db/schema.ts`.
 
-## Deploy to Vercel
+## Development commands
 
-1. Push this repo to GitHub, GitLab, or Bitbucket
-2. In Vercel, choose **Add New > Project** and import the repo
-3. Keep the detected TanStack Start framework settings
-4. Add production values from `.env.example` under **Settings > Environment Variables**
-5. Deploy
+| Command                    | Purpose                                                           |
+| -------------------------- | ----------------------------------------------------------------- |
+| `bun run dev`              | Start the Vite development server.                                |
+| `bun run db:start`         | Start local PostgreSQL with Compose.                              |
+| `bun run db:push`          | Push the current development schema to `DATABASE_URL`.            |
+| `bun run db:generate`      | Generate a Drizzle migration from schema changes.                 |
+| `bun run db:migrate`       | Apply committed migrations from `drizzle/` to `DATABASE_URL`.     |
+| `bun run db:studio`        | Open Drizzle Studio.                                              |
+| `bun test`                 | Run unit tests; PostgreSQL integration tests are opt-in.          |
+| `bun run test:integration` | Run PostgreSQL integration tests in a disposable Docker database. |
+| `bun run typecheck`        | Check TypeScript types.                                           |
+| `bun run lint`             | Run Oxlint.                                                       |
+| `bun run format:check`     | Check formatting with Oxfmt.                                      |
+| `bun run build`            | Build the production app with Vite and Nitro.                     |
 
-Vercel runs the build script and deploys Nitro's output as Vercel Functions and
-static assets. The included `vercel.json` makes framework detection explicit.
+The integration suite covers daily completion, leaderboard and streak reads,
+account linking, moderation, and migration backfill. It needs Docker and a local
+`postgres:18-alpine` image (`docker pull postgres:18-alpine`); it creates and
+removes its own database without using `DATABASE_URL`.
 
-Variables prefixed with `VITE_` are included in the browser bundle. Keep secrets
-unprefixed so they remain server-only.
+## App routes and moderation
 
-## Shadcn
+File-based routes live in `src/routes`:
 
-Add components using the latest version of [Shadcn](https://ui.shadcn.com/).
+- `/`: homepage with approved campus photos.
+- `/daily` and `/daily/$date`: today's game and past daily games.
+- `/submit`: community photo submissions.
+- `/login` and `/api/auth/$`: sign-in and Better Auth endpoints.
+- `/privacy`: privacy policy.
+- `/admin`: photo and report moderation for users with `isAdmin` set.
+- `/api/daily`: authenticated daily game creation endpoint used by the cron job.
+
+Admins can approve, reject, or reopen photos, rotate them in 90° increments, and
+resolve reports with an internal response. Responses stay internal; no email or
+reporter notification is sent. Photo decisions and report resolutions are
+separate actions. Pending or rejected photos are excluded from future games and
+the homepage; existing rounds remain intact. Saved rotation applies to admin
+previews, homepage images, and games.
+
+The admin link appears only for signed-in admins. Every admin read and mutation
+checks the current database role. Queues are paginated, and stale revisions are
+rejected to prevent moderators from overwriting each other's changes. Apply the
+admin moderation migration before running this version against an existing
+database.
+
+## Production on Vercel
+
+`vercel.json` selects the `tanstack-start` framework. The production build is:
 
 ```bash
-pnpm dlx shadcn@latest add button
+bun run build
 ```
 
-## Setting up Better Auth
+`vite.config.ts` includes TanStack Start and Nitro. Vercel uses this build to
+deploy the app's server functions and static assets. Keep the existing TanStack
+Start framework settings in the Vercel project.
 
-1. Generate and set the `BETTER_AUTH_SECRET` environment variable in your `.env.local`:
+Set production values for the variables in `.env.example` in Vercel's environment
+settings. Use the production Neon connection for `DATABASE_URL`, set
+`BETTER_AUTH_URL` to the production origin, and configure the Discord, GitHub,
+and Reddit OAuth callbacks for that origin. `VITE_` variables are included in the
+browser bundle; keep secrets unprefixed.
 
-   ```bash
-   npx -y @better-auth/cli secret
-   ```
+`vercel.json` schedules `/api/daily` at `0 5 * * *` (05:00 UTC). Configure
+`CRON_SECRET` in Vercel to match the endpoint's bearer-token check. The endpoint
+creates a game for the current `America/Toronto` date using approved photos.
 
-2. Visit the [Better Auth documentation](https://www.better-auth.com) to unlock the full potential of authentication in your app.
-
-### Adding a Database (Optional)
-
-Better Auth can work in stateless mode, but to persist user data, add a database:
-
-```typescript
-// src/lib/auth.ts
-import { betterAuth } from "better-auth";
-import { Pool } from "pg";
-
-export const auth = betterAuth({
-  database: new Pool({
-    connectionString: process.env.DATABASE_URL,
-  }),
-  // ... rest of config
-});
-```
-
-Then run migrations:
-
-```bash
-npx -y @better-auth/cli migrate
-```
-
-## Routing
-
-This project uses [TanStack Router](https://tanstack.com/router) with file-based routing. Routes are managed as files in `src/routes`.
-
-### Admin scope (NAT-327)
-
-`/admin` is the moderation workspace for users with Better Auth `isAdmin` set.
-Admins can approve, reject, or reopen photos, rotate them in 90° increments,
-and review reports with an internal response and a pending, upheld, or dismissed
-resolution. Responses stay internal; no email or reporter notification is sent.
-Photo decisions and report resolutions are separate actions. Rejected or pending
-photos are excluded from future games and the homepage; existing rounds remain
-intact. Saved rotation is applied to admin previews, homepage images, and games.
-
-The header shows the admin link only to signed-in admins. Every admin read and
-mutation checks the current database role. Queues are paginated and updates
-reject stale revisions so one moderator cannot silently overwrite another.
-Apply the admin moderation migration before running this version of the app.
-
-### Adding A Route
-
-To add a new route to your application just add a new file in the `./src/routes` directory.
-
-TanStack will automatically generate the content of the route file for you.
-
-Now that you have two routes you can use a `Link` component to navigate between them.
-
-### Adding Links
-
-To use SPA (Single Page Application) navigation you will need to import the `Link` component from `@tanstack/react-router`.
-
-```tsx
-import { Link } from "@tanstack/react-router";
-```
-
-Then anywhere in your JSX you can use it like so:
-
-```tsx
-<Link to="/about">About</Link>
-```
-
-This will create a link that will navigate to the `/about` route.
-
-More information on the `Link` component can be found in the [Link documentation](https://tanstack.com/router/v1/docs/framework/react/api/router/linkComponent).
-
-### Using A Layout
-
-In the File Based Routing setup the layout is located in `src/routes/__root.tsx`. Anything you add to the root route will appear in all the routes. The route content will appear in the JSX where you render `{children}` in the `shellComponent`.
-
-Here is an example layout that includes a header:
-
-```tsx
-import { HeadContent, Scripts, createRootRoute } from "@tanstack/react-router";
-
-export const Route = createRootRoute({
-  head: () => ({
-    meta: [
-      { charSet: "utf-8" },
-      { name: "viewport", content: "width=device-width, initial-scale=1" },
-      { title: "My App" },
-    ],
-  }),
-  shellComponent: ({ children }) => (
-    <html lang="en">
-      <head>
-        <HeadContent />
-      </head>
-      <body>
-        <header>
-          <nav>
-            <Link to="/">Home</Link>
-            <Link to="/about">About</Link>
-          </nav>
-        </header>
-        {children}
-        <Scripts />
-      </body>
-    </html>
-  ),
-});
-```
-
-More information on layouts can be found in the [Layouts documentation](https://tanstack.com/router/latest/docs/framework/react/guide/routing-concepts#layouts).
-
-## Server Functions
-
-TanStack Start provides server functions that allow you to write server-side code that seamlessly integrates with your client components.
-
-```tsx
-import { createServerFn } from "@tanstack/react-start";
-
-const getServerTime = createServerFn({
-  method: "GET",
-}).handler(async () => {
-  return new Date().toISOString();
-});
-
-// Use in a component
-function MyComponent() {
-  const [time, setTime] = useState("");
-
-  useEffect(() => {
-    getServerTime().then(setTime);
-  }, []);
-
-  return <div>Server time: {time}</div>;
-}
-```
-
-## API Routes
-
-You can create API routes by using the `server` property in your route definitions:
-
-```tsx
-import { createFileRoute } from "@tanstack/react-router";
-import { json } from "@tanstack/react-start";
-
-export const Route = createFileRoute("/api/hello")({
-  server: {
-    handlers: {
-      GET: () => json({ message: "Hello, World!" }),
-    },
-  },
-});
-```
-
-## Data Fetching
-
-There are multiple ways to fetch data in your application. You can use TanStack Query to fetch data from a server. But you can also use the `loader` functionality built into TanStack Router to load the data for a route before it's rendered.
-
-For example:
-
-```tsx
-import { createFileRoute } from "@tanstack/react-router";
-
-export const Route = createFileRoute("/people")({
-  loader: async () => {
-    const response = await fetch("https://swapi.dev/api/people");
-    return response.json();
-  },
-  component: PeopleComponent,
-});
-
-function PeopleComponent() {
-  const data = Route.useLoaderData();
-  return (
-    <ul>
-      {data.results.map((person) => (
-        <li key={person.name}>{person.name}</li>
-      ))}
-    </ul>
-  );
-}
-```
-
-Loaders simplify your data fetching logic dramatically. Check out more information in the [Loader documentation](https://tanstack.com/router/latest/docs/framework/react/guide/data-loading#loader-parameters).
-
-# Demo files
-
-Files prefixed with `demo` can be safely deleted. They are there to provide a starting point for you to play around with the features you've installed.
-
-# Learn More
-
-You can learn more about all of the offerings from TanStack in the [TanStack documentation](https://tanstack.com).
-
-For TanStack Start specific documentation, visit [TanStack Start](https://tanstack.com/start).
+Production schema application, the merge from `feat/tanstack-start-migration` to
+`main`, and the deployment cutover are tracked in
+[NAT-323](https://linear.app/nbaby/issue/NAT-323). Apply the baseline and subsequent
+Drizzle migrations as part of that cutover, then smoke-test sign-in, daily play,
+and photo submission.
