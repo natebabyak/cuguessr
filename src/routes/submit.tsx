@@ -23,6 +23,7 @@ import { FieldError } from "#/components/ui/field";
 import { Item, ItemContent } from "#/components/ui/item";
 import { toast } from "#/components/ui/toast";
 import { DEFAULT_LAT, DEFAULT_LNG, DEFAULT_ZOOM } from "#/lib/constants";
+import { createPhotoFn } from "#/lib/photos.functions";
 
 export const Route = createFileRoute("/submit")({
   component: RouteComponent,
@@ -78,8 +79,30 @@ function RouteComponent() {
     validators: {
       onSubmit: Schema,
     },
-    onSubmit: () => {
-      toast.add({ title: "Photo uploads aren’t available yet.", type: "info" });
+    onSubmit: async ({ value }) => {
+      if (!value.photo || value.lat === null || value.lng === null) return;
+
+      const formData = new FormData();
+      formData.append("photo", value.photo);
+      formData.append("latitude", String(value.lat));
+      formData.append("longitude", String(value.lng));
+
+      try {
+        await createPhotoFn({ data: formData });
+        toast.add({ title: "Photo submitted successfully!", type: "success" });
+        form.reset();
+        setThumbnailUrl(null);
+        setPhotoError(null);
+        if (photoInputRef.current) photoInputRef.current.value = "";
+      } catch (error) {
+        toast.add({
+          title:
+            error instanceof Error && error.message
+              ? error.message
+              : "Failed to submit photo. Please try again.",
+          type: "error",
+        });
+      }
     },
   });
 
