@@ -879,15 +879,21 @@ integration("account linking and daily play in PostgreSQL", () => {
       }
     }
     const migrationSql = readFileSync(
-      new URL("../drizzle/20261116221252_game_result/migration.sql", import.meta.url),
+      new URL(
+        "../drizzle/20261118214240_game_result_admin_moderation/migration.sql",
+        import.meta.url,
+      ),
       "utf8",
     );
+    // Only re-run the game_result DDL + backfill. The squashed file also has
+    // admin ALTERs that already applied when migrations ran in beforeAll.
+    const gameResultSql = migrationSql.slice(0, migrationSql.indexOf('ALTER TABLE "photo"'));
     const client = await pool.connect();
     try {
       await client.query("BEGIN");
       await client.query("DROP TABLE game_result");
       await client.query("SET LOCAL TIME ZONE 'Asia/Tokyo'");
-      await client.query(migrationSql);
+      await client.query(gameResultSql);
       const { rows } = await client.query(
         "SELECT * FROM game_result ORDER BY game_id, on_time DESC",
       );
@@ -910,7 +916,7 @@ integration("account linking and daily play in PostgreSQL", () => {
         ]),
       );
       // The backfill itself is safe to retry.
-      await client.query(migrationSql.slice(migrationSql.indexOf('INSERT INTO "game_result"')));
+      await client.query(gameResultSql.slice(gameResultSql.indexOf('INSERT INTO "game_result"')));
       expect((await client.query("SELECT * FROM game_result")).rows).toHaveLength(4);
       await client.query('DELETE FROM "user" WHERE id = $1', [players[0].user.id]);
       expect((await client.query("SELECT * FROM game_result")).rows).toHaveLength(2);
