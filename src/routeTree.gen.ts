@@ -17,6 +17,8 @@ import { Route as SubmitRouteImport } from './routes/submit'
 import { Route as ApiDailyRouteImport } from './routes/api.daily'
 import { Route as DailyIndexRouteImport } from './routes/daily.index'
 import { Route as DailyDateRouteImport } from './routes/daily.$date'
+import { Route as LeaderboardIndexRouteImport } from './routes/leaderboard.index'
+import { Route as LeaderboardDateRouteImport } from './routes/leaderboard.$date'
 import { Route as ApiAuthSplatRouteImport } from './routes/api.auth.$'
 
 const IndexRoute = IndexRouteImport.update({
@@ -59,6 +61,16 @@ const DailyDateRoute = DailyDateRouteImport.update({
   path: '/daily/$date',
   getParentRoute: () => rootRouteImport,
 } as any)
+const LeaderboardIndexRoute = LeaderboardIndexRouteImport.update({
+  id: '/leaderboard/',
+  path: '/leaderboard/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const LeaderboardDateRoute = LeaderboardDateRouteImport.update({
+  id: '/leaderboard/$date',
+  path: '/leaderboard/$date',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ApiAuthSplatRoute = ApiAuthSplatRouteImport.update({
   id: '/api/auth/$',
   path: '/api/auth/$',
@@ -73,7 +85,9 @@ export interface FileRoutesByFullPath {
   '/submit': typeof SubmitRoute
   '/api/daily': typeof ApiDailyRoute
   '/daily/$date': typeof DailyDateRoute
+  '/leaderboard/$date': typeof LeaderboardDateRoute
   '/daily/': typeof DailyIndexRoute
+  '/leaderboard/': typeof LeaderboardIndexRoute
   '/api/auth/$': typeof ApiAuthSplatRoute
 }
 export interface FileRoutesByTo {
@@ -84,7 +98,9 @@ export interface FileRoutesByTo {
   '/submit': typeof SubmitRoute
   '/api/daily': typeof ApiDailyRoute
   '/daily/$date': typeof DailyDateRoute
+  '/leaderboard/$date': typeof LeaderboardDateRoute
   '/daily': typeof DailyIndexRoute
+  '/leaderboard': typeof LeaderboardIndexRoute
   '/api/auth/$': typeof ApiAuthSplatRoute
 }
 export interface FileRoutesById {
@@ -96,7 +112,9 @@ export interface FileRoutesById {
   '/submit': typeof SubmitRoute
   '/api/daily': typeof ApiDailyRoute
   '/daily/$date': typeof DailyDateRoute
+  '/leaderboard/$date': typeof LeaderboardDateRoute
   '/daily/': typeof DailyIndexRoute
+  '/leaderboard/': typeof LeaderboardIndexRoute
   '/api/auth/$': typeof ApiAuthSplatRoute
 }
 export interface FileRouteTypes {
@@ -109,7 +127,9 @@ export interface FileRouteTypes {
     | '/submit'
     | '/api/daily'
     | '/daily/$date'
+    | '/leaderboard/$date'
     | '/daily/'
+    | '/leaderboard/'
     | '/api/auth/$'
   fileRoutesByTo: FileRoutesByTo
   to:
@@ -120,7 +140,9 @@ export interface FileRouteTypes {
     | '/submit'
     | '/api/daily'
     | '/daily/$date'
+    | '/leaderboard/$date'
     | '/daily'
+    | '/leaderboard'
     | '/api/auth/$'
   id:
     | '__root__'
@@ -131,7 +153,9 @@ export interface FileRouteTypes {
     | '/submit'
     | '/api/daily'
     | '/daily/$date'
+    | '/leaderboard/$date'
     | '/daily/'
+    | '/leaderboard/'
     | '/api/auth/$'
   fileRoutesById: FileRoutesById
 }
@@ -143,7 +167,9 @@ export interface RootRouteChildren {
   SubmitRoute: typeof SubmitRoute
   ApiDailyRoute: typeof ApiDailyRoute
   DailyDateRoute: typeof DailyDateRoute
+  LeaderboardDateRoute: typeof LeaderboardDateRoute
   DailyIndexRoute: typeof DailyIndexRoute
+  LeaderboardIndexRoute: typeof LeaderboardIndexRoute
   ApiAuthSplatRoute: typeof ApiAuthSplatRoute
 }
 
@@ -205,6 +231,20 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof DailyDateRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/leaderboard/': {
+      id: '/leaderboard/'
+      path: '/leaderboard'
+      fullPath: '/leaderboard/'
+      preLoaderRoute: typeof LeaderboardIndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/leaderboard/$date': {
+      id: '/leaderboard/$date'
+      path: '/leaderboard/$date'
+      fullPath: '/leaderboard/$date'
+      preLoaderRoute: typeof LeaderboardDateRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/api/auth/$': {
       id: '/api/auth/$'
       path: '/api/auth/$'
@@ -223,18 +263,11 @@ const rootRouteChildren: RootRouteChildren = {
   SubmitRoute: SubmitRoute,
   ApiDailyRoute: ApiDailyRoute,
   DailyDateRoute: DailyDateRoute,
+  LeaderboardDateRoute: LeaderboardDateRoute,
   DailyIndexRoute: DailyIndexRoute,
+  LeaderboardIndexRoute: LeaderboardIndexRoute,
   ApiAuthSplatRoute: ApiAuthSplatRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
-
-import type { getRouter } from './router.tsx'
-import type { createStart } from '@tanstack/react-start'
-declare module '@tanstack/react-start' {
-  interface Register {
-    ssr: true
-    router: Awaited<ReturnType<typeof getRouter>>
-  }
-}
