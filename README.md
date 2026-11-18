@@ -106,6 +106,15 @@ File-based routes live in `src/routes`:
 - `/admin`: photo and report moderation for users with `isAdmin` set.
 - `/api/daily`: authenticated daily game creation endpoint used by the cron job.
 
+### Streaks in the UI
+
+Signed-in (non-anonymous) players see **current** and **best** streak on the
+daily **results** screen after finishing or revisiting a completed game. Values
+come from `getUserStreaksFn` / `getUserStreaks`, which count only on-time
+`game_result` rows—archive and late plays do not extend a streak. Streaks are
+not shown in the header, on a profile page, or on a public board in this
+release.
+
 Admins can approve, reject, or reopen photos, rotate them in 90° increments, and
 resolve reports with an internal response. Responses stay internal; no email or
 reporter notification is sent. Photo decisions and report resolutions are
