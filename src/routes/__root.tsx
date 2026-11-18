@@ -2,6 +2,7 @@ import "maplibre-gl/dist/maplibre-gl.css";
 import "photoswipe/dist/photoswipe.css";
 import type { QueryClient } from "@tanstack/react-query";
 import { HeadContent, Outlet, Scripts, createRootRouteWithContext } from "@tanstack/react-router";
+import { Analytics } from "@vercel/analytics/react";
 
 import { ThemeProvider } from "#/components/theme-provider";
 import { Toaster } from "#/components/ui/toast";
@@ -23,7 +24,7 @@ export const Route = createRootRouteWithContext<MyRouterContext>()({
         content: "width=device-width, initial-scale=1",
       },
       {
-        title: "TanStack Start Starter",
+        title: "cuGuessr",
       },
     ],
     links: [
@@ -48,6 +49,7 @@ function RootComponent() {
         </ThemeProvider>
         <Scripts />
         <Toaster />
+        <Analytics />
       </body>
     </html>
   );
