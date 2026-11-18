@@ -1,11 +1,14 @@
 import { Link } from "@tanstack/react-router";
-import { ArrowLeftIcon, Share2Icon } from "lucide-react";
+import { ArrowLeftIcon, FlameIcon, Share2Icon } from "lucide-react";
 import { motion } from "motion/react";
+import { useEffect, useState } from "react";
 
 import { Button, buttonVariants } from "#/components/ui/button";
 import { Item, ItemContent } from "#/components/ui/item";
 import { toast } from "#/components/ui/toast";
+import { authClient } from "#/lib/auth-client";
 import { getGameNumber } from "#/lib/game";
+import { getUserStreaksFn } from "#/lib/game-results.functions";
 
 function getEmoji(points: number) {
   if (points >= 3750) return "🟩";
@@ -13,6 +16,12 @@ function getEmoji(points: number) {
   if (points >= 1250) return "🟨";
   return "🟥";
 }
+
+type UserStreaks = {
+  currentStreak: number;
+  bestStreak: number;
+  lastCompletedDate: string | null;
+};
 
 export function Results({
   date,
@@ -25,9 +34,32 @@ export function Results({
     points: number;
   }[];
 }) {
+  const { data: session } = authClient.useSession();
+  const [streaks, setStreaks] = useState<UserStreaks | null>(null);
+  const isSignedIn = Boolean(session && !session.user.isAnonymous);
   const gameNumber = getGameNumber(date);
   const totalPoints = roundResults.reduce((acc, { points }) => acc + points, 0).toLocaleString();
   const emojis = roundResults.map(({ points }) => getEmoji(points)).join(" ");
+
+  useEffect(() => {
+    if (!isSignedIn) {
+      setStreaks(null);
+      return;
+    }
+
+    let cancelled = false;
+    void getUserStreaksFn()
+      .then((result) => {
+        if (!cancelled) setStreaks(result);
+      })
+      .catch(() => {
+        if (!cancelled) setStreaks(null);
+      });
+
+    return () => {
+      cancelled = true;
+    };
+  }, [isSignedIn]);
 
   async function handleShareResults() {
     const shareText = [
@@ -65,6 +97,28 @@ export function Results({
       </h1>
       <p className="text-muted-foreground text-lg">{date}</p>
       <p className="text-3xl font-medium">{totalPoints} points</p>
+      {streaks && (
+        <motion.div
+          initial={{ opacity: 0, y: 12 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="flex w-full max-w-xs items-center justify-center gap-8"
+          aria-label="Your streaks"
+        >
+          <div className="flex flex-col items-center gap-1">
+            <div className="text-primary flex items-center gap-1.5 text-2xl font-semibold tabular-nums">
+              <FlameIcon aria-hidden="true" className="size-6" />
+              <span>{streaks.currentStreak.toLocaleString()}</span>
+            </div>
+            <p className="text-muted-foreground text-sm">Current streak</p>
+          </div>
+          <div className="flex flex-col items-center gap-1">
+            <p className="text-2xl font-semibold tabular-nums">
+              {streaks.bestStreak.toLocaleString()}
+            </p>
+            <p className="text-muted-foreground text-sm">Best streak</p>
+          </div>
+        </motion.div>
+      )}
       <ul className="flex w-full max-w-xs flex-col gap-2">
         {roundResults.map((r, index) => (
           <motion.li
