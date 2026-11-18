@@ -1,5 +1,5 @@
 import { Link } from "@tanstack/react-router";
-import { ArrowLeftIcon, FlameIcon, Share2Icon } from "lucide-react";
+import { ArrowLeftIcon, FlameIcon, Share2Icon, TrophyIcon } from "lucide-react";
 import { motion } from "motion/react";
 import { useEffect, useState } from "react";
 
@@ -151,6 +151,17 @@ export function Results({
           <Share2Icon />
           Share Results
         </Button>
+        <Link
+          to="/leaderboard/$date"
+          params={{ date }}
+          className={buttonVariants({
+            size: "lg",
+            variant: "outline",
+          })}
+        >
+          <TrophyIcon />
+          View Leaderboard
+        </Link>
         <Link
           to="/"
           className={buttonVariants({

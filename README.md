@@ -100,11 +100,27 @@ File-based routes live in `src/routes`:
 
 - `/`: homepage with approved campus photos.
 - `/daily` and `/daily/$date`: today's game and past daily games.
+- `/leaderboard` and `/leaderboard/$date`: daily on-time leaderboard.
 - `/submit`: community photo submissions.
 - `/login` and `/api/auth/$`: sign-in and Better Auth endpoints.
 - `/privacy`: privacy policy.
 - `/admin`: photo and report moderation for users with `isAdmin` set.
 - `/api/daily`: authenticated daily game creation endpoint used by the cron job.
+
+### Daily leaderboard
+
+`/leaderboard` redirects to today's board; `/leaderboard/$date` lists on-time
+`game_result` rows for that daily, ordered by points. The page reads
+`getDailyLeaderboardFn` / `getDailyLeaderboard` (stored totals), not a live SUM
+over `round_result`. Entries are linked from the footer and the daily results
+screen.
+
+**Deferred:** all-time and weekly boards are not shipped. Open product questions
+from NAT-211 remain open: whether to hide anonymous players vs show generated
+usernames, how to aggregate all-time scores, whether to ship a weekly board, and
+whether competitive boards should be signed-in only. This release shows every
+on-time finish with the account's current username and does not filter by
+anonymous status.
 
 ### Streaks in the UI
 
